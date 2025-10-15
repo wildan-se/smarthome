@@ -92,7 +92,7 @@
     "rimraf": "^6.0.1",
     "rollup": "^4.44.0",
     "rtlcss": "^4.3.0",
-    "sass": "^1.89.2",
+    "sass": "^1.93.2",
     "shx": "^0.4.0",
     "stylelint": "^16.21.0",
     "stylelint-config-twbs-bootstrap": "^16.1.0",
