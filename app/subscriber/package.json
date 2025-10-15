@@ -1,0 +1,13 @@
+{
+  "name": "smarthome-subscriber",
+  "version": "1.0.0",
+  "description": "MQTT subscriber that writes telemetry to MySQL",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "mqtt": "^4.3.7",
+    "mysql2": "^3.2.0"
+  }
+}
