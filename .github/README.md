@@ -158,7 +158,7 @@ Proyek ini dilisensikan di bawah **Lisensi MIT**. Lihat file [LICENSE](LICENSE) 
 
 MIT License
 
-Copyright (c) 2024 [Nama Anda atau Pemilik Proyek]
+Copyright (c) 2024 [muhammad wildan septiano]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
