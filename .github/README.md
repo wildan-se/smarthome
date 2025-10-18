@@ -152,7 +152,7 @@ Kami sangat menyambut kontribusi dari komunitas! Jika Anda memiliki ide, laporan
 
 ## 📄 Lisensi
 
-Proyek ini dilisensikan di bawah **Lisensi MIT**. Lihat file [LICENSE](LICENSE) (jika ada) untuk detail lebih lanjut, atau mengacu pada teks berikut:
+Proyek ini dilisensikan di bawah **Lisensi MIT** :
 
 ````
 
