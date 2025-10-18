@@ -1,4 +1,4 @@
-````markdown
+
 # Sistem Smart Home Dashboard
 
 Dashboard berbasis web untuk memonitor dan mengontrol perangkat keras rumah pintar, mencakup logging data sensor, manajemen akses pintu (RFID), dan kontrol relay/servo.
