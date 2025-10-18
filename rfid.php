@@ -78,7 +78,7 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             <li class="nav-item">
               <a href="log.php" class="nav-link">
                 <i class="nav-icon fas fa-list"></i>
-                <p>Log & Sensor</p>
+                <p>Log</p>
               </a>
             </li>
             <li class="nav-item">
@@ -267,6 +267,13 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         </div>
       </section>
     </div>
+    <footer class="main-footer">
+      <strong>Copyright &copy; <?= date('Y') ?> <a href="index.php">Koneksi Pintar</a>.</strong>
+
+      <div class="float-right d-none d-sm-inline-block">
+        <b>Version</b> 1.0.0
+      </div>
+    </footer>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

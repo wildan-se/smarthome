@@ -44,6 +44,50 @@ foreach ($configs as $config) {
   <link rel="stylesheet" href="assets/css/custom.css">
 
   <style>
+    /* ========== Sidebar Fixed Position ========== */
+    .main-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 1038;
+    }
+
+    /* Smooth scrollbar for sidebar */
+    .main-sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .main-sidebar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .main-sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+    }
+
+    .main-sidebar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Content wrapper adjustment */
+    .content-wrapper {
+      margin-left: 250px;
+      transition: margin-left 0.3s ease-in-out;
+    }
+
+    /* When sidebar is collapsed */
+    .sidebar-collapse .content-wrapper {
+      margin-left: 4.6rem;
+    }
+
+    .sidebar-collapse .main-sidebar {
+      margin-left: 0;
+    }
+
+    /* ========== Config Sections ========== */
     .config-section {
       margin-bottom: 30px;
     }
@@ -143,7 +187,7 @@ foreach ($configs as $config) {
             <li class="nav-item">
               <a href="log.php" class="nav-link">
                 <i class="nav-icon fas fa-list"></i>
-                <p>Log & Sensor</p>
+                <p>Log </p>
               </a>
             </li>
             <li class="nav-item">
@@ -177,6 +221,12 @@ foreach ($configs as $config) {
           <div class="row mb-2">
             <div class="col-sm-6">
               <h1><i class="fas fa-cog"></i> Pengaturan Sistem</h1>
+            </div>
+            <div class="col-sm-6">
+              <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+                <li class="breadcrumb-item active">Pengaturan</li>
+              </ol>
             </div>
           </div>
         </div>
@@ -354,7 +404,11 @@ foreach ($configs as $config) {
 
     <!-- Footer -->
     <footer class="main-footer">
-      <strong>&copy; 2024 Smart Home IoT.</strong> All rights reserved.
+      <strong>Copyright &copy; <?= date('Y') ?> <a href="index.php">Koneksi Pintar</a>.</strong>
+
+      <div class="float-right d-none d-sm-inline-block">
+        <b>Version</b> 1.0.0
+      </div>
     </footer>
   </div>
 

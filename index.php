@@ -89,7 +89,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
             <li class="nav-item">
               <a href="log.php" class="nav-link">
                 <i class="nav-icon fas fa-list"></i>
-                <p>Log & Sensor</p>
+                <p>Log </p>
               </a>
             </li>
             <li class="nav-item">
