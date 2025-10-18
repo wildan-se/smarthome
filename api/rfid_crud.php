@@ -3,11 +3,13 @@ require_once '../config/config.php';
 header('Content-Type: application/json');
 $action = $_GET['action'] ?? '';
 
-// List semua kartu
+// List semua kartu dengan informasi admin
 if ($action === 'list') {
-  $stmt = $conn->prepare('SELECT uid, added_at FROM rfid_cards ORDER BY added_at DESC');
-  $stmt->execute();
-  $result = $stmt->get_result();
+  $sql = 'SELECT r.uid, r.name, r.added_at, COALESCE(u.username, "System") as added_by_name 
+          FROM rfid_cards r 
+          LEFT JOIN users u ON r.added_by = u.id 
+          ORDER BY r.added_at DESC';
+  $result = $conn->query($sql);
   $data = [];
   while ($row = $result->fetch_assoc()) {
     $data[] = $row;
@@ -16,11 +18,16 @@ if ($action === 'list') {
   exit;
 }
 
-// Ambil log akses
+// Ambil log akses dengan nama pengguna
 if ($action === 'getlogs') {
-  $stmt = $conn->prepare('SELECT uid, access_time, status FROM rfid_logs ORDER BY access_time DESC LIMIT 100');
-  $stmt->execute();
-  $result = $stmt->get_result();
+  // ❌ Exclude MANUAL_CONTROL dari tampilan log RFID
+  $sql = 'SELECT l.uid, l.access_time, l.status, c.name 
+          FROM rfid_logs l 
+          LEFT JOIN rfid_cards c ON l.uid = c.uid 
+          WHERE l.uid != "MANUAL_CONTROL"
+          ORDER BY l.access_time DESC 
+          LIMIT 100';
+  $result = $conn->query($sql);
   $data = [];
   while ($row = $result->fetch_assoc()) {
     $data[] = $row;
@@ -31,7 +38,11 @@ if ($action === 'getlogs') {
 
 // Tambah kartu ke database
 if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+  session_start();
   $uid = $_POST['uid'] ?? '';
+  $name = $_POST['name'] ?? '';
+  $added_by = $_SESSION['user_id'] ?? null;
+
   if (!$uid) {
     echo json_encode(['success' => false, 'error' => 'UID tidak boleh kosong']);
     exit;
@@ -50,9 +61,9 @@ if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
   }
 
-  // Tambah kartu baru
-  $stmt = $conn->prepare('INSERT INTO rfid_cards (uid, added_at, added_by) VALUES (?, NOW(), 2)');
-  $stmt->bind_param('s', $uid);
+  // Tambah kartu baru dengan added_by dari session
+  $stmt = $conn->prepare('INSERT INTO rfid_cards (uid, name, added_at, added_by) VALUES (?, ?, NOW(), ?)');
+  $stmt->bind_param('ssi', $uid, $name, $added_by);
   if ($stmt->execute()) {
     $newId = $stmt->insert_id;
     echo json_encode([
@@ -61,6 +72,7 @@ if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
       'data' => [
         'id' => $newId,
         'uid' => $uid,
+        'name' => $name,
         'added_at' => date('Y-m-d H:i:s')
       ]
     ]);
