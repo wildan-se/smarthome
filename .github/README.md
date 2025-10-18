@@ -1,115 +1,182 @@
-# [AdminLTE - Bootstrap 5 Admin Dashboard](https://adminlte.io)
 
-[![npm version](https://img.shields.io/npm/v/admin-lte/latest.svg)](https://www.npmjs.com/package/admin-lte)
-[![Packagist](https://img.shields.io/packagist/v/almasaeed2010/adminlte.svg)](https://packagist.org/packages/almasaeed2010/adminlte)
-[![cdn version](https://data.jsdelivr.com/v1/package/npm/admin-lte/badge)](https://www.jsdelivr.com/package/npm/admin-lte)
-[![Discord Invite](https://img.shields.io/badge/discord-join%20now-green)](https://discord.gg/jfdvjwFqfz)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/1277b36b-08f3-43fa-826a-4b4d24614b3c/deploy-status)](https://app.netlify.com/sites/adminlte-v4/deploys)
+# Sistem Smart Home Dashboard
 
-**AdminLTE** is a fully responsive administration template. Based on **[Bootstrap 5](https://getbootstrap.com/)** framework and also the JavaScript plugins.
-Highly customizable and easy to use. Fits many screen resolutions from small mobile devices to large desktops.
+Dashboard berbasis web untuk memonitor dan mengontrol perangkat keras rumah pintar, mencakup logging data sensor, manajemen akses pintu (RFID), dan kontrol relay/servo.
 
-## What's New in v4.0.0-rc3
+---
 
-**Production Deployment & Cross-Platform Compatibility** - This release resolves critical production deployment issues:
+## 💡 Fitur Utama
 
-- **Fixed Production Builds** - Resolved CSS/JS path issues, sidebar navigation, and image loading in all deployment scenarios
-- **Smart Path Resolution** - Automatic relative path calculation works for root deployment, sub-folders, and CDN hosting  
-- **RTL CSS Fix** - Eliminated rtlcss interference with standard LTR production builds
-- **Updated Dependencies** - Bootstrap 5.3.7, Bootstrap Icons 1.13.1, OverlayScrollbars 2.11.0
-- **Zero Console Errors** - Fixed all CDN integrity mismatches and runtime issues
-- **FTP/Static Host Ready** - Perfect compatibility with traditional hosting and modern static platforms
+* **Monitoring Sensor Real-time:** Menerima dan menampilkan data Suhu dan Kelembaban (dari sensor DHT, dll.) yang dikirim oleh perangkat keras.
+* **Kontrol Perangkat:** Menyediakan antarmuka untuk mengontrol output (seperti relay untuk lampu/peralatan) dan mengendalikan Servo.
+* **Sistem Keamanan RFID:** Manajemen Kartu RFID untuk kontrol akses pintu (tambah, edit, hapus kartu pengguna).
+* **Logging Data Komprehensif:** Mencatat riwayat log dari pembacaan sensor (DHT) dan log akses pintu/RFID.
+* **Export Data:** Fungsionalitas untuk mengekspor data log (kartu RFID, DHT, Pintu) ke format CSV.
+* **Pengaturan Dinamis:** Mengelola konfigurasi sistem melalui antarmuka admin.
+* **Pembersihan Log Otomatis:** Script untuk membersihkan log lama secara berkala agar database tetap optimal.
 
-**Key Improvements:**
-- ✅ Development and production environments now behave identically
-- ✅ Images, CSS, and JavaScript load correctly in any deployment structure  
-- ✅ Sidebar navigation displays properly with badges and arrow indicators
-- ✅ All CDN resources load without console errors
-- ✅ Complete production build included in repository for easy deployment
+---
 
-See the [CHANGELOG.md](CHANGELOG.md) for complete details.
+## 🛠️ Teknologi yang Digunakan
 
-## Looking for Premium Templates?
+| Kategori | Teknologi | Detail |
+| :--- | :--- | :--- |
+| **Backend** | **PHP** (Native) | Menangani logika bisnis, API penerima data, dan CRUD. |
+| **Database** | **MySQL/MariaDB** | Digunakan untuk menyimpan data sensor, log akses, dan konfigurasi. |
+| **Frontend/UI** | **HTML, CSS, JavaScript** | Antarmuka pengguna responsif. |
+| **Framework UI** | **AdminLTE v4** | Template dashboard untuk tampilan antarmuka yang profesional. |
+| **Dependencies** | **Composer** | Digunakan untuk mengelola dependensi PHP. |
 
-AdminLTE.io just opened a new premium templates page. Hand picked to ensure the best quality and the most affordable
-prices. Visit <https://adminlte.io/premium> for more information.
+---
 
-!["AdminLTE Presentation"](https://adminlte.io/AdminLTE3.png "AdminLTE Presentation")
+## ⚙️ Prasyarat Instalasi
 
-**AdminLTE** has been carefully coded with clear comments in all of its JS, SCSS and HTML files.
-SCSS has been used to increase code customizability.
+Pastikan Anda telah menginstal perangkat lunak berikut:
 
-## Quick start
+1.  **Web Server:** Apache / Nginx (XAMPP, WAMP, atau sejenisnya direkomendasikan).
+2.  **PHP:** Versi 7.4 atau lebih tinggi (disertai ekstensi `curl` dan `pdo_mysql`).
+3.  **Database Server:** MySQL atau MariaDB.
+4.  **Composer:** Manajer dependensi PHP.
 
-### Development
+### Langkah-langkah Instalasi
 
-To start developing with AdminLTE:
+1.  **Clone Repositori:**
+    ```bash
+    git clone [URL_REPOSITORI_ANDA] smarthome
+    cd smarthome
+    ```
 
-1. **Install dependencies:** `npm install`
-2. **Start development server:** `npm start` *(opens browser at http://localhost:3000)*
-3. **Start coding!** Files auto-compile and refresh on changes
+2.  **Konfigurasi PHP Dependencies:**
+    ```bash
+    composer install
+    ```
 
-### Production Build
+3.  **Konfigurasi Database:**
+    * Buat database baru (misalnya `smarthome_db`).
+    * Impor skema database dari file `config/database.sql` ke database yang baru Anda buat.
 
-To build for production:
+4.  **Konfigurasi Aplikasi:**
+    * Duplikat file `config/config.example.php` dan ganti namanya menjadi `config/config.php`.
+    * Edit `config/config.php` dan sesuaikan pengaturan koneksi database serta kredensial login admin:
+        ```php
+        define('DB_SERVER', 'localhost');
+        define('DB_USERNAME', 'root');
+        define('DB_PASSWORD', '');
+        define('DB_NAME', 'smarthome_db');
+        // ... (dan ubah kredensial admin)
+        define('ADMIN_USERNAME', 'admin');
+        define('ADMIN_PASSWORD', 'password_aman'); // Ganti dengan hash password aman
+        ```
 
-1. **Full production build:** `npm run production` *(includes linting and optimization)*
-2. **Quick build:** `npm run build` *(faster for development/testing)*
+5.  **Akses Aplikasi:**
+    * Akses dashboard melalui *browser* Anda: `http://localhost/smarthome/`
+    * Login menggunakan kredensial admin yang telah Anda atur.
 
-### Available Scripts
+---
 
-- `npm start` - Start development server with file watching
-- `npm run build` - Build all assets for development
-- `npm run production` - Full production build with linting and bundlewatch
-- `npm run lint` - Run all linters (JS, CSS, docs, lockfile)
-- `npm run css` - Build CSS only
-- `npm run js` - Build JavaScript only
+## 🌳 Susunan Project
 
-## Browser Support
+Struktur direktori utama project adalah sebagai berikut:
 
-AdminLTE supports all modern browsers with the latest Bootstrap 5.3.7:
-- Chrome (latest)
-- Firefox (latest) 
-- Safari (latest)
-- Edge (latest)
+````
 
-## Platform Support
+smarthome/
+├── api/                  \# Endpoint untuk menerima data dari perangkat keras & CRUD
+│   ├── receive\_data.php  \# API utama untuk logging sensor/perangkat
+│   ├── rfid\_crud.php     \# Logika CRUD untuk kartu RFID
+│   └── ...
+├── assets/               \# Aset kustom (CSS, JS)
+│   └── css/custom.css
+├── config/               \# File konfigurasi sistem
+│   ├── config.php        \# Pengaturan koneksi database & kredensial
+│   └── database.sql      \# Skema database
+├── dist/                 \# Asset AdminLTE yang sudah terkompilasi (CSS, JS, Fonts)
+├── export/               \# Folder untuk menyimpan file CSV hasil export
+├── vendor/               \# Dependensi PHP dari Composer
+├── cleanup\_old\_logs.php  \# Script untuk menghapus data log lama
+├── index.php             \# Halaman Dashboard utama
+├── kontrol.php           \# Halaman kontrol perangkat (Relay, Servo)
+├── log.php               \# Halaman log pembacaan sensor DHT
+├── logs.php              \# Halaman log akses pintu/RFID
+├── rfid.php              \# Halaman manajemen kartu RFID
+├── settings.php          \# Halaman pengaturan sistem
+└── ...
 
-AdminLTE v4 build scripts work cross-platform:
-- **Windows** - Command Prompt, PowerShell, Git Bash
-- **macOS** - Terminal, iTerm2
-- **Linux** - Bash, Zsh, and other Unix shells
+````
 
-All npm scripts use cross-platform utilities to ensure consistent behavior across different operating systems.
+---
 
-## Contributing
+## 🚀 Contoh Penggunaan (Endpoint API)
 
-- Highly welcome.
-- For your extra reference check [AdminLTE v4 Contribution Guide](https://github.com/ColorlibHQ/AdminLTE#contributing)
-- First thing first, you should have bit knowledge about NodeJS.
-- Github Knowledge.
-- Install NodeJS LTS version.
-- Clone this Repository to your machine and change to `master` branch.
-- Go to Cloned Folder.
-- In cli/bash run `npm install` it will install dependency from `package.json`.
-- After installation completes, run `npm start`
-- Cool, Send your changes in PR to `master` branch.
+Perangkat keras Anda (misalnya, ESP32 atau NodeMCU) dapat mengirim data sensor ke *dashboard* menggunakan permintaan **HTTP POST** ke endpoint yang sesuai.
 
-## Sponsorship
+### 1. Mengirim Data Sensor Suhu & Kelembaban (DHT)
 
-Support AdminLTE development by becoming a sponsor.
-[Github Sponsors](https://github.com/sponsors/danny007in) or
-[PayPal](https://www.paypal.me/daniel007in)
+Untuk mengirim data Suhu dan Kelembaban:
 
-## License
+* **URL Endpoint:** `http://[IP_SERVER]/smarthome/api/receive_data.php`
+* **Metode:** `POST`
+* **Data (Form-Data atau JSON):**
+    ```
+    type: dht_log
+    temperature: 28.5
+    humidity: 75.2
+    ```
 
-AdminLTE is an open source project by [AdminLTE.io](https://adminlte.io) that is licensed under [MIT](https://opensource.org/licenses/MIT).
-AdminLTE.io reserves the right to change the license of future releases.
+### 2. Mengirim Data Log Akses Pintu (RFID)
 
-## Image Credits
+Untuk mengirim log ketika kartu RFID di-scan:
 
-- [Pixeden](http://www.pixeden.com/psd-web-elements/flat-responsive-showcase-psd)
-- [Graphicsfuel](https://www.graphicsfuel.com/2013/02/13-high-resolution-blur-backgrounds/)
-- [Pickaface](https://pickaface.net/)
-- [Unsplash](https://unsplash.com/)
-- [Uifaces](http://uifaces.com/)
+* **URL Endpoint:** `http://[IP_SERVER]/smarthome/api/receive_data.php`
+* **Metode:** `POST`
+* **Data (Form-Data atau JSON):**
+    ```
+    type: door_log
+    card_uid: 0A:1B:2C:3D
+    status: ACCESS_GRANTED
+    ```
+
+---
+
+## 🤝 Kontribusi
+
+Kami sangat menyambut kontribusi dari komunitas! Jika Anda memiliki ide, laporan *bug*, atau perbaikan, silakan:
+
+1.  *Fork* repositori ini.
+2.  Buat *branch* baru: `git checkout -b feature/nama-fitur-baru`
+3.  Lakukan perubahan Anda dan *commit* (*commit message* yang jelas).
+4.  Dorong perubahan ke *branch* Anda: `git push origin feature/nama-fitur-baru`
+5.  Buka **Pull Request** baru.
+
+---
+
+## 📄 Lisensi
+
+Proyek ini dilisensikan di bawah **Lisensi MIT** :
+
+````
+
+MIT License
+
+Copyright (c) 2024 [muhammad wildan septiano]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
+```
