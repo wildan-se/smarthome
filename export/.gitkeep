@@ -1,0 +1,7 @@
+# Keep this directory for export files
+# Export folder is git-ignored but this file ensures the directory exists
+
+*.xlsx
+*.csv
+*.xls
+!.gitkeep

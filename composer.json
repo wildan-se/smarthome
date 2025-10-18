@@ -21,5 +21,9 @@
   "license": "MIT",
   "support": {
     "issues": "https://github.com/ColorlibHQ/AdminLTE/issues"
+  },
+  "require": {
+    "phpoffice/phpspreadsheet": "^5.1",
+    "tecnickcom/tcpdf": "^6.10"
   }
 }

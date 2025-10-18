@@ -1,41 +1,151 @@
-# generated types
-.astro/
+# ============================================
+# SENSITIVE FILES - CREDENTIALS & SECRETS
+# ============================================
+# ⚠️ DO NOT COMMIT THESE FILES!
 
-# unwanted types
-**/env.d.ts
+# Database configuration
+config/config.php
+config/database.php
 
-# System / Log files
-*.DS_Store
+# Environment files
+*.env
+.env
+.env.local
+.env.production
+
+# ESP32 firmware with WiFi/MQTT credentials
+*.ino
+*.cpp
+*.h
+ESP32_*.ino
+
+# Backup files with potential credentials
+*_backup.*
+*_old.*
+
+# ============================================
+# EXPORT & DATA FILES
+# ============================================
+
+# Export folder (may contain sensitive user data)
+export/*
+!export/.gitkeep
+
+# Database dumps & SQL files
+*.sql
+*.dump
+*.sqlite
+*.db
+
+# Log files with sensitive data
 *.log
 
-# Archives
-*.zip
+# ============================================
+# DEPENDENCIES & VENDOR
+# ============================================
 
-# Sass Cache
-.sass-cache
+# PHP Composer
+vendor/
+composer.lock
 
-# Project files
-.idea
-nbproject
-nbproject/private
+# Node modules
+node_modules/
+package-lock.json
+
+# ============================================
+# DEVELOPMENT & BUILD FILES
+# ============================================
+
+# IDE & Editor
+.idea/
+nbproject/
 .vscode/
 .vs/
+*.sublime-*
+*.swp
+*.swo
 
-# Node / Bower
-node_modules/
-bower_components/
+# Build output
+dist/
+build/
+.astro/
 
-# Docs
-/docs/_site/
-/docs/vendor/
-/docs/.bundle/
-/docs_html/
-.jekyll-cache/
-.jekyll-metadata
+# Cache & Temp
+.cache/
+*.cache
+*.tmp
+*.temp
+tmp/
+temp/
 
-# ETC
+# Sass Cache
+.sass-cache/
+
+# ============================================
+# SYSTEM FILES
+# ============================================
+
+# macOS
+*.DS_Store
+._*
+
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ============================================
+# ARCHIVES
+# ============================================
+
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# ============================================
+# TEST & DEBUG FILES
+# ============================================
+
+# Personal notes
 TODO
-test.html
-ad.js
-/.cache/
+NOTES.md
 CLAUDE.md
+
+# Development documentation (keep README.md only)
+DOKUMENTASI_*.md
+FIX_*.md
+PERBAIKAN_*.md
+UPDATE_*.md
+IMPROVEMENT_*.md
+UI_*.md
+RFID_*.md
+
+# Test files
+test.html
+test_*.php
+test_*.html
+test_mqtt.html
+ad.js
+
+# Debug & fix scripts
+check_*.php
+fix_*.php
+truncate_*.php
+clear_*.php
+
+# Setup & migration scripts (one-time use)
+setup_config.php
+setup_manual_control.php
+migrate_*.php
+update_rfid_table.php
+reset_password.php
+
+# Session files
+sessions/
+*.session
