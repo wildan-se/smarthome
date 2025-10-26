@@ -17,9 +17,10 @@ $host = 'localhost';           // Database host (biasanya localhost)
 $db   = 'smarthome';          // Nama database Anda
 $user = 'root';               // Username database (ganti dengan username Anda)
 $pass = '';                   // Password database (ganti dengan password Anda)
+$port = 3307;                 // Port database (default Laragon: 3307, XAMPP: 3306)
 
 // Buat koneksi database
-$conn = new mysqli($host, $user, $pass, $db);
+$conn = new mysqli($host, $user, $pass, $db, $port);
 
 // Cek koneksi
 if ($conn->connect_error) {
