@@ -217,18 +217,18 @@ require_once 'config/config.php';
 
             <!-- Log RFID Access -->
             <div class="card card-primary card-outline shadow-sm hover-shadow fadeIn mt-4" id="cardRfid">
-              <div class="card-header">
+              <div class="card-header" style="cursor: pointer;" onclick="toggleCard('collapseRfid')">
                 <h3 class="card-title">
                   <i class="fas fa-id-card"></i> Log Akses RFID
                 </h3>
                 <div class="card-tools">
                   <span class="badge badge-info mr-2" id="rfidCount">0 records</span>
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="collapse" data-target="#collapseRfid">
-                    <i class="fas fa-minus"></i>
+                  <button type="button" class="btn btn-tool">
+                    <i class="fas fa-minus" id="iconRfid"></i>
                   </button>
                 </div>
               </div>
-              <div class="collapse show" id="collapseRfid" data-parent="#accordionLogs">
+              <div class="card-body" id="collapseRfid" style="display: block;">
                 <div class="card-body">
                   <!-- Filter Section -->
                   <div class="card card-secondary card-outline mb-3">
@@ -287,18 +287,18 @@ require_once 'config/config.php';
 
             <!-- Log DHT Sensor -->
             <div class="card card-success card-outline shadow-sm hover-shadow fadeIn mt-4" id="cardDht">
-              <div class="card-header">
+              <div class="card-header" style="cursor: pointer;" onclick="toggleCard('collapseDht')">
                 <h3 class="card-title">
                   <i class="fas fa-thermometer-half"></i> Log Suhu & Kelembapan
                 </h3>
                 <div class="card-tools">
                   <span class="badge badge-info mr-2" id="dhtCount">0 records</span>
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="collapse" data-target="#collapseDht">
-                    <i class="fas fa-minus"></i>
+                  <button type="button" class="btn btn-tool">
+                    <i class="fas fa-plus" id="iconDht"></i>
                   </button>
                 </div>
               </div>
-              <div class="collapse" id="collapseDht" data-parent="#accordionLogs">
+              <div class="card-body" id="collapseDht" style="display: none;">
                 <div class="card-body">
                   <!-- Filter Section -->
                   <div class="card card-secondary card-outline mb-3">
@@ -378,18 +378,18 @@ require_once 'config/config.php';
 
             <!-- Log Door Status -->
             <div class="card card-warning card-outline shadow-sm hover-shadow fadeIn mt-4 mb-4" id="cardDoor">
-              <div class="card-header">
+              <div class="card-header" style="cursor: pointer;" onclick="toggleCard('collapseDoor')">
                 <h3 class="card-title">
                   <i class="fas fa-door-open"></i> Log Status Pintu
                 </h3>
                 <div class="card-tools">
                   <span class="badge badge-info mr-2" id="doorCount">0 records</span>
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="collapse" data-target="#collapseDoor">
-                    <i class="fas fa-minus"></i>
+                  <button type="button" class="btn btn-tool">
+                    <i class="fas fa-plus" id="iconDoor"></i>
                   </button>
                 </div>
               </div>
-              <div class="collapse" id="collapseDoor" data-parent="#accordionLogs">
+              <div class="card-body" id="collapseDoor" style="display: none;">
                 <div class="card-body">
                   <!-- Filter Section -->
                   <div class="card card-secondary card-outline mb-3">
@@ -453,6 +453,35 @@ require_once 'config/config.php';
     let rfidData = [];
     let dhtData = [];
     let doorData = [];
+
+    // Accordion functionality
+    function toggleCard(cardId) {
+      const cards = ['collapseRfid', 'collapseDht', 'collapseDoor'];
+      const icons = ['iconRfid', 'iconDht', 'iconDoor'];
+
+      cards.forEach((id, index) => {
+        const cardBody = document.getElementById(id);
+        const icon = document.getElementById(icons[index]);
+
+        if (id === cardId) {
+          // Toggle the clicked card
+          if (cardBody.style.display === 'none') {
+            cardBody.style.display = 'block';
+            icon.classList.remove('fa-plus');
+            icon.classList.add('fa-minus');
+          } else {
+            cardBody.style.display = 'none';
+            icon.classList.remove('fa-minus');
+            icon.classList.add('fa-plus');
+          }
+        } else {
+          // Close other cards
+          cardBody.style.display = 'none';
+          icon.classList.remove('fa-minus');
+          icon.classList.add('fa-plus');
+        }
+      });
+    }
 
     function updateStatistics() {
       // RFID Stats
