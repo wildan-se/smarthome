@@ -70,6 +70,12 @@ $cards_count = $conn->query("SELECT COUNT(*) as total FROM rfid_cards")->fetch_a
               </a>
             </li>
             <li class="nav-item">
+              <a href="kipas.php" class="nav-link">
+                <i class="nav-icon fas fa-fan"></i>
+                <p>Kontrol Kipas</p>
+              </a>
+            </li>
+            <li class="nav-item">
               <a href="kontrol.php" class="nav-link">
                 <i class="nav-icon fas fa-door-open"></i>
                 <p>Kontrol Pintu</p>

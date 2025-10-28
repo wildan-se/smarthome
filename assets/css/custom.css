@@ -708,3 +708,20 @@ code {
     page-break-inside: avoid;
   }
 }
+
+/* ====================================
+   FAN ANIMATION
+   ==================================== */
+@keyframes fan-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fan-spinning {
+  animation: fan-spin 1s linear infinite;
+  color: #28a745 !important;
+}

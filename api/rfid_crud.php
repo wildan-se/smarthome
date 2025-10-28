@@ -18,10 +18,16 @@ if ($action === 'list') {
   exit;
 }
 
-// Ambil log akses dengan nama pengguna
+// Ambil log akses dengan nama pengguna (semua riwayat, tidak hanya 1 per UID)
 if ($action === 'getlogs') {
   // ❌ Exclude MANUAL_CONTROL dari tampilan log RFID
-  $sql = 'SELECT l.uid, l.access_time, l.status, c.name 
+  // ✅ LEFT JOIN agar tetap tampil meskipun kartu sudah dihapus
+  // ✅ Tampilkan SEMUA riwayat akses, urutkan dari yang terbaru
+  $sql = 'SELECT 
+            l.uid, 
+            l.access_time, 
+            l.status, 
+            COALESCE(c.name, "Kartu Terhapus") as name 
           FROM rfid_logs l 
           LEFT JOIN rfid_cards c ON l.uid = c.uid 
           WHERE l.uid != "MANUAL_CONTROL"
@@ -32,7 +38,7 @@ if ($action === 'getlogs') {
   while ($row = $result->fetch_assoc()) {
     $data[] = $row;
   }
-  echo json_encode(['success' => true, 'data' => $data]);
+  echo json_encode(['success' => true, 'data' => $data, 'count' => count($data)]);
   exit;
 }
 
@@ -83,20 +89,56 @@ if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   exit;
 }
 
-// Tambah log akses
+// Tambah log akses (dengan pengecekan duplikat)
 if ($action === 'log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   $uid = $_POST['uid'] ?? '';
   $status = $_POST['status'] ?? '';
+
+  // Normalize UID (trim dan uppercase)
+  $uid = strtoupper(trim($uid));
 
   if (!$uid || !$status) {
     echo json_encode(['success' => false, 'error' => 'UID dan status harus diisi']);
     exit;
   }
 
+  // ✅ Validasi: Hanya log untuk kartu yang TERDAFTAR
+  $stmt = $conn->prepare('SELECT COUNT(*) as count FROM rfid_cards WHERE uid = ?');
+  $stmt->bind_param('s', $uid);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $row = $result->fetch_assoc();
+  $stmt->close();
+
+  if ($row['count'] == 0) {
+    // Kartu tidak terdaftar, skip logging
+    echo json_encode(['success' => true, 'message' => 'Card not registered, log skipped', 'skipped' => true]);
+    exit;
+  }
+
+  // ✅ Cek apakah ada log yang sama dalam 2 detik terakhir (untuk hindari duplikat)
+  $stmt = $conn->prepare('SELECT COUNT(*) as count 
+                           FROM rfid_logs 
+                           WHERE uid = ? 
+                           AND status = ? 
+                           AND access_time >= DATE_SUB(NOW(), INTERVAL 2 SECOND)');
+  $stmt->bind_param('ss', $uid, $status);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $row = $result->fetch_assoc();
+  $stmt->close();
+
+  if ($row['count'] > 0) {
+    // Log duplikat dalam 2 detik terakhir, skip
+    echo json_encode(['success' => true, 'message' => 'Log skipped (duplicate within 2 seconds)', 'skipped' => true]);
+    exit;
+  }
+
+  // Tambah log baru
   $stmt = $conn->prepare('INSERT INTO rfid_logs (uid, access_time, status) VALUES (?, NOW(), ?)');
   $stmt->bind_param('ss', $uid, $status);
   if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Log berhasil ditambahkan']);
+    echo json_encode(['success' => true, 'message' => 'Log berhasil ditambahkan', 'uid' => $uid, 'status' => $status]);
   } else {
     echo json_encode(['success' => false, 'error' => 'Gagal menambahkan log: ' . $stmt->error]);
   }

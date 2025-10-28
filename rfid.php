@@ -23,6 +23,326 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/custom.css">
+  <style>
+    /* Enhanced Alert Styling for Delete Card */
+    .alert {
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      position: relative;
+      animation: slideInDown 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      transition: all 0.3s ease;
+    }
+
+    .alert:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      transform: translateY(-2px);
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .alert .close {
+      font-size: 1.8rem;
+      font-weight: 300;
+      opacity: 0.4;
+      transition: all 0.2s ease;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .alert .close:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .alert code {
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      letter-spacing: 1px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .alert .fa-2x {
+      font-size: 2.2rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+      animation: iconPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes iconPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    .alert small {
+      font-size: 0.85rem;
+      display: block;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .alert strong {
+      display: block;
+      margin-bottom: 4px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Success Alert Enhancement */
+    .alert-success {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      border-color: #28a745;
+    }
+
+    /* Warning Alert Enhancement */
+    .alert-warning {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+      border-color: #ffc107;
+    }
+
+    /* Danger Alert Enhancement */
+    .alert-danger {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      border-color: #dc3545;
+    }
+
+    /* Info Alert Enhancement */
+    .alert-info {
+      background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+      border-color: #17a2b8;
+    }
+
+    /* Spinner Animation */
+    .fa-spin {
+      animation: fa-spin 1s infinite linear;
+    }
+
+    @keyframes fa-spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+      .alert {
+        padding: 14px 16px;
+      }
+
+      .alert .fa-2x {
+        font-size: 1.6rem;
+      }
+
+      .alert code {
+        font-size: 0.9rem !important;
+        padding: 1px 6px !important;
+      }
+
+      .alert strong {
+        font-size: 1rem !important;
+      }
+
+      .alert .d-flex {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .alert .me-3 {
+        margin-right: 0 !important;
+        margin-bottom: 10px;
+      }
+    }
+
+    /* Modal Delete Confirmation Styling */
+    #deleteCardModal .modal-content,
+    #deleteDbOnlyModal .modal-content {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      animation: modalPopIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes modalPopIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.7) translateY(-20px);
+      }
+
+      50% {
+        transform: scale(1.05) translateY(0);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    #deleteCardModal.fade .modal-dialog,
+    #deleteDbOnlyModal.fade .modal-dialog {
+      transition: transform 0.3s ease-out;
+    }
+
+    #deleteCardModal .modal-header,
+    #deleteDbOnlyModal .modal-header {
+      position: relative;
+      overflow: hidden;
+    }
+
+    #deleteCardModal .modal-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: rotate(45deg);
+      animation: shimmer 3s infinite;
+    }
+
+    #deleteDbOnlyModal .modal-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transform: rotate(45deg);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+      }
+
+      100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+      }
+    }
+
+    #deleteCardModal .modal-body,
+    #deleteDbOnlyModal .modal-body {
+      animation: fadeInUp 0.5s ease-out 0.1s both;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #deleteCardModal .btn,
+    #deleteDbOnlyModal .btn {
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #deleteCardModal .btn::before,
+    #deleteDbOnlyModal .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    #deleteCardModal .btn:hover::before,
+    #deleteDbOnlyModal .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    #deleteCardModal .btn:hover,
+    #deleteDbOnlyModal .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    #deleteCardModal .btn-danger:hover {
+      background-color: #c82333;
+      border-color: #bd2130;
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    }
+
+    #deleteDbOnlyModal .btn-warning:hover {
+      background-color: #e0a800;
+      border-color: #d39e00;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    #deleteCardModal .bg-light,
+    #deleteDbOnlyModal .bg-light {
+      transition: all 0.3s ease;
+    }
+
+    #deleteCardModal .bg-light:hover,
+    #deleteDbOnlyModal .bg-light:hover {
+      background-color: #f8f9fa !important;
+      transform: scale(1.02);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #deleteCardModal .fa-id-card,
+    #deleteDbOnlyModal .fa-database {
+      animation: iconBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes iconBounce {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    /* Modal backdrop animation */
+    .modal.fade .modal-dialog {
+      transform: scale(0.7);
+      opacity: 0;
+    }
+
+    .modal.show .modal-dialog {
+      transform: scale(1);
+      opacity: 1;
+    }
+  </style>
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -67,6 +387,12 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
               <a href="rfid.php" class="nav-link active">
                 <i class="nav-icon fas fa-id-card"></i>
                 <p>Manajemen RFID</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="kipas.php" class="nav-link">
+                <i class="nav-icon fas fa-fan"></i>
+                <p>Kontrol Kipas</p>
               </a>
             </li>
             <li class="nav-item">
@@ -267,6 +593,101 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         </div>
       </section>
     </div>
+
+    <!-- Modal Konfirmasi Hapus Kartu -->
+    <div class="modal fade" id="deleteCardModal" tabindex="-1" role="dialog" aria-labelledby="deleteCardModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 12px; border: none; overflow: hidden;">
+          <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 20px; position: relative;">
+            <h5 class="modal-title" id="deleteCardModalLabel" style="font-weight: 600; z-index: 1;">
+              <i class="fas fa-trash-alt me-2"></i> Hapus Kartu RFID
+            </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 0.9; z-index: 1;">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" style="padding: 30px 25px;">
+            <div class="text-center mb-3">
+              <div style="width: 70px; height: 70px; margin: 0 auto 15px; background: linear-gradient(135deg, #ffe5e5 0%, #ffcccc 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #dc3545;"></i>
+              </div>
+            </div>
+            <p class="text-center mb-3" style="font-size: 1.05rem; font-weight: 500;">Apakah Anda yakin ingin menghapus kartu ini?</p>
+            <div class="bg-light p-3 rounded mb-3" style="border: 2px dashed #dc3545; background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%) !important;">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-id-card fa-2x text-danger me-3"></i>
+                <div>
+                  <small class="text-muted d-block mb-1">UID Kartu:</small>
+                  <code id="deleteCardUID" style="font-size: 1.15rem; color: #dc3545; font-weight: 700; background: rgba(220,53,69,0.1); padding: 4px 12px; border-radius: 6px; letter-spacing: 1px;">-</code>
+                </div>
+              </div>
+            </div>
+            <div class="alert alert-danger mb-0" style="background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); border-radius: 8px;">
+              <small>
+                <i class="fas fa-info-circle me-1"></i>
+                <strong>Perhatian:</strong> Kartu akan dihapus dari ESP32 dan database secara permanen.
+              </small>
+            </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 20px; background: #f8f9fa;">
+            <button type="button" class="btn btn-secondary btn-lg" data-dismiss="modal" style="border-radius: 8px; padding: 10px 24px; font-weight: 500;">
+              <i class="fas fa-times me-2"></i> Batal
+            </button>
+            <button type="button" class="btn btn-danger btn-lg" id="confirmDeleteBtn" style="border-radius: 8px; padding: 10px 24px; font-weight: 500;">
+              <i class="fas fa-trash-alt me-2"></i> Ya, Hapus
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus dari Database Saja (ESP32 Offline) -->
+    <div class="modal fade" id="deleteDbOnlyModal" tabindex="-1" role="dialog" aria-labelledby="deleteDbOnlyModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 12px; border: none; overflow: hidden;">
+          <div class="modal-header" style="background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%); color: #212529; border: none; padding: 20px; position: relative;">
+            <h5 class="modal-title" id="deleteDbOnlyModalLabel" style="font-weight: 600; z-index: 1;">
+              <i class="fas fa-exclamation-triangle me-2"></i> ESP32 Tidak Merespons
+            </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #212529; opacity: 0.9; z-index: 1;">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" style="padding: 30px 25px;">
+            <div class="text-center mb-3">
+              <div style="width: 70px; height: 70px; margin: 0 auto 15px; background: linear-gradient(135deg, #fff9e5 0%, #ffecb3 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);">
+                <i class="fas fa-wifi-slash" style="font-size: 2rem; color: #ffc107;"></i>
+              </div>
+            </div>
+            <p class="text-center mb-3" style="font-size: 1.05rem; font-weight: 500;">ESP32 tidak merespons dalam waktu yang ditentukan.</p>
+            <div class="bg-light p-3 rounded mb-3" style="border: 2px dashed #ffc107; background: linear-gradient(135deg, #fffef5 0%, #fff9e5 100%) !important;">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-database fa-2x text-warning me-3"></i>
+                <div>
+                  <small class="text-muted d-block mb-1">UID Kartu:</small>
+                  <code id="deleteDbOnlyUID" style="font-size: 1.15rem; color: #ff9800; font-weight: 700; background: rgba(255,193,7,0.1); padding: 4px 12px; border-radius: 6px; letter-spacing: 1px;">-</code>
+                </div>
+              </div>
+            </div>
+            <div class="alert alert-warning mb-0" style="background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3); border-radius: 8px;">
+              <small>
+                <i class="fas fa-question-circle me-1"></i>
+                <strong>Lanjutkan?</strong> Kartu akan dihapus dari database saja (ESP32 sedang offline).
+              </small>
+            </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 20px; background: #f8f9fa;">
+            <button type="button" class="btn btn-secondary btn-lg" data-dismiss="modal" style="border-radius: 8px; padding: 10px 24px; font-weight: 500;">
+              <i class="fas fa-times me-2"></i> Batal
+            </button>
+            <button type="button" class="btn btn-warning btn-lg" id="confirmDeleteDbOnlyBtn" style="border-radius: 8px; padding: 10px 24px; font-weight: 500; color: #212529;">
+              <i class="fas fa-database me-2"></i> Hapus dari Database
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer class="main-footer">
       <strong>Copyright &copy; <?= date('Y') ?> <a href="index.php">Koneksi Pintar</a>.</strong>
 
@@ -299,11 +720,18 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
 
     $('#formAddRFID').submit(function(e) {
       e.preventDefault();
-      const uid = $(this).find('[name=uid]').val();
+      const uid = $(this).find('[name=uid]').val().trim().toUpperCase(); // Normalize UID
       const name = $(this).find('[name=name]').val();
 
       // Simpan nama ke localStorage untuk digunakan saat ESP32 konfirmasi
       localStorage.setItem('pendingCard_' + uid, name);
+
+      // ✅ PENTING: Tandai UID ini sebagai sedang proses registrasi SEBELUM kirim ke ESP32
+      // Ini untuk mencegah log masuk ke riwayat jika ESP32 kirim /rfid/access sebelum /rfid/info
+      localStorage.setItem('lastAddedUID', uid);
+      localStorage.setItem('lastAddTime', Date.now().toString());
+
+      console.log('🔵 Starting registration for UID:', uid, '- Marker set at:', Date.now());
 
       // Kirim perintah register ke ESP32
       client.publish(`${topicRoot}/rfid/register`, uid);
@@ -324,27 +752,46 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
           data = JSON.parse(message);
         } catch {}
 
-        // Simpan UID terakhir untuk fallback
+        // Simpan UID terakhir untuk fallback (normalize)
         if (data.uid) {
-          lastScannedUID = data.uid;
+          lastScannedUID = data.uid.trim().toUpperCase();
         }
 
         if (data.action === 'add' && data.result === 'ok' && data.uid) {
-          // Ambil nama dari localStorage
-          const name = localStorage.getItem('pendingCard_' + data.uid) || '';
-          localStorage.removeItem('pendingCard_' + data.uid);
+          const normalizedUID = data.uid.trim().toUpperCase();
 
-          // Tambah kartu ke database dengan nama
+          // Ambil nama dari localStorage
+          const name = localStorage.getItem('pendingCard_' + normalizedUID) || '';
+          localStorage.removeItem('pendingCard_' + normalizedUID);
+
+          // ✅ Refresh marker timestamp (sudah diset di form submit, tapi refresh untuk kepastian)
+          localStorage.setItem('lastAddedUID', normalizedUID);
+          localStorage.setItem('lastAddTime', Date.now().toString());
+
+          console.log('✅ Card add confirmed from ESP32:', normalizedUID, '- Refreshing marker at:', Date.now());
+
+          // Tambah kartu ke database dengan nama (TANPA log ke riwayat akses)
           $.post('api/rfid_crud.php?action=add', {
-            uid: data.uid,
+            uid: normalizedUID,
             name: name
           }, function(res) {
             if (res.success) {
-              $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu <strong>' + data.uid + '</strong> (' + name + ') berhasil ditambahkan!</div>');
+              $('#addResult').html('<div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> Kartu <strong>' + normalizedUID + '</strong> (' + name + ') berhasil ditambahkan!<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
               $('#formAddRFID')[0].reset();
               loadRFID();
+              // ✅ TIDAK memanggil loadLog() agar kartu baru tidak masuk ke riwayat
+
+              // Hapus marker setelah 5 detik (lebih lama dari blacklist 3 detik untuk keamanan)
+              setTimeout(function() {
+                const currentUID = localStorage.getItem('lastAddedUID');
+                if (currentUID === normalizedUID) {
+                  localStorage.removeItem('lastAddedUID');
+                  localStorage.removeItem('lastAddTime');
+                  console.log('🧹 Marker cleared for:', normalizedUID);
+                }
+              }, 5000);
             } else {
-              $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> ' + (res.error || 'Gagal tambah kartu') + '</div>');
+              $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> ' + (res.error || 'Gagal tambah kartu') + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
             }
           }, 'json');
         }
@@ -355,27 +802,29 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             uid: data.uid
           }, function(res) {
             if (res.success) {
-              $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu <strong>' + data.uid + '</strong> berhasil dihapus dari ESP32 dan database!</div>');
+              $('#addResult').html('<div class="alert alert-success alert-dismissible fade show" style="border-left: 4px solid #28a745;"><div class="d-flex align-items-center"><i class="fas fa-check-circle fa-2x me-3" style="color: #28a745;"></i><div><strong style="font-size: 1.1rem;">Berhasil!</strong><br>Kartu <code style="font-size: 1rem; padding: 2px 8px; background: rgba(40,167,69,0.1); border-radius: 4px;">' + data.uid + '</code> berhasil dihapus.<br><small class="text-muted"><i class="fas fa-check me-1"></i>Dihapus dari ESP32 dan database.</small></div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
               loadRFID();
+              // ✅ TIDAK memanggil loadLog() agar tidak reload riwayat saat hapus kartu
             } else {
-              $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Kartu dihapus dari ESP32, tapi gagal hapus dari database: ' + (res.error || 'Unknown error') + '</div>');
+              $('#addResult').html('<div class="alert alert-warning alert-dismissible fade show" style="border-left: 4px solid #ffc107;"><div class="d-flex align-items-center"><i class="fas fa-exclamation-triangle fa-2x me-3" style="color: #ff9800;"></i><div><strong style="font-size: 1.1rem;">Sebagian Berhasil</strong><br>Kartu dihapus dari ESP32, tapi gagal hapus dari database.<br><small class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>' + (res.error || 'Unknown error') + '</small></div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
             }
           }, 'json').fail(function() {
-            $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server untuk hapus dari database</div>');
+            $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show" style="border-left: 4px solid #dc3545;"><div class="d-flex align-items-center"><i class="fas fa-times-circle fa-2x me-3" style="color: #dc3545;"></i><div><strong style="font-size: 1.1rem;">Error!</strong><br>Gagal menghubungi server untuk hapus dari database.<br><small class="text-muted"><i class="fas fa-info-circle me-1"></i>Periksa koneksi jaringan Anda.</small></div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
           });
         }
 
         // Handle jika ESP32 tidak menemukan kartu saat hapus
         if (data.action === 'remove' && data.result === 'not_found' && data.uid) {
-          $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Kartu tidak ditemukan di ESP32, menghapus dari database saja...</div>');
+          $('#addResult').html('<div class="alert alert-warning alert-dismissible fade show" style="border-left: 4px solid #ffc107;"><div class="d-flex align-items-center"><i class="fas fa-exclamation-triangle fa-2x me-3" style="color: #ff9800;"></i><div><strong style="font-size: 1.1rem;">Kartu Tidak Ditemukan</strong><br>Kartu <code style="font-size: 1rem; padding: 2px 8px; background: rgba(255,152,0,0.1); border-radius: 4px;">' + data.uid + '</code> tidak ditemukan di ESP32.<br><small class="text-muted"><i class="fas fa-info-circle me-1"></i>Menghapus dari database saja...</small></div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
 
           // Tetap hapus dari database
           $.post('api/rfid_crud.php?action=remove', {
             uid: data.uid
           }, function(res) {
             if (res.success) {
-              $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu berhasil dihapus dari database!</div>');
+              $('#addResult').html('<div class="alert alert-success alert-dismissible fade show" style="border-left: 4px solid #28a745;"><div class="d-flex align-items-center"><i class="fas fa-check-circle fa-2x me-3" style="color: #28a745;"></i><div><strong style="font-size: 1.1rem;">Berhasil!</strong><br>Kartu <code style="font-size: 1rem; padding: 2px 8px; background: rgba(40,167,69,0.1); border-radius: 4px;">' + data.uid + '</code> berhasil dihapus dari database.<br><small class="text-muted"><i class="fas fa-info-circle me-1"></i>Kartu tidak ada di ESP32, dihapus dari database saja.</small></div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
               loadRFID();
+              // ✅ TIDAK memanggil loadLog()
             }
           }, 'json');
         }
@@ -388,7 +837,8 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         } catch {}
 
         // Ambil UID dari data atau gunakan lastScannedUID sebagai fallback
-        const uid = data.uid || lastScannedUID || 'unknown';
+        let uid = data.uid || lastScannedUID || 'unknown';
+        uid = uid.trim().toUpperCase(); // Normalize UID untuk matching
 
         // ❌ SKIP jika dari kontrol manual - tidak dicatat di riwayat
         if (uid === 'MANUAL_CONTROL') {
@@ -396,18 +846,46 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
           return;
         }
 
-        // Log akses kartu (hanya untuk kartu fisik)
-        if (data.status) {
+        // ❌ SKIP jika ini adalah UID yang baru saja ditambahkan (dalam 3 detik terakhir)
+        const pendingUID = localStorage.getItem('lastAddedUID');
+        const addTime = localStorage.getItem('lastAddTime');
+        if (pendingUID && pendingUID === uid && addTime) {
+          const timeDiff = Date.now() - parseInt(addTime);
+          if (timeDiff < 3000) { // 3 detik - cukup untuk mencegah auto-scan tapi user bisa langsung test
+            console.log('⚠️ BLOCKED: Newly added card from access log:', uid, 'Time diff:', timeDiff, 'ms', 'Pending:', pendingUID);
+            return;
+          } else {
+            console.log('⏰ Time expired for blacklist:', uid, 'Time diff:', timeDiff, 'ms');
+            // Clear marker setelah expired untuk cleanup
+            localStorage.removeItem('lastAddedUID');
+            localStorage.removeItem('lastAddTime');
+          }
+        }
+
+        // ✅ Log akses kartu (hanya untuk kartu fisik yang di-tap/scan, bukan saat register)
+        // Hanya log jika status = 'granted' atau 'denied'
+        if (data.status && (data.status === 'granted' || data.status === 'denied')) {
+          console.log('✅ Logging physical tap for:', uid, 'Status:', data.status);
           $.post('api/rfid_crud.php?action=log', {
             uid: uid,
             status: data.status
           }, function(res) {
-            if (res.success) {
-              loadLog();
+            console.log('📝 Log API Response:', res);
+            if (res.success && !res.skipped) {
+              console.log('✅ Log berhasil, reloading riwayat...');
+              loadLog(); // Reload riwayat hanya saat ada tap fisik kartu
               // Reset lastScannedUID setelah digunakan
               if (!data.uid) lastScannedUID = '';
+            } else if (res.skipped) {
+              console.log('⚠️ Log skipped:', res.message);
+            } else {
+              console.log('❌ Log failed:', res.error || res.message);
             }
-          }, 'json');
+          }, 'json').fail(function(xhr, status, error) {
+            console.error('❌ Log API Error:', status, error);
+          });
+        } else {
+          console.log('⚠️ No valid status for logging. Status:', data.status);
         }
       }
     });
@@ -427,11 +905,8 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
                 <td><i class="far fa-calendar text-muted"></i> ${r.added_at}</td>
                 <td><span class="badge badge-info"><i class="fas fa-user-shield"></i> ${addedBy}</span></td>
                 <td class="text-center">
-                  <button class='btn btn-danger btn-sm shadow-sm' onclick='removeRFID("${r.uid}")' title='Hapus dari ESP32 dan Database'>
+                  <button class='btn btn-danger btn-sm shadow-sm' onclick='removeFromDBOnly("${r.uid}")' title='Hapus dari Database'>
                     <i class='fas fa-trash-alt'></i> Hapus
-                  </button>
-                  <button class='btn btn-outline-secondary btn-sm ml-1' onclick='removeFromDBOnly("${r.uid}")' title='Hapus dari Database saja (ESP32 offline)'>
-                    <i class='fas fa-database'></i> DB Only
                   </button>
                 </td>
               </tr>
@@ -445,85 +920,106 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
       }, 'json');
     }
 
-    function removeRFID(uid) {
-      if (!confirm('Apakah Anda yakin ingin menghapus kartu dengan UID: ' + uid + '?')) {
-        return;
-      }
-
-      // Kirim perintah hapus ke ESP32
-      client.publish(`${topicRoot}/rfid/remove`, uid);
-      $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Perintah hapus kartu dikirim ke ESP32, menunggu konfirmasi...</div>');
-
-      // Set timeout fallback: jika 5 detik tidak ada respons dari ESP32, hapus langsung dari database
-      setTimeout(function() {
-        if ($('#addResult').html().includes('menunggu konfirmasi')) {
-          // Masih menunggu, berarti ESP32 tidak merespons
-          if (confirm('ESP32 tidak merespons. Hapus kartu dari database saja?')) {
-            $.post('api/rfid_crud.php?action=remove', {
-              uid: uid
-            }, function(res) {
-              if (res.success) {
-                $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu berhasil dihapus dari database (ESP32 offline/tidak merespons)</div>');
-                loadRFID();
-              } else {
-                $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Gagal menghapus: ' + (res.error || 'Unknown error') + '</div>');
-              }
-            }, 'json');
-          } else {
-            $('#addResult').html('');
-          }
-        }
-      }, 5000); // Timeout 5 detik
-    }
+    let cardToDelete = ''; // Variable to store UID for deletion
 
     function removeFromDBOnly(uid) {
-      if (!confirm('Hapus kartu ' + uid + ' dari DATABASE saja?\n\n⚠️ Kartu masih akan tersimpan di ESP32.\nGunakan fungsi ini hanya jika ESP32 offline.')) {
-        return;
-      }
+      // Set UID yang akan dihapus
+      cardToDelete = uid;
+      $('#deleteCardUID').text(uid);
 
+      // Tampilkan modal konfirmasi
+      $('#deleteCardModal').modal('show');
+    }
+
+    // Handle konfirmasi hapus dari modal
+    $('#confirmDeleteBtn').click(function() {
+      const uid = cardToDelete;
+
+      // Tutup modal
+      $('#deleteCardModal').modal('hide');
+
+      // Kirim perintah hapus ke ESP32 terlebih dahulu
+      client.publish(`${topicRoot}/rfid/remove`, uid);
+      $('#addResult').html('<div class="alert alert-info alert-dismissible fade show" style="border-left: 4px solid #17a2b8;"><div class="d-flex align-items-center"><i class="fas fa-spinner fa-spin fa-2x me-3" style="color: #17a2b8;"></i><div><strong style="font-size: 1.1rem;">Memproses...</strong><br>Mengirim perintah hapus ke ESP32.<br><small class="text-muted"><i class="fas fa-info-circle me-1"></i>Mohon tunggu, sedang menghubungi perangkat...</small></div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
+
+      // Set timeout: jika 5 detik tidak ada response dari ESP32, tampilkan modal konfirmasi kedua
+      setTimeout(function() {
+        const currentAlert = $('#addResult').html();
+        if (currentAlert && currentAlert.includes('Mengirim perintah')) {
+          // ESP32 tidak response, tampilkan modal konfirmasi database only
+          $('#deleteDbOnlyUID').text(uid);
+          $('#deleteDbOnlyModal').modal('show');
+        }
+      }, 5000); // Timeout 5 detik
+    });
+
+    // Handle konfirmasi hapus database only (ESP32 offline)
+    $('#confirmDeleteDbOnlyBtn').click(function() {
+      const uid = $('#deleteDbOnlyUID').text();
+
+      // Tutup modal
+      $('#deleteDbOnlyModal').modal('hide');
+
+      // Hapus dari database
       $.post('api/rfid_crud.php?action=remove', {
         uid: uid
       }, function(res) {
         if (res.success) {
-          $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu <strong>' + uid + '</strong> berhasil dihapus dari database!</div>');
+          $('#addResult').html('<div class="alert alert-warning alert-dismissible fade show" style="border-left: 4px solid #ffc107;"><div class="d-flex align-items-center"><i class="fas fa-exclamation-triangle fa-2x me-3" style="color: #ff9800;"></i><div><strong style="font-size: 1.1rem;">Perhatian!</strong><br>Kartu <code style="font-size: 1rem; padding: 2px 8px; background: rgba(255,152,0,0.1); border-radius: 4px;">' + uid + '</code> berhasil dihapus dari database.<br><small class="text-muted"><i class="fas fa-info-circle me-1"></i>ESP32 sedang offline, kartu hanya dihapus dari database.</small></div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
           loadRFID();
         } else {
-          $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Gagal menghapus: ' + (res.error || 'Unknown error') + '</div>');
+          $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show" style="border-left: 4px solid #dc3545;"><div class="d-flex align-items-center"><i class="fas fa-times-circle fa-2x me-3" style="color: #dc3545;"></i><div><strong style="font-size: 1.1rem;">Gagal!</strong><br>' + (res.error || 'Unknown error') + '</div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
         }
       }, 'json').fail(function() {
-        $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server</div>');
+        $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show" style="border-left: 4px solid #dc3545;"><div class="d-flex align-items-center"><i class="fas fa-times-circle fa-2x me-3" style="color: #dc3545;"></i><div><strong style="font-size: 1.1rem;">Error!</strong><br>Gagal menghubungi server</div></div><button type="button" class="close" data-dismiss="alert" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);">&times;</button></div>');
       });
-    }
+    });
 
     function loadLog() {
+      console.log('🔄 Loading RFID access logs...');
       $.get('api/rfid_crud.php?action=getlogs', function(res) {
+        console.log('📊 Logs received:', res);
         let rows = '';
-        if (res.success && res.data) {
-          // Batasi 20 log terbaru saja
-          const recentLogs = res.data.slice(0, 20);
-          recentLogs.forEach((l, index) => {
-            const name = l.name || '<em class="text-muted">Tidak terdaftar</em>';
-            const statusClass = l.status === 'granted' ? 'success' : 'danger';
-            const statusIcon = l.status === 'granted' ? 'check-circle' : 'times-circle';
-            const statusText = l.status === 'granted' ? 'Diterima' : 'Ditolak';
+        if (res.success) {
+          if (res.data && res.data.length > 0) {
+            console.log('✅ Found', res.data.length, 'log entries');
+            // Batasi 50 log terbaru saja untuk performa
+            const recentLogs = res.data.slice(0, 50);
+            recentLogs.forEach((l, index) => {
+              const name = l.name || '<em class="text-muted">Tidak terdaftar</em>';
+              const statusClass = l.status === 'granted' ? 'success' : 'danger';
+              const statusIcon = l.status === 'granted' ? 'check-circle' : 'times-circle';
+              const statusText = l.status === 'granted' ? 'Diterima' : 'Ditolak';
 
-            rows += `
-              <tr class="fadeIn">
-                <td class="text-center"><strong>${index + 1}</strong></td>
-                <td><code class="code-badge">${l.uid}</code></td>
-                <td><i class="fas fa-user text-muted"></i> ${name}</td>
-                <td><i class="far fa-clock text-muted"></i> ${l.access_time}</td>
-                <td class="text-center">
-                  <span class="badge badge-${statusClass} pulse">
-                    <i class="fas fa-${statusIcon}"></i> ${statusText}
-                  </span>
-                </td>
-              </tr>
-            `;
-          });
+              rows += `
+                <tr class="fadeIn">
+                  <td class="text-center"><strong>${index + 1}</strong></td>
+                  <td><code class="code-badge">${l.uid}</code></td>
+                  <td><i class="fas fa-user text-muted"></i> ${name}</td>
+                  <td><i class="far fa-clock text-muted"></i> ${l.access_time}</td>
+                  <td class="text-center">
+                    <span class="badge badge-${statusClass} pulse">
+                      <i class="fas fa-${statusIcon}"></i> ${statusText}
+                    </span>
+                  </td>
+                </tr>
+              `;
+            });
+            $('#tableLog tbody').html(rows);
+            console.log('✅ Log table updated with', recentLogs.length, 'entries');
+          } else {
+            console.log('⚠️ No log data found - empty array');
+            $('#tableLog tbody').html('<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada riwayat akses</td></tr>');
+          }
+        } else {
+          console.error('❌ API returned success: false');
+          $('#tableLog tbody').html('<tr><td colspan="5" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i><br>Error: ' + (res.error || 'Unknown error') + '</td></tr>');
         }
-        $('#tableLog tbody').html(rows || '<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada riwayat akses</td></tr>');
-      }, 'json');
+      }, 'json').fail(function(xhr, status, error) {
+        console.error('❌ Failed to load logs:', status, error);
+        console.error('Response Text:', xhr.responseText);
+        $('#tableLog tbody').html('<tr><td colspan="5" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i><br>Gagal memuat riwayat akses</td></tr>');
+      });
     }
 
     $(function() {

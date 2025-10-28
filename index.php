@@ -81,6 +81,12 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               </a>
             </li>
             <li class="nav-item">
+              <a href="kipas.php" class="nav-link">
+                <i class="nav-icon fas fa-fan"></i>
+                <p>Kontrol Kipas</p>
+              </a>
+            </li>
+            <li class="nav-item">
               <a href="kontrol.php" class="nav-link">
                 <i class="nav-icon fas fa-door-open"></i>
                 <p>Kontrol Pintu</p>
@@ -191,6 +197,36 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
                 <div class="icon"><i class="fas fa-tint"></i></div>
                 <div class="small-box-footer">
                   <span id="humidity_status">Menunggu data...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fan & RFID Status Cards -->
+          <div class="row">
+            <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+              <div class="small-box bg-success fade-in" id="fan_card">
+                <div class="inner">
+                  <h3 id="fan_status_text">OFF</h3>
+                  <p>Status Kipas</p>
+                </div>
+                <div class="icon"><i class="fas fa-fan" id="fan_icon_dashboard"></i></div>
+                <div class="small-box-footer">
+                  <span id="fan_mode_text">Mode: AUTO</span> |
+                  <a href="kipas.php" class="text-white"><i class="fas fa-cog"></i> Kontrol</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+              <div class="small-box bg-primary fade-in">
+                <div class="inner">
+                  <h3 id="registered_cards">0</h3>
+                  <p>Kartu Terdaftar</p>
+                </div>
+                <div class="icon"><i class="fas fa-id-card"></i></div>
+                <div class="small-box-footer">
+                  <a href="rfid.php" class="text-white"><i class="fas fa-arrow-circle-right"></i> Kelola Kartu</a>
                 </div>
               </div>
             </div>
@@ -484,6 +520,33 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
         }
       }
 
+      // Kipas Status
+      if (topic === `${topicRoot}/kipas/status`) {
+        const fanStatus = msg.toLowerCase();
+        const fanCard = $('#fan_card');
+        const fanText = $('#fan_status_text');
+        const fanIcon = $('#fan_icon_dashboard');
+
+        if (fanStatus === 'on') {
+          fanText.text('ON');
+          fanCard.removeClass('bg-secondary').addClass('bg-success');
+          fanIcon.addClass('fan-spinning');
+        } else {
+          fanText.text('OFF');
+          fanCard.removeClass('bg-success').addClass('bg-secondary');
+          fanIcon.removeClass('fan-spinning');
+        }
+
+        // Auto-detect ESP32 online
+        markESP32Online();
+      }
+
+      // Kipas Mode
+      if (topic === `${topicRoot}/kipas/mode`) {
+        const mode = msg.toUpperCase();
+        $('#fan_mode_text').text('Mode: ' + mode);
+      }
+
       // RFID Access
       if (topic === `${topicRoot}/rfid/access`) {
         let data = {};
@@ -494,7 +557,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
         }
 
         const status = data.status || '-';
-        const uid = data.uid || '';
+        let uid = (data.uid || '').trim().toUpperCase(); // Normalize UID
 
         // ❌ SKIP jika dari kontrol manual
         if (uid === 'MANUAL_CONTROL') {
@@ -502,26 +565,60 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           return;
         }
 
+        // ❌ SKIP jika ini adalah UID yang baru saja ditambahkan (dalam 3 detik terakhir)
+        const pendingUID = localStorage.getItem('lastAddedUID');
+        const addTime = localStorage.getItem('lastAddTime');
+        if (pendingUID && pendingUID === uid && addTime) {
+          const timeDiff = Date.now() - parseInt(addTime);
+          if (timeDiff < 3000) { // 3 detik - cukup untuk mencegah auto-scan tapi user bisa langsung test
+            console.log('⚠️ BLOCKED: Newly added card from dashboard display:', uid, 'Time diff:', timeDiff, 'ms', 'Pending:', pendingUID);
+            return;
+          } else {
+            console.log('⏰ Time expired for dashboard blacklist:', uid, 'Time diff:', timeDiff, 'ms');
+            // Clear marker setelah expired untuk cleanup
+            localStorage.removeItem('lastAddedUID');
+            localStorage.removeItem('lastAddTime');
+          }
+        }
+
         // Auto-detect ESP32 online from RFID data
         markESP32Online();
 
-        const statusElem = $('#last_rfid_status');
+        // ✅ Update tampilan hanya untuk akses fisik yang sah (granted/denied)
+        if (status === 'granted' || status === 'denied') {
+          console.log('✅ Dashboard: Physical tap detected for:', uid, 'Status:', status);
 
-        if (status === 'granted') {
-          statusElem.removeClass('badge-danger badge-secondary').addClass('badge-success');
-          statusElem.html('<i class="fas fa-check-circle"></i> Akses Diterima');
-        } else if (status === 'denied') {
-          statusElem.removeClass('badge-success badge-secondary').addClass('badge-danger');
-          statusElem.html('<i class="fas fa-times-circle"></i> Akses Ditolak');
+          // Update UI secara langsung untuk responsivitas
+          const statusElem = $('#last_rfid_status');
+
+          if (status === 'granted') {
+            statusElem.removeClass('badge-danger badge-secondary').addClass('badge-success');
+            statusElem.html('<i class="fas fa-check-circle"></i> Akses Diterima');
+            $('#last_rfid').html('<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">' + uid + '</code>');
+          } else if (status === 'denied') {
+            statusElem.removeClass('badge-success badge-secondary').addClass('badge-danger');
+            statusElem.html('<i class="fas fa-times-circle"></i> Akses Ditolak');
+            $('#last_rfid').html('<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">' + uid + '</code>');
+          }
+
+          $('#last_rfid_time').text(new Date().toLocaleString('id-ID'));
+
+          // ✅ Simpan log RFID (hanya dari kartu fisik yang di-scan)
+          // API akan validasi apakah kartu terdaftar
+          sendLog('rfid', {
+            uid: uid,
+            status: status
+          });
+
+          // ✅ Reload data dari database setelah 500ms untuk sinkronisasi
+          // Ini memastikan waktu dan data sesuai dengan yang ada di database
+          setTimeout(function() {
+            console.log('🔄 Reloading last RFID access from database...');
+            loadLastRFIDAccess();
+          }, 500);
+        } else {
+          console.log('⚠️ Dashboard: No valid status. Status:', status);
         }
-
-        $('#last_rfid_time').text(new Date().toLocaleString('id-ID'));
-
-        // Simpan log RFID (hanya dari kartu fisik, bukan manual control)
-        sendLog('rfid', {
-          uid: uid,
-          status: status
-        });
       }
 
       // RFID Info
@@ -533,7 +630,8 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           console.error('Parse error:', e);
         }
 
-        const uid = data.uid || '';
+        let uid = (data.uid || '').trim().toUpperCase(); // Normalize UID
+        const action = data.action || '';
 
         // ❌ SKIP jika dari kontrol manual
         if (uid === 'MANUAL_CONTROL') {
@@ -541,10 +639,30 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           return;
         }
 
+        // ✅ Jika ini adalah proses tambah kartu, tandai untuk skip di /rfid/access
+        if (action === 'add' && data.result === 'ok' && uid) {
+          localStorage.setItem('lastAddedUID', uid);
+          localStorage.setItem('lastAddTime', Date.now().toString());
+
+          // Hapus marker setelah 5 detik (lebih lama dari blacklist 3 detik untuk keamanan)
+          setTimeout(function() {
+            const currentUID = localStorage.getItem('lastAddedUID');
+            if (currentUID === uid) {
+              localStorage.removeItem('lastAddedUID');
+              localStorage.removeItem('lastAddTime');
+              console.log('🧹 Dashboard marker cleared for:', uid);
+            }
+          }, 5000);
+
+          console.log('✅ Dashboard: Card registered:', uid, '- Will skip next /rfid/access for 3 seconds');
+        }
+
         // Auto-detect ESP32 online from RFID data
         markESP32Online();
 
-        if (uid) {
+        // ❌ JANGAN update display saat proses add (agar tidak muncul saat registrasi)
+        // ✅ Hanya update untuk action remove atau action lainnya (bukan add)
+        if (uid && action !== 'add') {
           $('#last_rfid').text(uid);
           $('#last_rfid_time').text(new Date().toLocaleString('id-ID'));
         }
@@ -689,9 +807,50 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
       $('#current-time').text(formattedTime);
     }
 
+    // Load last RFID access from database
+    function loadLastRFIDAccess() {
+      $.get('api/rfid_crud.php?action=getlogs', function(res) {
+        if (res.success && res.data && res.data.length > 0) {
+          const lastLog = res.data[0]; // Data sudah terurut DESC
+          const uid = lastLog.uid || '-';
+          const status = lastLog.status || '-';
+          const time = lastLog.access_time || '-';
+
+          console.log('✅ Loading last RFID access:', uid, status, time);
+
+          // Update UI dengan styling yang lebih jelas
+          $('#last_rfid').html('<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">' + uid + '</code>');
+          $('#last_rfid_time').text(time);
+
+          const statusElem = $('#last_rfid_status');
+          if (status === 'granted') {
+            statusElem.removeClass('badge-danger badge-secondary').addClass('badge-success');
+            statusElem.html('<i class="fas fa-check-circle"></i> Akses Diterima');
+          } else if (status === 'denied') {
+            statusElem.removeClass('badge-success badge-secondary').addClass('badge-danger');
+            statusElem.html('<i class="fas fa-times-circle"></i> Akses Ditolak');
+          }
+        } else {
+          console.log('ℹ️ No RFID access history found');
+        }
+      }, 'json').fail(function(xhr, status, error) {
+        console.log('⚠️ Failed to load last RFID access:', error);
+      });
+    }
+
     // Update clock immediately and then every second
     updateClock();
     setInterval(updateClock, 1000);
+
+    // Load last RFID access on page load
+    loadLastRFIDAccess();
+
+    // Load registered cards count
+    $.get('api/rfid_crud.php?action=list', function(res) {
+      if (res.success && res.data) {
+        $('#registered_cards').text(res.data.length);
+      }
+    }, 'json');
   </script>
 </body>
 
