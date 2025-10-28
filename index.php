@@ -339,7 +339,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
       const fanIcon = $('#fan_icon_dashboard');
 
       // Update visual
-      fanBox.html('<i class="fas fa-exclamation-triangle"></i> OFFLINE');
+      fanBox.html('<i class="fas fa-exclamation-triangle"></i> Offline');
       fanCard.removeClass('bg-success bg-purple bg-warning').addClass('bg-secondary');
       fanIcon.removeClass('fan-spinning');
       $('#fan_mode_text').html('<i class="fas fa-wifi-slash"></i> ESP32 Offline');
@@ -962,6 +962,10 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
     // Update clock immediately and then every second
     updateClock();
     setInterval(updateClock, 1000);
+    // Load last RFID access initially so dashboard 'Akses RFID Terakhir' syncs with DB
+    if (typeof loadLastRFIDAccess === 'function') {
+      loadLastRFIDAccess();
+    }
   </script>
 </body>
 
