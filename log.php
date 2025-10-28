@@ -121,7 +121,7 @@ require_once 'config/config.php';
             <li class="nav-item">
               <a href="log.php" class="nav-link active">
                 <i class="nav-icon fas fa-list"></i>
-                <p>Log & Sensor</p>
+                <p>Log </p>
               </a>
             </li>
             <li class="nav-item">
@@ -212,222 +212,233 @@ require_once 'config/config.php';
             </div>
           </div>
 
-          <!-- Log RFID Access -->
-          <div class="card card-primary card-outline shadow-sm hover-shadow fadeIn mt-4">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-id-card"></i> Log Akses RFID
-              </h3>
-              <div class="card-tools">
-                <span class="badge badge-info mr-2" id="rfidCount">0 records</span>
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                  <i class="fas fa-minus"></i>
-                </button>
+          <!-- Accordion for Logs -->
+          <div id="accordionLogs">
+
+            <!-- Log RFID Access -->
+            <div class="card card-primary card-outline shadow-sm hover-shadow fadeIn mt-4" id="cardRfid">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-id-card"></i> Log Akses RFID
+                </h3>
+                <div class="card-tools">
+                  <span class="badge badge-info mr-2" id="rfidCount">0 records</span>
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="collapse" data-target="#collapseRfid">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="card-body">
-              <!-- Filter Section -->
-              <div class="card card-secondary card-outline mb-3">
+              <div class="collapse show" id="collapseRfid" data-parent="#accordionLogs">
                 <div class="card-body">
-                  <div class="row align-items-end">
-                    <div class="col-md-5">
-                      <div class="form-group mb-0">
-                        <label class="d-block"><i class="fas fa-filter"></i> Filter Status:</label>
-                        <select class="form-control p-1" id="filterRfidStatus">
-                          <option value="">Semua Status</option>
-                          <option value="granted">✅ Akses Diterima</option>
-                          <option value="denied">❌ Akses Ditolak</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="col-md-5">
-                      <div class="form-group mb-0">
-                        <label class="d-block"><i class="fas fa-search"></i> Cari UID/Nama:</label>
-                        <input type="text" class="form-control" id="searchRfid" placeholder="Ketik untuk mencari...">
-                      </div>
-                    </div>
-                    <div class="col-md-2">
-                      <div class="form-group mb-0">
-                        <button class="btn btn-primary btn-block shadow-sm" onclick="loadRFIDLog()">
-                          <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
+                  <!-- Filter Section -->
+                  <div class="card card-secondary card-outline mb-3">
+                    <div class="card-body">
+                      <div class="row align-items-end">
+                        <div class="col-md-5">
+                          <div class="form-group mb-0">
+                            <label class="d-block"><i class="fas fa-filter"></i> Filter Status:</label>
+                            <select class="form-control p-1" id="filterRfidStatus">
+                              <option value="">Semua Status</option>
+                              <option value="granted">✅ Akses Diterima</option>
+                              <option value="denied">❌ Akses Ditolak</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-md-5">
+                          <div class="form-group mb-0">
+                            <label class="d-block"><i class="fas fa-search"></i> Cari UID/Nama:</label>
+                            <input type="text" class="form-control" id="searchRfid" placeholder="Ketik untuk mencari...">
+                          </div>
+                        </div>
+                        <div class="col-md-2">
+                          <div class="form-group mb-0">
+                            <button class="btn btn-primary btn-block shadow-sm" onclick="loadRFIDLog()">
+                              <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <div class="table-responsive scrollable-table">
-                <table class="table table-hover table-striped modern-table mb-0" id="tableRFIDLog">
-                  <thead class="thead-sticky">
-                    <tr>
-                      <th width="50" class="text-center">#</th>
-                      <th><i class="fas fa-fingerprint"></i> UID Kartu</th>
-                      <th><i class="fas fa-user"></i> Nama Pengguna</th>
-                      <th><i class="far fa-clock"></i> Waktu Akses</th>
-                      <th width="150" class="text-center"><i class="fas fa-check-circle"></i> Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="5" class="text-center text-muted">
-                        <i class="fas fa-spinner fa-spin"></i> Memuat data...
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Log DHT Sensor -->
-          <div class="card card-success card-outline shadow-sm hover-shadow fadeIn mt-4">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-thermometer-half"></i> Log Suhu & Kelembapan
-              </h3>
-              <div class="card-tools">
-                <span class="badge badge-info mr-2" id="dhtCount">0 records</span>
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                  <i class="fas fa-minus"></i>
-                </button>
-              </div>
-            </div>
-            <div class="card-body">
-              <!-- Filter Section -->
-              <div class="card card-secondary card-outline mb-3">
-                <div class="card-body">
-                  <div class="row align-items-end">
-                    <div class="col-md-3">
-                      <div class="form-group mb-0">
-                        <label class="d-block"><i class="fas fa-clock"></i> Rentang Waktu:</label>
-                        <select class="form-control p-1" id="filterDHTTime">
-                          <option value="30">🕐 30 Menit Terakhir</option>
-                          <option value="60" selected>🕑 1 Jam Terakhir</option>
-                          <option value="180">🕒 3 Jam Terakhir</option>
-                          <option value="360">🕕 6 Jam Terakhir</option>
-                          <option value="1440">📅 24 Jam Terakhir</option>
-                          <option value="10080">📆 7 Hari Terakhir</option>
-                          <option value="all">📊 Semua Data</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="col-md-2">
-                      <div class="form-group mb-0">
-                        <label class="d-block"><i class="fas fa-temperature-low"></i> Suhu Min:</label>
-                        <input type="number" class="form-control" id="filterTempMin" placeholder="0">
-                      </div>
-                    </div>
-                    <div class="col-md-2">
-                      <div class="form-group mb-0">
-                        <label class="d-block"><i class="fas fa-temperature-high"></i> Suhu Max:</label>
-                        <input type="number" class="form-control" id="filterTempMax" placeholder="50">
-                      </div>
-                    </div>
-                    <div class="col-md-2">
-                      <div class="form-group mb-0">
-                        <label class="d-block"><i class="fas fa-tint"></i> Lembap Min:</label>
-                        <input type="number" class="form-control" id="filterHumMin" placeholder="0">
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="form-group mb-0">
-                        <button class="btn btn-primary btn-block shadow-sm" onclick="loadDHTLog()">
-                          <i class="fas fa-sync-alt"></i> Terapkan Filter
-                        </button>
-                      </div>
-                    </div>
+                  <div class="table-responsive scrollable-table">
+                    <table class="table table-hover table-striped modern-table mb-0" id="tableRFIDLog">
+                      <thead class="thead-sticky">
+                        <tr>
+                          <th width="50" class="text-center">#</th>
+                          <th><i class="fas fa-fingerprint"></i> UID Kartu</th>
+                          <th><i class="fas fa-user"></i> Nama Pengguna</th>
+                          <th><i class="far fa-clock"></i> Waktu Akses</th>
+                          <th width="150" class="text-center"><i class="fas fa-check-circle"></i> Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td colspan="5" class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
-
-              <div class="table-responsive scrollable-table">
-                <table class="table table-hover table-striped modern-table mb-0" id="tableDHTLog">
-                  <thead class="thead-sticky">
-                    <tr>
-                      <th width="50" class="text-center">#</th>
-                      <th><i class="far fa-clock"></i> Waktu</th>
-                      <th width="180"><i class="fas fa-thermometer-half"></i> Suhu (°C)</th>
-                      <th width="180"><i class="fas fa-tint"></i> Kelembapan (%)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="4" class="text-center text-muted">
-                        <i class="fas fa-spinner fa-spin"></i> Memuat data...
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="card-footer bg-light">
-                <small class="text-muted">
-                  <i class="fas fa-info-circle"></i>
-                  Menampilkan: <span id="dhtInfo" class="font-weight-bold">-</span>
-                </small>
-              </div>
             </div>
-          </div>
 
-          <!-- Log Door Status -->
-          <div class="card card-warning card-outline shadow-sm hover-shadow fadeIn mt-4 mb-4">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-door-open"></i> Log Status Pintu
-              </h3>
-              <div class="card-tools">
-                <span class="badge badge-info mr-2" id="doorCount">0 records</span>
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                  <i class="fas fa-minus"></i>
-                </button>
+            <!-- Log DHT Sensor -->
+            <div class="card card-success card-outline shadow-sm hover-shadow fadeIn mt-4" id="cardDht">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-thermometer-half"></i> Log Suhu & Kelembapan
+                </h3>
+                <div class="card-tools">
+                  <span class="badge badge-info mr-2" id="dhtCount">0 records</span>
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="collapse" data-target="#collapseDht">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="card-body">
-              <!-- Filter Section -->
-              <div class="card card-secondary card-outline mb-3">
+              <div class="collapse" id="collapseDht" data-parent="#accordionLogs">
                 <div class="card-body">
-                  <div class="row align-items-end">
-                    <div class="col-md-8">
-                      <div class="form-group mb-0">
-                        <label class="d-block"><i class="fas fa-filter"></i> Filter Status Pintu:</label>
-                        <select class="form-control p-1" id="filterDoorStatus">
-                          <option value="">Semua Status</option>
-                          <option value="terbuka">🔓 Terbuka</option>
-                          <option value="tertutup">🔒 Tertutup</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-group mb-0">
-                        <button class="btn btn-primary btn-block shadow-sm" onclick="loadDoorLog()">
-                          <i class="fas fa-sync-alt"></i> Terapkan Filter
-                        </button>
+                  <!-- Filter Section -->
+                  <div class="card card-secondary card-outline mb-3">
+                    <div class="card-body">
+                      <div class="row align-items-end">
+                        <div class="col-md-3">
+                          <div class="form-group mb-0">
+                            <label class="d-block"><i class="fas fa-clock"></i> Rentang Waktu:</label>
+                            <select class="form-control p-1" id="filterDHTTime">
+                              <option value="30">🕐 30 Menit Terakhir</option>
+                              <option value="60" selected>🕑 1 Jam Terakhir</option>
+                              <option value="180">🕒 3 Jam Terakhir</option>
+                              <option value="360">🕕 6 Jam Terakhir</option>
+                              <option value="1440">📅 24 Jam Terakhir</option>
+                              <option value="10080">📆 7 Hari Terakhir</option>
+                              <option value="all">📊 Semua Data</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-md-2">
+                          <div class="form-group mb-0">
+                            <label class="d-block"><i class="fas fa-temperature-low"></i> Suhu Min:</label>
+                            <input type="number" class="form-control" id="filterTempMin" placeholder="0">
+                          </div>
+                        </div>
+                        <div class="col-md-2">
+                          <div class="form-group mb-0">
+                            <label class="d-block"><i class="fas fa-temperature-high"></i> Suhu Max:</label>
+                            <input type="number" class="form-control" id="filterTempMax" placeholder="50">
+                          </div>
+                        </div>
+                        <div class="col-md-2">
+                          <div class="form-group mb-0">
+                            <label class="d-block"><i class="fas fa-tint"></i> Lembap Min:</label>
+                            <input type="number" class="form-control" id="filterHumMin" placeholder="0">
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="form-group mb-0">
+                            <button class="btn btn-primary btn-block shadow-sm" onclick="loadDHTLog()">
+                              <i class="fas fa-sync-alt"></i> Terapkan Filter
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  <div class="table-responsive scrollable-table">
+                    <table class="table table-hover table-striped modern-table mb-0" id="tableDHTLog">
+                      <thead class="thead-sticky">
+                        <tr>
+                          <th width="50" class="text-center">#</th>
+                          <th><i class="far fa-clock"></i> Waktu</th>
+                          <th width="180"><i class="fas fa-thermometer-half"></i> Suhu (°C)</th>
+                          <th width="180"><i class="fas fa-tint"></i> Kelembapan (%)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td colspan="4" class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="card-footer bg-light">
+                    <small class="text-muted">
+                      <i class="fas fa-info-circle"></i>
+                      Menampilkan: <span id="dhtInfo" class="font-weight-bold">-</span>
+                    </small>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div class="table-responsive scrollable-table">
-                <table class="table table-hover table-striped modern-table mb-0" id="tableDoorLog">
-                  <thead class="thead-sticky">
-                    <tr>
-                      <th width="50" class="text-center">#</th>
-                      <th><i class="far fa-clock"></i> Waktu</th>
-                      <th width="200" class="text-center"><i class="fas fa-door-open"></i> Status Pintu</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="3" class="text-center text-muted">
-                        <i class="fas fa-spinner fa-spin"></i> Memuat data...
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            <!-- Log Door Status -->
+            <div class="card card-warning card-outline shadow-sm hover-shadow fadeIn mt-4 mb-4" id="cardDoor">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-door-open"></i> Log Status Pintu
+                </h3>
+                <div class="card-tools">
+                  <span class="badge badge-info mr-2" id="doorCount">0 records</span>
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="collapse" data-target="#collapseDoor">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="collapse" id="collapseDoor" data-parent="#accordionLogs">
+                <div class="card-body">
+                  <!-- Filter Section -->
+                  <div class="card card-secondary card-outline mb-3">
+                    <div class="card-body">
+                      <div class="row align-items-end">
+                        <div class="col-md-8">
+                          <div class="form-group mb-0">
+                            <label class="d-block"><i class="fas fa-filter"></i> Filter Status Pintu:</label>
+                            <select class="form-control p-1" id="filterDoorStatus">
+                              <option value="">Semua Status</option>
+                              <option value="terbuka">🔓 Terbuka</option>
+                              <option value="tertutup">🔒 Tertutup</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="form-group mb-0">
+                            <button class="btn btn-primary btn-block shadow-sm" onclick="loadDoorLog()">
+                              <i class="fas fa-sync-alt"></i> Terapkan Filter
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="table-responsive scrollable-table">
+                    <table class="table table-hover table-striped modern-table mb-0" id="tableDoorLog">
+                      <thead class="thead-sticky">
+                        <tr>
+                          <th width="50" class="text-center">#</th>
+                          <th><i class="far fa-clock"></i> Waktu</th>
+                          <th width="200" class="text-center"><i class="fas fa-door-open"></i> Status Pintu</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td colspan="3" class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+
+          </div><!-- End accordionLogs -->
 
         </div>
       </section>
