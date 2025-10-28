@@ -226,6 +226,13 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
                       <span class="info-box-number" id="last_rfid" style="font-size: 1.1rem;">-</span>
                     </div>
                   </div>
+                  <div class="info-box mb-3 shadow-sm">
+                    <span class="info-box-icon bg-purple"><i class="fas fa-user"></i></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Nama Pengguna</span>
+                      <span class="info-box-number" id="last_rfid_name" style="font-size: 1rem;">-</span>
+                    </div>
+                  </div>
                   <div class="info-box mb-0 shadow-sm">
                     <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
                     <div class="info-box-content">
@@ -934,13 +941,15 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
         if (res.success && res.data && res.data.length > 0) {
           const lastLog = res.data[0]; // Data sudah terurut DESC
           const uid = lastLog.uid || '-';
+          const name = lastLog.name || 'Tidak Dikenal';
           const status = lastLog.status || '-';
           const time = lastLog.access_time || '-';
 
-          console.log('✅ Loading last RFID access:', uid, status, time);
+          console.log('✅ Loading last RFID access:', uid, name, status, time);
 
           // Update UI dengan styling yang lebih jelas
           $('#last_rfid').html('<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">' + uid + '</code>');
+          $('#last_rfid_name').html('<strong>' + name + '</strong>');
           $('#last_rfid_time').text(time);
 
           const statusElem = $('#last_rfid_status');
@@ -953,6 +962,10 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           }
         } else {
           console.log('ℹ️ No RFID access history found');
+          $('#last_rfid').html('<code class="text-muted">-</code>');
+          $('#last_rfid_name').html('<em class="text-muted">Belum ada akses</em>');
+          $('#last_rfid_time').text('-');
+          $('#last_rfid_status').removeClass('badge-success badge-danger').addClass('badge-secondary').html('Belum Ada Data');
         }
       }, 'json').fail(function(xhr, status, error) {
         console.log('⚠️ Failed to load last RFID access:', error);
@@ -962,10 +975,15 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
     // Update clock immediately and then every second
     updateClock();
     setInterval(updateClock, 1000);
+
     // Load last RFID access initially so dashboard 'Akses RFID Terakhir' syncs with DB
-    if (typeof loadLastRFIDAccess === 'function') {
+    loadLastRFIDAccess();
+
+    // Auto-refresh RFID access every 10 seconds to keep dashboard in sync
+    setInterval(function() {
+      console.log('🔄 Auto-refreshing RFID access data...');
       loadLastRFIDAccess();
-    }
+    }, 10000);
   </script>
 </body>
 
