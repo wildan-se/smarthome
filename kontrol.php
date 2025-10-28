@@ -82,12 +82,6 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
               </a>
             </li>
             <li class="nav-item">
-              <a href="fan.php" class="nav-link">
-                <i class="nav-icon fas fa-fan"></i>
-                <p>Kontrol Kipas</p>
-              </a>
-            </li>
-            <li class="nav-item">
               <a href="log.php" class="nav-link">
                 <i class="nav-icon fas fa-list"></i>
                 <p>Log</p>
