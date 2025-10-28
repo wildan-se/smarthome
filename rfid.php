@@ -403,12 +403,6 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
               </a>
             </li>
             <li class="nav-item">
-              <a href="fan.php" class="nav-link">
-                <i class="nav-icon fas fa-fan"></i>
-                <p>Kontrol Kipas</p>
-              </a>
-            </li>
-            <li class="nav-item">
               <a href="log.php" class="nav-link">
                 <i class="nav-icon fas fa-list"></i>
                 <p>Log</p>
@@ -726,61 +720,26 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
     let lastScannedUID = ''; // Menyimpan UID terakhir yang di-scan
 
     $('#formAddRFID').submit(function(e) {
-          e.preventDefault();
-          const uid = $(this).find('[name=uid]').val();
-          const name = $(this).find('[name=name]').val();
+      e.preventDefault();
+      const uid = $(this).find('[name=uid]').val();
+      const name = $(this).find('[name=name]').val();
 
-          // Simpan nama ke localStorage untuk digunakan saat ESP32 konfirmasi
-          localStorage.setItem('pendingCard_' + uid, name);
+      // Simpan nama ke localStorage untuk digunakan saat ESP32 konfirmasi
+      localStorage.setItem('pendingCard_' + uid, name);
 
-          // Kirim perintah register ke ESP32
-          client.publish(`${topicRoot}/rfid/register`, uid);
+      // Kirim perintah register ke ESP32
+      client.publish(`${topicRoot}/rfid/register`, uid);
 
-          Swal.fire({
-            title: 'Berhasil!',
-            html: `Kartu <code><strong>${uid}</strong></code><br><strong>${name}</strong><br>berhasil ditambahkan!`,
-            icon: 'success',
-            confirmButtonColor: '#28a745',
-            confirmButtonText: '<i class="fas fa-check"></i> OK',
-            timer: 3000
-          });
-          $('#formAddRFID')[0].reset();
-          loadRFID();
-        } else {
-          Swal.fire({
-            title: 'Gagal!',
-            text: res.error || 'Gagal menambahkan kartu',
-            icon: 'error',
-            confirmButtonColor: '#dc3545',
-            confirmButtonText: '<i class="fas fa-times"></i> Tutup'
-          });
-        }
-      },
-      error: function(xhr, status, error) {
-        console.error('AJAX Error Details:');
-        console.error('Status:', status);
-        console.error('Error:', error);
-        console.error('Response Text:', xhr.responseText);
+      Swal.fire({
+        title: 'Menunggu Konfirmasi',
+        html: `Mengirim kartu <code><strong>${uid}</strong></code><br><strong>${name}</strong><br>ke ESP32...`,
+        icon: 'info',
+        confirmButtonColor: '#17a2b8',
+        confirmButtonText: '<i class="fas fa-check"></i> OK',
+        timer: 3000
+      });
 
-        let errorMsg = 'Gagal menghubungi server';
-        if (xhr.responseText) {
-          try {
-            const errData = JSON.parse(xhr.responseText);
-            errorMsg = errData.error || errorMsg;
-          } catch (e) {
-            errorMsg = xhr.responseText.substring(0, 100);
-          }
-        }
-
-        Swal.fire({
-          title: 'Error!',
-          html: `<strong>Status:</strong> ${xhr.status}<br><strong>Error:</strong> ${errorMsg}`,
-          icon: 'error',
-          confirmButtonColor: '#dc3545',
-          confirmButtonText: '<i class="fas fa-times"></i> Tutup'
-        });
-      }
-    });
+      $('#formAddRFID')[0].reset();
     });
 
     // Subscribe MQTT untuk log akses
@@ -974,7 +933,7 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
       }, 'json').fail(function() {
         $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server</div>');
       });
-    });
+    }
 
     function loadLog() {
       $.get('api/rfid_crud.php?action=getlogs', function(res) {
