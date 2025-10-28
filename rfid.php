@@ -455,6 +455,8 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
+          <!-- Result / status messages will be injected here -->
+          <div id="addResult"></div>
 
           <!-- Form Tambah Kartu -->
           <div class="card card-primary card-outline shadow-sm hover-shadow fadeIn">
@@ -881,6 +883,39 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
     });
 
     function loadRFID() {
+      $.get('api/rfid_crud.php?action=list', function(res) {
+        let rows = '';
+        if (res.success && res.data) {
+          res.data.forEach((card, index) => {
+            rows += `
+              <tr class="fadeIn">
+                <td class="text-center"><strong>${index + 1}</strong></td>
+                <td><code class="code-badge">${card.uid}</code></td>
+                <td><i class="fas fa-user text-muted"></i> ${card.name || '<em class="text-muted">Tidak ada nama</em>'}</td>
+                <td><i class="far fa-calendar-alt text-muted"></i> ${card.added_at}</td>
+                <td><i class="fas fa-user-shield text-muted"></i> ${card.added_by_name || 'System'}</td>
+                <td class="text-center">
+                  <div class="btn-group" role="group" aria-label="Aksi">
+                    <button class="btn btn-sm btn-danger" onclick="removeRFID('${card.uid}')" title="Hapus di ESP32 & DB">
+                      <i class="fas fa-trash-alt"></i> Hapus
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="removeFromDBOnly('${card.uid}')" title="Hapus hanya di Database">
+                      <i class="fas fa-database"></i> DB
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+          $('#cardCount').html(`<i class="fas fa-id-card"></i> ${res.data.length} Kartu`);
+        } else {
+          $('#cardCount').html('<i class="fas fa-id-card"></i> 0 Kartu');
+        }
+        $('#tableRFID tbody').html(rows || '<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada kartu terdaftar</td></tr>');
+      }, 'json');
+    }
+
+    function removeRFID(uid) {
       // Show SweetAlert2 confirmation with options:
       // - Confirm: Hapus di ESP32 + Database
       // - Deny: Hapus hanya di Database
@@ -891,9 +926,12 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         icon: 'warning',
         showDenyButton: true,
         showCancelButton: true,
-        confirmButtonText: 'Hapus di ESP32 & Database',
-        denyButtonText: 'Hapus hanya di Database',
-        cancelButtonText: 'Batal',
+        confirmButtonText: '<i class="fas fa-microchip"></i> Hapus di ESP32 & Database',
+        denyButtonText: '<i class="fas fa-database"></i> Hapus hanya di Database',
+        cancelButtonText: '<i class="fas fa-times"></i> Batal',
+        confirmButtonColor: '#dc3545',
+        denyButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
         focusCancel: true
       }).then((result) => {
         if (result.isConfirmed) {
@@ -901,17 +939,19 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
           client.publish(`${topicRoot}/rfid/remove`, uid);
 
           // Also remove from database immediately to keep UI in sync
-          $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Menghapus kartu... Mohon tunggu.</div>');
+          $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Menghapus kartu dari ESP32 dan database...</div>');
           $.post('api/rfid_crud.php?action=remove', {
             uid: uid
           }, function(res) {
             if (res.success) {
               $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu berhasil dihapus (ESP32 & DB).</div>');
               loadRFID();
+              loadLog(); // Refresh log juga
               Swal.fire({
                 icon: 'success',
                 title: 'Berhasil',
-                text: 'Kartu dihapus dari ESP32 dan database.'
+                text: 'Kartu dihapus dari ESP32 dan database.',
+                timer: 2000
               });
             } else {
               $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: ' + (res.error || 'Gagal menghapus') + '</div>');
@@ -929,8 +969,6 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
               text: 'Gagal menghubungi server untuk menghapus dari database.'
             });
           });
-
-          // Optionally keep a visual indicator that ESP32 confirmation may follow
         } else if (result.isDenied) {
           // Remove only from DB
           Swal.fire({
@@ -939,7 +977,9 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Ya, hapus dari DB',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d'
           }).then((sub) => {
             if (sub.isConfirmed) {
               $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Menghapus dari database...</div>');
@@ -949,10 +989,12 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
                 if (res.success) {
                   $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu dihapus dari database</div>');
                   loadRFID();
+                  loadLog(); // Refresh log juga
                   Swal.fire({
                     icon: 'success',
                     title: 'Berhasil',
-                    text: 'Kartu dihapus dari database.'
+                    text: 'Kartu dihapus dari database.',
+                    timer: 2000
                   });
                 } else {
                   $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: ' + (res.error || 'Gagal menghapus') + '</div>');
@@ -972,65 +1014,52 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
               });
             }
           });
-        } else {
-          // Cancelled
-          return;
         }
+        // else: Cancelled, do nothing
       });
-    } else {
-      $('#cardCount').html('<i class="fas fa-id-card"></i> 0 Kartu');
-    }
-    $('#tableRFID tbody').html(rows || '<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada kartu terdaftar</td></tr>');
-    }, 'json');
-    }
-
-    function removeRFID(uid) {
-      if (!confirm('Apakah Anda yakin ingin menghapus kartu dengan UID: ' + uid + '?')) {
-        return;
-      }
-
-      // Kirim perintah hapus ke ESP32
-      client.publish(`${topicRoot}/rfid/remove`, uid);
-      $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Perintah hapus kartu dikirim ke ESP32, menunggu konfirmasi...</div>');
-
-      // Set timeout fallback: jika 5 detik tidak ada respons dari ESP32, hapus langsung dari database
-      setTimeout(function() {
-        if ($('#addResult').html().includes('menunggu konfirmasi')) {
-          // Masih menunggu, berarti ESP32 tidak merespons
-          if (confirm('ESP32 tidak merespons. Hapus kartu dari database saja?')) {
-            $.post('api/rfid_crud.php?action=remove', {
-              uid: uid
-            }, function(res) {
-              if (res.success) {
-                $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu berhasil dihapus dari database (ESP32 offline/tidak merespons)</div>');
-                loadRFID();
-              } else {
-                $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Gagal menghapus: ' + (res.error || 'Unknown error') + '</div>');
-              }
-            }, 'json');
-          } else {
-            $('#addResult').html('');
-          }
-        }
-      }, 5000); // Timeout 5 detik
     }
 
     function removeFromDBOnly(uid) {
-      if (!confirm('Hapus kartu ' + uid + ' dari DATABASE saja?\n\n⚠️ Kartu masih akan tersimpan di ESP32.\nGunakan fungsi ini hanya jika ESP32 offline.')) {
-        return;
-      }
+      Swal.fire({
+        title: 'Hapus dari Database saja?',
+        html: `Kartu <code><strong>${uid}</strong></code> akan dihapus dari database tetapi tetap tersimpan di ESP32. Lanjutkan?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus dari DB',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#ffc107'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
 
-      $.post('api/rfid_crud.php?action=remove', {
-        uid: uid
-      }, function(res) {
-        if (res.success) {
-          $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu <strong>' + uid + '</strong> berhasil dihapus dari database!</div>');
-          loadRFID();
-        } else {
-          $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Gagal menghapus: ' + (res.error || 'Unknown error') + '</div>');
-        }
-      }, 'json').fail(function() {
-        $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server</div>');
+        $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Menghapus dari database...</div>');
+        $.post('api/rfid_crud.php?action=remove', {
+          uid: uid
+        }, function(res) {
+          if (res.success) {
+            $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu <strong>' + uid + '</strong> berhasil dihapus dari database!</div>');
+            loadRFID();
+            loadLog();
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil',
+              text: 'Kartu dihapus dari database.'
+            });
+          } else {
+            $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Gagal menghapus: ' + (res.error || 'Unknown error') + '</div>');
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal',
+              text: res.error || 'Gagal menghapus dari database.'
+            });
+          }
+        }, 'json').fail(function() {
+          $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server</div>');
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: 'Gagal menghubungi server.'
+          });
+        });
       });
     }
 
