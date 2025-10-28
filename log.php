@@ -130,12 +130,6 @@ require_once 'config/config.php';
                 <p>Export Data</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="settings.php" class="nav-link">
-                <i class="nav-icon fas fa-cog"></i>
-                <p>Pengaturan Sistem</p>
-              </a>
-            </li>
             <li class="nav-header">ACCOUNT</li>
             <li class="nav-item">
               <a href="logout.php" class="nav-link">
