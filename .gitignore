@@ -70,6 +70,15 @@ dist/
 build/
 .astro/
 
+# TypeScript & JavaScript build files (PHP project only)
+src/
+tsconfig.json
+rollup.config.js
+*.js.map
+
+# GitHub Actions workflows (PHP project - tidak perlu CI/CD Node.js)
+.github/
+
 # Cache & Temp
 .cache/
 *.cache

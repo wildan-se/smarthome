@@ -93,6 +93,12 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               </a>
             </li>
             <li class="nav-item">
+              <a href="fan.php" class="nav-link">
+                <i class="nav-icon fas fa-fan"></i>
+                <p>Kontrol Kipas</p>
+              </a>
+            </li>
+            <li class="nav-item">
               <a href="log.php" class="nav-link">
                 <i class="nav-icon fas fa-list"></i>
                 <p>Log </p>
@@ -147,7 +153,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
       <section class="content">
         <div class="container-fluid">
 
-          <!-- Status Cards -->
+          <!-- Row 1: Status Cards (ESP32, Door, Temperature, Humidity) -->
           <div class="row">
             <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
               <div class="small-box bg-danger fade-in">
@@ -232,14 +238,79 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
             </div>
           </div>
 
-          <!-- Charts and Info -->
+          <!-- Row 2: Fan Status & Control -->
           <div class="row">
-            <!-- Chart -->
+            <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+              <div class="small-box bg-purple fade-in" id="fan_status_box">
+                <div class="inner">
+                  <h3 id="fan_status">OFF</h3>
+                  <p>Status Kipas</p>
+                </div>
+                <div class="icon"><i class="fas fa-fan" id="fan_icon"></i></div>
+                <div class="small-box-footer">
+                  <span id="fan_mode_text">Mode: Manual</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-9 col-md-6 col-sm-12 mb-4">
+              <div class="card card-purple shadow-md fade-in">
+                <div class="card-header ">
+                  <h3 class="card-title text-dark"><i class="fas fa-wind mr-2 text-purple"></i>Kontrol Kipas Otomatis</h3>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-warning"><i class="fas fa-temperature-high"></i></span>
+                        <div class="info-box-content">
+                          <span class="info-box-text">Threshold ON</span>
+                          <span class="info-box-number" id="threshold_on">34°C</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-indigo"><i class="fas fa-temperature-low"></i></span>
+                        <div class="info-box-content">
+                          <span class="info-box-text">Threshold OFF</span>
+                          <span class="info-box-number" id="threshold_off">28°C</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="info-box shadow-sm">
+                        <span class="info-box-icon bg-primary"><i class="fas fa-cog"></i></span>
+                        <div class="info-box-content">
+                          <span class="info-box-text">Mode Aktif</span>
+                          <span class="info-box-number" id="fan_mode_display">MANUAL</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-center mt-2">
+                    <a href="fan.php" class="btn btn-purple btn-sm">
+                      <i class="fas fa-sliders-h"></i> Pengaturan Lengkap
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: Chart & RFID Info -->
+          <div class="row">
+            <!-- Temperature & Humidity Chart -->
             <div class="col-lg-8 col-md-12 mb-4">
               <div class="card card-primary shadow-md fade-in">
                 <div class="card-header">
-                  <h3 class="card-title">
-                    <i class="fas fa-chart-line mr-2"></i>Grafik Suhu & Kelembapan Real-time
+                  <h3 class="card-title text-dark">
+                    <i class="fas fa-chart-line mr-2 text-blue"></i>Grafik Suhu & Kelembapan Real-time
                   </h3>
                   <div class="card-tools">
                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -261,12 +332,12 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               </div>
             </div>
 
-            <!-- RFID Info & Stats -->
+            <!-- RFID Info & Statistics -->
             <div class="col-lg-4 col-md-12">
               <!-- RFID Last Access -->
               <div class="card card-info shadow-md fade-in mb-4">
                 <div class="card-header">
-                  <h3 class="card-title"><i class="fas fa-id-card mr-2"></i>Akses RFID Terakhir</h3>
+                  <h3 class="card-title text-dark"><i class="fas fa-id-card mr-2 text-green"></i>Akses RFID Terakhir</h3>
                 </div>
                 <div class="card-body">
                   <div class="info-box mb-3 shadow-sm">
@@ -289,19 +360,20 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
                 </div>
               </div>
 
-              <!-- Quick Stats -->
-              <div class="row">
-                <div class="col-12">
-                  <div class="info-box shadow-md fade-in">
+              <!-- Statistics Cards -->
+              <div class="card card-success shadow-md fade-in">
+                <div class="card-header">
+                  <h3 class="card-title"><i class="fas fa-chart-bar mr-2"></i>Statistik</h3>
+                </div>
+                <div class="card-body p-2">
+                  <div class="info-box mb-2">
                     <span class="info-box-icon bg-primary"><i class="fas fa-id-card-alt"></i></span>
                     <div class="info-box-content">
                       <span class="info-box-text">Total Kartu Terdaftar</span>
                       <span class="info-box-number"><?= number_format($total_cards) ?></span>
                     </div>
                   </div>
-                </div>
-                <div class="col-12">
-                  <div class="info-box shadow-md fade-in">
+                  <div class="info-box mb-0">
                     <span class="info-box-icon bg-success"><i class="fas fa-history"></i></span>
                     <div class="info-box-content">
                       <span class="info-box-text">Akses Hari Ini</span>
@@ -343,6 +415,65 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
 
     // Variable untuk tracking sumber kontrol
     let controlSource = 'rfid'; // default: dari RFID, bisa jadi 'manual'
+    let isESP32Online = false; // Track ESP32 status
+    let esp32HeartbeatTimer = null; // Timer untuk heartbeat monitoring
+    const HEARTBEAT_TIMEOUT = 10000; // 10 detik timeout
+
+    // ========================================
+    // FUNGSI HELPER - FAN STATUS MANAGEMENT
+    // ========================================
+    function setFanOfflineStatus() {
+      isESP32Online = false;
+      const fanBox = $('#fan_status');
+      const fanCard = $('#fan_status_box');
+      const fanIcon = $('#fan_icon');
+
+      // Update visual
+      fanBox.html('<i class="fas fa-exclamation-triangle"></i> OFFLINE');
+      fanCard.removeClass('bg-success bg-purple bg-secondary bg-warning').addClass('bg-secondary');
+      fanIcon.removeClass('fa-spin');
+      $('#fan_mode_text').html('<i class="fas fa-wifi-slash"></i> ESP32 Offline');
+
+      console.log('🔴 Kipas: Status OFFLINE (ESP32 tidak terhubung)');
+    }
+
+    function setFanOnlineStatus() {
+      isESP32Online = true;
+
+      // ✅ PERBAIKAN: Jangan set "Checking..." - tunggu data real dari ESP32
+      console.log('🟢 Kipas: ESP32 Online - waiting for relay status');
+
+      // Tidak perlu update UI di sini, biarkan relay/status handler yang update
+    }
+
+    // ✅ Fungsi untuk reset heartbeat timer
+    function resetHeartbeat() {
+      // Clear timer lama
+      if (esp32HeartbeatTimer) {
+        clearTimeout(esp32HeartbeatTimer);
+      }
+
+      // Set ESP32 sebagai online
+      if (!isESP32Online) {
+        isESP32Online = true;
+        console.log('💓 Heartbeat detected - ESP32 Online');
+      }
+
+      // Set timer baru - jika tidak ada heartbeat dalam 10 detik, set offline
+      esp32HeartbeatTimer = setTimeout(() => {
+        console.log('💔 Heartbeat timeout - ESP32 dianggap Offline');
+
+        // Set ESP32 offline
+        const statusBox = $('#esp_status');
+        const statusCard = statusBox.closest('.small-box');
+        statusBox.text('Offline');
+        statusCard.removeClass('bg-info bg-warning').addClass('bg-danger');
+        $('#esp_connection_time').text('Timeout - ' + new Date().toLocaleTimeString('id-ID'));
+
+        // Set kipas offline
+        setFanOfflineStatus();
+      }, HEARTBEAT_TIMEOUT);
+    }
 
     // MQTT Client Connection
     const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
@@ -366,6 +497,12 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
       statusBox.html('<i class="fas fa-spinner fa-spin"></i> Checking...');
       statusCard.removeClass('bg-danger bg-info').addClass('bg-warning');
 
+      // ✅ Set kipas juga checking
+      const fanBox = $('#fan_status');
+      const fanCard = $('#fan_status_box');
+      fanBox.html('<i class="fas fa-spinner fa-spin"></i> Checking...');
+      fanCard.removeClass('bg-danger bg-info bg-success bg-secondary').addClass('bg-warning');
+
       // Timeout 5 detik untuk cek apakah ESP32 response
       setTimeout(() => {
         const currentStatus = statusBox.text().trim();
@@ -374,6 +511,9 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           statusBox.text('Offline');
           statusCard.removeClass('bg-warning bg-info').addClass('bg-danger');
           $('#esp_connection_time').text('ESP32 tidak merespon');
+
+          // ✅ Set kipas offline juga
+          setFanOfflineStatus();
         }
       }, 5000);
     });
@@ -387,6 +527,9 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
       const statusCard = statusBox.closest('.small-box');
       statusBox.text('Offline');
       statusCard.removeClass('bg-info bg-warning').addClass('bg-danger');
+
+      // ✅ SYNC: Kipas juga offline saat ESP32 offline
+      setFanOfflineStatus();
     });
 
     client.on('message', (topic, message) => {
@@ -401,10 +544,19 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           statusBox.text('Online');
           statusCard.removeClass('bg-danger bg-warning').addClass('bg-info');
           $('#esp_connection_time').text('Online sejak ' + new Date().toLocaleTimeString('id-ID'));
+
+          // ✅ SYNC: Kipas online kembali saat ESP32 online
+          setFanOnlineStatus();
+
+          // Request current status dari ESP32
+          client.publish(`${topicRoot}/relay/request_status`, '1');
         } else {
           statusBox.text('Offline');
           statusCard.removeClass('bg-info bg-warning').addClass('bg-danger');
           $('#esp_connection_time').text('Offline sejak ' + new Date().toLocaleTimeString('id-ID'));
+
+          // ✅ SYNC: Kipas offline saat ESP32 offline
+          setFanOfflineStatus();
         }
       }
 
@@ -480,8 +632,6 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               temperature: temp,
               humidity: window.lastDHTData.humidity
             });
-            delete window.lastDHTData.humidity;
-            delete window.lastDHTData.humTime;
           }
         }
       }
@@ -514,8 +664,6 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               temperature: window.lastDHTData.temperature,
               humidity: hum
             });
-            delete window.lastDHTData.temperature;
-            delete window.lastDHTData.tempTime;
           }
         }
       }
@@ -557,7 +705,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
         }
 
         const status = data.status || '-';
-        let uid = (data.uid || '').trim().toUpperCase(); // Normalize UID
+        const uid = data.uid || '';
 
         // ❌ SKIP jika dari kontrol manual
         if (uid === 'MANUAL_CONTROL') {
@@ -583,6 +731,9 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
 
         // Auto-detect ESP32 online from RFID data
         markESP32Online();
+
+        // Update UID Kartu
+        $('#last_rfid').text(uid);
 
         // ✅ Update tampilan hanya untuk akses fisik yang sah (granted/denied)
         if (status === 'granted' || status === 'denied') {
@@ -630,8 +781,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           console.error('Parse error:', e);
         }
 
-        let uid = (data.uid || '').trim().toUpperCase(); // Normalize UID
-        const action = data.action || '';
+        const uid = data.uid || '';
 
         // ❌ SKIP jika dari kontrol manual
         if (uid === 'MANUAL_CONTROL') {
@@ -660,11 +810,60 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
         // Auto-detect ESP32 online from RFID data
         markESP32Online();
 
-        // ❌ JANGAN update display saat proses add (agar tidak muncul saat registrasi)
-        // ✅ Hanya update untuk action remove atau action lainnya (bukan add)
-        if (uid && action !== 'add') {
+        if (uid) {
           $('#last_rfid').text(uid);
           $('#last_rfid_time').text(new Date().toLocaleString('id-ID'));
+        }
+      }
+
+      // === Fan/Relay Status ===
+      if (topic === `${topicRoot}/relay/status`) {
+        // Auto-detect ESP32 online dari data
+        markESP32Online();
+
+        // ✅ PERBAIKAN: Update UI langsung tanpa cek isESP32Online
+        // (karena jika ada data berarti ESP32 pasti online)
+
+        const fanBox = $('#fan_status');
+        const fanCard = $('#fan_status_box');
+        const fanIcon = $('#fan_icon');
+
+        const isOn = msg.toLowerCase().includes('on');
+        const isAuto = msg.toLowerCase().includes('auto');
+
+        fanBox.text(isOn ? 'ON' : 'OFF');
+
+        if (isOn) {
+          fanCard.removeClass('bg-secondary bg-purple bg-warning').addClass('bg-success');
+          fanIcon.addClass('fa-spin');
+        } else {
+          fanCard.removeClass('bg-success bg-purple bg-warning').addClass('bg-secondary');
+          fanIcon.removeClass('fa-spin');
+        }
+
+        $('#fan_mode_text').html('<i class="fas fa-' + (isAuto ? 'magic' : 'hand-pointer') + '"></i> Mode: ' + (isAuto ? 'Auto' : 'Manual'));
+
+        console.log(`✅ Kipas UI Updated: ${isOn ? 'ON' : 'OFF'} (${isAuto ? 'Auto' : 'Manual'})`);
+      }
+
+      // === Fan Mode Status ===
+      if (topic === `${topicRoot}/fan/mode/status`) {
+        const mode = msg.toLowerCase();
+        const isAuto = mode === 'auto';
+
+        $('#fan_mode_display').text(mode.toUpperCase());
+        $('#fan_mode_text').html('<i class="fas fa-' + (isAuto ? 'magic' : 'hand-pointer') + '"></i> Mode: ' + (isAuto ? 'Auto' : 'Manual'));
+      }
+
+      // === Fan Threshold Status ===
+      if (topic === `${topicRoot}/fan/threshold/status`) {
+        // Format: "ON>34C OFF<28C"
+        const parts = msg.split(' ');
+        if (parts.length >= 2) {
+          const onTemp = parts[0].replace('ON>', '').replace('C', '');
+          const offTemp = parts[1].replace('OFF<', '').replace('C', '');
+          $('#threshold_on').text(onTemp + '°C');
+          $('#threshold_off').text(offTemp + '°C');
         }
       }
     });
@@ -736,12 +935,24 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
       const statusCard = statusBox.closest('.small-box');
       const currentStatus = statusBox.text().trim();
 
+      // ✅ Reset heartbeat timer setiap kali ada data dari ESP32
+      resetHeartbeat();
+
       // Only update if not already showing "Online"
       if (currentStatus !== 'Online') {
         console.log('✅ ESP32 detected online from data');
         statusBox.text('Online');
         statusCard.removeClass('bg-danger bg-warning').addClass('bg-info');
         $('#esp_connection_time').text('Online sejak ' + new Date().toLocaleTimeString('id-ID'));
+
+        // ✅ Set kipas online juga
+        if (!isESP32Online) {
+          setFanOnlineStatus();
+          // Request status kipas
+          setTimeout(() => {
+            client.publish(`${topicRoot}/relay/request_status`, '1');
+          }, 300);
+        }
       }
     }
 
@@ -841,16 +1052,6 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
     // Update clock immediately and then every second
     updateClock();
     setInterval(updateClock, 1000);
-
-    // Load last RFID access on page load
-    loadLastRFIDAccess();
-
-    // Load registered cards count
-    $.get('api/rfid_crud.php?action=list', function(res) {
-      if (res.success && res.data) {
-        $('#registered_cards').text(res.data.length);
-      }
-    }, 'json');
   </script>
 </body>
 

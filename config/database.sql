@@ -54,3 +54,28 @@ CREATE TABLE config (
   device_serial VARCHAR(20),
   sensor_interval INT DEFAULT 10
 );
+
+-- Tabel Konfigurasi Kipas Otomatis
+CREATE TABLE fan_config (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  mode ENUM('auto', 'manual') DEFAULT 'auto',
+  threshold_temp_on FLOAT DEFAULT 34.0,
+  threshold_temp_off FLOAT DEFAULT 28.0,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_by INT,
+  FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- Tabel Log Kipas (mode auto)
+CREATE TABLE fan_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  status ENUM('on', 'off') NOT NULL,
+  temperature FLOAT,
+  humidity FLOAT,
+  triggered_by ENUM('auto', 'manual') DEFAULT 'auto',
+  logged_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default fan config
+INSERT INTO fan_config (mode, threshold_temp_on, threshold_temp_off) 
+VALUES ('auto', 34.0, 28.0);

@@ -94,9 +94,6 @@ if ($action === 'log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   $uid = $_POST['uid'] ?? '';
   $status = $_POST['status'] ?? '';
 
-  // Normalize UID (trim dan uppercase)
-  $uid = strtoupper(trim($uid));
-
   if (!$uid || !$status) {
     echo json_encode(['success' => false, 'error' => 'UID dan status harus diisi']);
     exit;
@@ -136,10 +133,17 @@ if ($action === 'log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Tambah log baru
   $stmt = $conn->prepare('INSERT INTO rfid_logs (uid, access_time, status) VALUES (?, NOW(), ?)');
+  if (!$stmt) {
+    error_log("RFID Log Failed - Prepare error: " . $conn->error);
+    echo json_encode(['success' => false, 'error' => 'Database error: ' . $conn->error]);
+    exit;
+  }
+
   $stmt->bind_param('ss', $uid, $status);
   if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Log berhasil ditambahkan', 'uid' => $uid, 'status' => $status]);
+    echo json_encode(['success' => true, 'message' => 'Log berhasil ditambahkan']);
   } else {
+    error_log("RFID Log Failed - Execute error: " . $stmt->error);
     echo json_encode(['success' => false, 'error' => 'Gagal menambahkan log: ' . $stmt->error]);
   }
   $stmt->close();
@@ -149,19 +153,57 @@ if ($action === 'log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // Hapus kartu
 if ($action === 'remove' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   $uid = $_POST['uid'] ?? '';
+
+  // Log untuk debugging
+  error_log("RFID Remove Request - UID: " . $uid);
+
   if (!$uid) {
     echo json_encode(['success' => false, 'error' => 'UID tidak boleh kosong']);
     exit;
   }
 
-  $stmt = $conn->prepare('DELETE FROM rfid_cards WHERE uid = ?');
-  $stmt->bind_param('s', $uid);
-  if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Kartu berhasil dihapus']);
-  } else {
-    echo json_encode(['success' => false, 'error' => 'Gagal menghapus kartu: ' . $stmt->error]);
+  // Mulai transaction untuk memastikan atomicity
+  $conn->begin_transaction();
+
+  try {
+    // Hapus log terlebih dahulu (foreign key constraint)
+    $stmt1 = $conn->prepare('DELETE FROM rfid_logs WHERE uid = ?');
+    if (!$stmt1) {
+      throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt1->bind_param('s', $uid);
+    $stmt1->execute();
+    $logs_deleted = $stmt1->affected_rows;
+    $stmt1->close();
+
+    // Kemudian hapus kartu
+    $stmt2 = $conn->prepare('DELETE FROM rfid_cards WHERE uid = ?');
+    if (!$stmt2) {
+      throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt2->bind_param('s', $uid);
+    $stmt2->execute();
+    $cards_deleted = $stmt2->affected_rows;
+    $stmt2->close();
+
+    // Commit transaction
+    $conn->commit();
+
+    error_log("RFID Remove Success - Cards: $cards_deleted, Logs: $logs_deleted");
+    echo json_encode([
+      'success' => true,
+      'message' => 'Kartu berhasil dihapus',
+      'deleted' => [
+        'cards' => $cards_deleted,
+        'logs' => $logs_deleted
+      ]
+    ]);
+  } catch (Exception $e) {
+    // Rollback jika ada error
+    $conn->rollback();
+    error_log("RFID Remove Failed - Error: " . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Gagal menghapus kartu: ' . $e->getMessage()]);
   }
-  $stmt->close();
   exit;
 }
 
