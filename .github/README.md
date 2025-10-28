@@ -243,7 +243,10 @@ Anda perlu fungsi di `loop()` untuk mem-polling `api/kipas_crud.php?action=get_s
 ```cpp
 void checkFanStatus() {
   HTTPClient http;
-  String url = "[http://server-anda.com/api/kipas_crud.php?action=get_status&serial=](http://server-anda.com/api/kipas_crud.php?action=get_status&serial=)" + serial_number;
+  
+  // Ini adalah baris yang benar, tanpa format markdown
+  String url = "http://server-anda.com/api/kipas_crud.php?action=get_status&serial=" + serial_number;
+  
   http.begin(url);
   
   int httpResponseCode = http.GET();
@@ -293,35 +296,3 @@ void checkFanStatus() {
 
 -----
 
-## 🤝 Panduan Kontribusi
-
-Kami menyambut baik kontribusi\! Jika Anda ingin meningkatkan proyek ini, silakan *fork* repositori ini dan ajukan *Pull Request* (PR).
-
-1.  Fork repositori.
-2.  Buat branch fitur baru (`git checkout -b fitur/NamaFitur`).
-3.  Commit perubahan Anda (`git commit -m 'Menambahkan fitur A'`).
-4.  Push ke branch (`git push origin fitur/NamaFitur`).
-5.  Buka Pull Request.
-
------
-
-## 📜 Lisensi
-
-Proyek ini dilisensikan di bawah **MIT License**. Lihat file `LICENSE` (jika ada) untuk detail lebih lanjut.
-
------
-
-## 👨‍💻 Info Penulis
-
-  * **Pengelola Proyek:** [Nama Anda / Username GitHub Anda]
-  * **Email:** [email@anda.com]
-  * **GitHub:** [https://github.com/NAMA\_ANDA](https://www.google.com/search?q=https://github.com/NAMA_ANDA)
-
------
-
-## 📞 Kontak & Dukungan
-
-Jika Anda menemukan bug atau memiliki pertanyaan, silakan buka **Issue** di repositori GitHub ini.
-
-```
-```
