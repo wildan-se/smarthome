@@ -773,6 +773,21 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
           const name = localStorage.getItem('pendingCard_' + data.uid) || '';
           localStorage.removeItem('pendingCard_' + data.uid);
 
+          // ✅ BLACKLIST: Tandai kartu ini untuk di-skip di riwayat selama 3 detik
+          localStorage.setItem('lastAddedUID', data.uid);
+          localStorage.setItem('lastAddTime', Date.now().toString());
+          console.log('✅ Blacklist set for:', data.uid, '- Will skip in access log for 3 seconds');
+
+          // Hapus blacklist setelah 3 detik
+          setTimeout(function() {
+            const currentUID = localStorage.getItem('lastAddedUID');
+            if (currentUID === data.uid) {
+              localStorage.removeItem('lastAddedUID');
+              localStorage.removeItem('lastAddTime');
+              console.log('🧹 Blacklist cleared for:', data.uid);
+            }
+          }, 3000);
+
           // Tambah kartu ke database dengan nama
           $.post('api/rfid_crud.php?action=add', {
             uid: data.uid,
@@ -837,6 +852,22 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         if (uid === 'MANUAL_CONTROL') {
           console.log('⚠️ Skipping manual control from RFID access log');
           return;
+        }
+
+        // ❌ SKIP jika kartu baru saja ditambahkan (dalam 3 detik terakhir)
+        const pendingUID = localStorage.getItem('lastAddedUID');
+        const addTime = localStorage.getItem('lastAddTime');
+        if (pendingUID && pendingUID === uid && addTime) {
+          const timeDiff = Date.now() - parseInt(addTime);
+          if (timeDiff < 3000) { // 3 detik blacklist
+            console.log('⚠️ BLOCKED: Newly added card from access log:', uid, 'Time diff:', timeDiff, 'ms');
+            return;
+          } else {
+            console.log('⏰ Time expired for blacklist:', uid, 'Time diff:', timeDiff, 'ms');
+            // Clear marker setelah expired
+            localStorage.removeItem('lastAddedUID');
+            localStorage.removeItem('lastAddTime');
+          }
         }
 
         // Log akses kartu (hanya untuk kartu fisik)
