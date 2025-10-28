@@ -93,12 +93,6 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               </a>
             </li>
             <li class="nav-item">
-              <a href="fan.php" class="nav-link">
-                <i class="nav-icon fas fa-fan"></i>
-                <p>Kontrol Kipas</p>
-              </a>
-            </li>
-            <li class="nav-item">
               <a href="log.php" class="nav-link">
                 <i class="nav-icon fas fa-list"></i>
                 <p>Log </p>
@@ -238,72 +232,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
             </div>
           </div>
 
-          <!-- Row 2: Fan Status & Control -->
-          <div class="row">
-            <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
-              <div class="small-box bg-purple fade-in" id="fan_status_box">
-                <div class="inner">
-                  <h3 id="fan_status">OFF</h3>
-                  <p>Status Kipas</p>
-                </div>
-                <div class="icon"><i class="fas fa-fan" id="fan_icon"></i></div>
-                <div class="small-box-footer">
-                  <span id="fan_mode_text">Mode: Manual</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-lg-9 col-md-6 col-sm-12 mb-4">
-              <div class="card card-purple shadow-md fade-in">
-                <div class="card-header ">
-                  <h3 class="card-title text-dark"><i class="fas fa-wind mr-2 text-purple"></i>Kontrol Kipas Otomatis</h3>
-                  <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                      <i class="fas fa-minus"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-4">
-                      <div class="info-box shadow-sm">
-                        <span class="info-box-icon bg-warning"><i class="fas fa-temperature-high"></i></span>
-                        <div class="info-box-content">
-                          <span class="info-box-text">Threshold ON</span>
-                          <span class="info-box-number" id="threshold_on">34°C</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="info-box shadow-sm">
-                        <span class="info-box-icon bg-indigo"><i class="fas fa-temperature-low"></i></span>
-                        <div class="info-box-content">
-                          <span class="info-box-text">Threshold OFF</span>
-                          <span class="info-box-number" id="threshold_off">28°C</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="info-box shadow-sm">
-                        <span class="info-box-icon bg-primary"><i class="fas fa-cog"></i></span>
-                        <div class="info-box-content">
-                          <span class="info-box-text">Mode Aktif</span>
-                          <span class="info-box-number" id="fan_mode_display">MANUAL</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="text-center mt-2">
-                    <a href="fan.php" class="btn btn-purple btn-sm">
-                      <i class="fas fa-sliders-h"></i> Pengaturan Lengkap
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Row 3: Chart & RFID Info -->
+          <!-- Row 2: Chart & RFID Info -->
           <div class="row">
             <!-- Temperature & Humidity Chart -->
             <div class="col-lg-8 col-md-12 mb-4">
@@ -424,14 +353,14 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
     // ========================================
     function setFanOfflineStatus() {
       isESP32Online = false;
-      const fanBox = $('#fan_status');
-      const fanCard = $('#fan_status_box');
-      const fanIcon = $('#fan_icon');
+      const fanBox = $('#fan_status_text');
+      const fanCard = $('#fan_card');
+      const fanIcon = $('#fan_icon_dashboard');
 
       // Update visual
       fanBox.html('<i class="fas fa-exclamation-triangle"></i> OFFLINE');
-      fanCard.removeClass('bg-success bg-purple bg-secondary bg-warning').addClass('bg-secondary');
-      fanIcon.removeClass('fa-spin');
+      fanCard.removeClass('bg-success bg-purple bg-warning').addClass('bg-secondary');
+      fanIcon.removeClass('fan-spinning');
       $('#fan_mode_text').html('<i class="fas fa-wifi-slash"></i> ESP32 Offline');
 
       console.log('🔴 Kipas: Status OFFLINE (ESP32 tidak terhubung)');
@@ -498,8 +427,8 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
       statusCard.removeClass('bg-danger bg-info').addClass('bg-warning');
 
       // ✅ Set kipas juga checking
-      const fanBox = $('#fan_status');
-      const fanCard = $('#fan_status_box');
+      const fanBox = $('#fan_status_text');
+      const fanCard = $('#fan_card');
       fanBox.html('<i class="fas fa-spinner fa-spin"></i> Checking...');
       fanCard.removeClass('bg-danger bg-info bg-success bg-secondary').addClass('bg-warning');
 
@@ -824,9 +753,9 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
         // ✅ PERBAIKAN: Update UI langsung tanpa cek isESP32Online
         // (karena jika ada data berarti ESP32 pasti online)
 
-        const fanBox = $('#fan_status');
-        const fanCard = $('#fan_status_box');
-        const fanIcon = $('#fan_icon');
+        const fanBox = $('#fan_status_text');
+        const fanCard = $('#fan_card');
+        const fanIcon = $('#fan_icon_dashboard');
 
         const isOn = msg.toLowerCase().includes('on');
         const isAuto = msg.toLowerCase().includes('auto');
@@ -835,10 +764,10 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
 
         if (isOn) {
           fanCard.removeClass('bg-secondary bg-purple bg-warning').addClass('bg-success');
-          fanIcon.addClass('fa-spin');
+          fanIcon.addClass('fan-spinning');
         } else {
           fanCard.removeClass('bg-success bg-purple bg-warning').addClass('bg-secondary');
-          fanIcon.removeClass('fa-spin');
+          fanIcon.removeClass('fan-spinning');
         }
 
         $('#fan_mode_text').html('<i class="fas fa-' + (isAuto ? 'magic' : 'hand-pointer') + '"></i> Mode: ' + (isAuto ? 'Auto' : 'Manual'));
