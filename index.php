@@ -214,47 +214,47 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           <div class="row">
             <!-- RFID Last Access -->
             <div class="col-lg-6 col-md-12 mb-4">
-              <div class="card card-info shadow-md fade-in">
+              <div class="card card-info shadow-md fade-in h-100">
                 <div class="card-header">
-                  <h3 class="card-title text-dark"><i class="fas fa-id-card mr-2 text-green"></i>Akses RFID Terakhir</h3>
+                  <h3 class="card-title text-dark"><i class="fas fa-id-card mr-2"></i>Akses RFID Terakhir</h3>
                 </div>
                 <div class="card-body">
                   <div class="info-box mb-3 shadow-sm">
                     <span class="info-box-icon bg-info"><i class="fas fa-fingerprint"></i></span>
                     <div class="info-box-content">
                       <span class="info-box-text">UID Kartu</span>
-                      <span class="info-box-number" id="last_rfid" style="font-size: 1.2rem;">-</span>
+                      <span class="info-box-number" id="last_rfid" style="font-size: 1.1rem;">-</span>
                     </div>
                   </div>
-                  <table class="table table-sm table-borderless">
-                    <tr>
-                      <td><i class="fas fa-clock text-primary"></i> Waktu:</td>
-                      <td id="last_rfid_time" class="text-right font-weight-bold">-</td>
-                    </tr>
-                    <tr>
-                      <td><i class="fas fa-check-circle text-success"></i> Status:</td>
-                      <td class="text-right"><span id="last_rfid_status" class="badge badge-secondary">-</span></td>
-                    </tr>
-                  </table>
+                  <div class="info-box mb-0 shadow-sm">
+                    <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Waktu & Status</span>
+                      <span class="info-box-number" style="font-size: 0.9rem;">
+                        <div id="last_rfid_time" class="mb-1">-</div>
+                        <span id="last_rfid_status" class="badge badge-secondary">-</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Statistics Cards -->
             <div class="col-lg-6 col-md-12 mb-4">
-              <div class="card card-success shadow-md fade-in">
+              <div class="card card-success shadow-md fade-in h-100">
                 <div class="card-header">
-                  <h3 class="card-title"><i class="fas fa-chart-bar mr-2"></i>Statistik Sistem</h3>
+                  <h3 class="card-title text-dark"><i class="fas fa-chart-bar mr-2"></i>Statistik Sistem</h3>
                 </div>
-                <div class="card-body p-2">
-                  <div class="info-box mb-2">
+                <div class="card-body">
+                  <div class="info-box mb-3 shadow-sm">
                     <span class="info-box-icon bg-primary"><i class="fas fa-id-card-alt"></i></span>
                     <div class="info-box-content">
                       <span class="info-box-text">Total Kartu Terdaftar</span>
                       <span class="info-box-number"><?= number_format($total_cards) ?></span>
                     </div>
                   </div>
-                  <div class="info-box mb-0">
+                  <div class="info-box mb-0 shadow-sm">
                     <span class="info-box-icon bg-success"><i class="fas fa-history"></i></span>
                     <div class="info-box-content">
                       <span class="info-box-text">Akses Hari Ini</span>
