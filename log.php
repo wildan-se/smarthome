@@ -54,6 +54,57 @@ require_once 'config/config.php';
     .thead-sticky th {
       border-bottom: 2px solid #dee2e6 !important;
     }
+
+    /* Smooth accordion animations */
+    .card-body-accordion {
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.3s ease,
+        padding 0.4s ease;
+      max-height: 0;
+      opacity: 0;
+      padding: 0 1.25rem;
+    }
+
+    .card-body-accordion.show {
+      max-height: 3000px;
+      opacity: 1;
+      padding: 1.25rem;
+    }
+
+    /* Smooth icon rotation */
+    .btn-tool i {
+      transition: transform 0.3s ease;
+    }
+
+    .btn-tool i.rotate {
+      transform: rotate(180deg);
+    }
+
+    /* Card header hover effect */
+    .card-header-clickable {
+      cursor: pointer;
+      transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card-header-clickable:hover {
+      background-color: rgba(0, 0, 0, 0.02);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header-clickable:active {
+      transform: scale(0.99);
+    }
+
+    /* Smooth card transitions */
+    .card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card.active-card {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
   </style>
 </head>
 
@@ -216,8 +267,8 @@ require_once 'config/config.php';
           <div id="accordionLogs">
 
             <!-- Log RFID Access -->
-            <div class="card card-primary card-outline shadow-sm hover-shadow fadeIn mt-4" id="cardRfid">
-              <div class="card-header" style="cursor: pointer;" onclick="toggleCard('collapseRfid')">
+            <div class="card card-primary card-outline shadow-sm hover-shadow fadeIn mt-4 active-card" id="cardRfid">
+              <div class="card-header card-header-clickable" onclick="toggleCard('collapseRfid', 'cardRfid')">
                 <h3 class="card-title">
                   <i class="fas fa-id-card"></i> Log Akses RFID
                 </h3>
@@ -228,7 +279,7 @@ require_once 'config/config.php';
                   </button>
                 </div>
               </div>
-              <div class="card-body" id="collapseRfid" style="display: block;">
+              <div class="card-body-accordion show" id="collapseRfid">
                 <div class="card-body">
                   <!-- Filter Section -->
                   <div class="card card-secondary card-outline mb-3">
@@ -287,7 +338,7 @@ require_once 'config/config.php';
 
             <!-- Log DHT Sensor -->
             <div class="card card-success card-outline shadow-sm hover-shadow fadeIn mt-4" id="cardDht">
-              <div class="card-header" style="cursor: pointer;" onclick="toggleCard('collapseDht')">
+              <div class="card-header card-header-clickable" onclick="toggleCard('collapseDht', 'cardDht')">
                 <h3 class="card-title">
                   <i class="fas fa-thermometer-half"></i> Log Suhu & Kelembapan
                 </h3>
@@ -298,7 +349,7 @@ require_once 'config/config.php';
                   </button>
                 </div>
               </div>
-              <div class="card-body" id="collapseDht" style="display: none;">
+              <div class="card-body-accordion" id="collapseDht">
                 <div class="card-body">
                   <!-- Filter Section -->
                   <div class="card card-secondary card-outline mb-3">
@@ -378,7 +429,7 @@ require_once 'config/config.php';
 
             <!-- Log Door Status -->
             <div class="card card-warning card-outline shadow-sm hover-shadow fadeIn mt-4 mb-4" id="cardDoor">
-              <div class="card-header" style="cursor: pointer;" onclick="toggleCard('collapseDoor')">
+              <div class="card-header card-header-clickable" onclick="toggleCard('collapseDoor', 'cardDoor')">
                 <h3 class="card-title">
                   <i class="fas fa-door-open"></i> Log Status Pintu
                 </h3>
@@ -389,7 +440,7 @@ require_once 'config/config.php';
                   </button>
                 </div>
               </div>
-              <div class="card-body" id="collapseDoor" style="display: none;">
+              <div class="card-body-accordion" id="collapseDoor">
                 <div class="card-body">
                   <!-- Filter Section -->
                   <div class="card card-secondary card-outline mb-3">
@@ -454,31 +505,36 @@ require_once 'config/config.php';
     let dhtData = [];
     let doorData = [];
 
-    // Accordion functionality
-    function toggleCard(cardId) {
+    // Smooth accordion functionality with animations
+    function toggleCard(cardId, cardElementId) {
       const cards = ['collapseRfid', 'collapseDht', 'collapseDoor'];
       const icons = ['iconRfid', 'iconDht', 'iconDoor'];
+      const cardElements = ['cardRfid', 'cardDht', 'cardDoor'];
 
       cards.forEach((id, index) => {
         const cardBody = document.getElementById(id);
         const icon = document.getElementById(icons[index]);
+        const cardElement = document.getElementById(cardElements[index]);
 
         if (id === cardId) {
-          // Toggle the clicked card
-          if (cardBody.style.display === 'none') {
-            cardBody.style.display = 'block';
-            icon.classList.remove('fa-plus');
-            icon.classList.add('fa-minus');
-          } else {
-            cardBody.style.display = 'none';
+          // Toggle the clicked card with smooth animation
+          if (cardBody.classList.contains('show')) {
+            cardBody.classList.remove('show');
             icon.classList.remove('fa-minus');
             icon.classList.add('fa-plus');
+            cardElement.classList.remove('active-card');
+          } else {
+            cardBody.classList.add('show');
+            icon.classList.remove('fa-plus');
+            icon.classList.add('fa-minus');
+            cardElement.classList.add('active-card');
           }
         } else {
-          // Close other cards
-          cardBody.style.display = 'none';
+          // Close other cards with smooth animation
+          cardBody.classList.remove('show');
           icon.classList.remove('fa-minus');
           icon.classList.add('fa-plus');
+          cardElement.classList.remove('active-card');
         }
       });
     }
