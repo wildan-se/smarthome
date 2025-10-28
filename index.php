@@ -141,9 +141,9 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
       <section class="content">
         <div class="container-fluid">
 
-          <!-- Row 1: Status Cards (ESP32, Door, Temperature, Humidity) -->
+          <!-- Row 1: All Status Cards (ESP32, Door, Temperature, Humidity, Fan) - 5 Columns -->
           <div class="row">
-            <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
               <div class="small-box bg-danger fade-in">
                 <div class="inner">
                   <h3 id="esp_status">Offline</h3>
@@ -156,7 +156,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
               <div class="small-box bg-success fade-in">
                 <div class="inner">
                   <h3 id="door_status">Tertutup</h3>
@@ -169,11 +169,11 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
               <div class="small-box bg-warning fade-in">
                 <div class="inner">
                   <h3 id="temperature">-</h3>
-                  <p>Suhu Ruangan (°C)</p>
+                  <p>Suhu (°C)</p>
                 </div>
                 <div class="icon"><i class="fas fa-thermometer-half"></i></div>
                 <div class="small-box-footer">
@@ -182,7 +182,7 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
               <div class="small-box bg-info fade-in">
                 <div class="inner">
                   <h3 id="humidity">-</h3>
@@ -194,12 +194,8 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Row 2: Fan Status & Chart -->
-          <div class="row">
-            <!-- Fan Status -->
-            <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
               <div class="small-box bg-success fade-in" id="fan_card">
                 <div class="inner">
                   <h3 id="fan_status_text">OFF</h3>
@@ -212,36 +208,9 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
                 </div>
               </div>
             </div>
-
-            <!-- Temperature & Humidity Chart -->
-            <div class="col-lg-9 col-md-12 mb-4">
-              <div class="card card-primary shadow-md fade-in">
-                <div class="card-header">
-                  <h3 class="card-title text-dark">
-                    <i class="fas fa-chart-line mr-2 text-blue"></i>Grafik Suhu & Kelembapan Real-time
-                  </h3>
-                  <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                      <i class="fas fa-minus"></i>
-                    </button>
-                    <button type="button" class="btn btn-tool" data-card-widget="maximize">
-                      <i class="fas fa-expand"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <canvas id="dhtChart" height="80"></canvas>
-                </div>
-                <div class="card-footer bg-white">
-                  <small class="text-muted">
-                    <i class="far fa-clock"></i> Update otomatis setiap data baru diterima
-                  </small>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <!-- Row 3: RFID Info & Statistics -->
+          <!-- Row 2: RFID Info & Statistics - 2 Columns -->
           <div class="row">
             <!-- RFID Last Access -->
             <div class="col-lg-6 col-md-12 mb-4">
@@ -292,6 +261,35 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
                       <span class="info-box-number"><?= number_format($today_access) ?></span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: Chart Full Width -->
+          <div class="row">
+            <div class="col-12 mb-4">
+              <div class="card card-primary shadow-md fade-in">
+                <div class="card-header">
+                  <h3 class="card-title text-dark">
+                    <i class="fas fa-chart-line mr-2 text-blue"></i>Grafik Suhu & Kelembapan Real-time
+                  </h3>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                      <i class="fas fa-expand"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <canvas id="dhtChart" height="60"></canvas>
+                </div>
+                <div class="card-footer bg-white">
+                  <small class="text-muted">
+                    <i class="far fa-clock"></i> Update otomatis setiap data baru diterima
+                  </small>
                 </div>
               </div>
             </div>
