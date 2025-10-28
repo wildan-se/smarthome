@@ -577,8 +577,10 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
       if (topic.endsWith('/kipas/status')) {
         const newStatus = payload.toLowerCase();
 
-        // Log perubahan status kipas ke database
+        // Log perubahan status kipas ke database hanya jika status berubah
         if (newStatus !== currentFanStatus) {
+          console.log('🔄 Fan status changed:', currentFanStatus, '→', newStatus);
+
           // Determine trigger message
           let triggerMsg = '';
           if (currentMode === 'auto') {
@@ -591,31 +593,42 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             triggerMsg = newStatus === 'on' ? 'Manual ON oleh user' : 'Manual OFF oleh user';
           }
 
-          $.post('api/kipas_crud.php', {
-            action: 'log_status',
-            status: newStatus,
-            mode: currentMode,
-            temperature: currentTemp,
-            humidity: currentHumidity,
-            trigger: triggerMsg
-          }, function(res) {
-            if (res.success) {
-              console.log('✅ Status kipas berhasil di-log');
-              // Refresh history setelah 500ms
-              setTimeout(loadHistory, 500);
-            }
-          }, 'json');
+          // Only log if temperature and humidity data is valid
+          if (currentTemp > 0 && currentHumidity > 0) {
+            $.post('api/kipas_crud.php', {
+              action: 'log_status',
+              status: newStatus,
+              mode: currentMode,
+              temperature: currentTemp,
+              humidity: currentHumidity,
+              trigger: triggerMsg
+            }, function(res) {
+              if (res.success) {
+                console.log('✅ Status kipas berhasil di-log');
+                // Refresh history setelah 500ms
+                setTimeout(loadHistory, 500);
+              } else {
+                console.error('❌ Failed to log fan status:', res.error);
+              }
+            }, 'json').fail(function(xhr) {
+              console.error('❌ Log request failed:', xhr.responseText);
+            });
+          } else {
+            console.warn('⚠️ Skipping log - invalid temperature/humidity data');
+          }
+
+          currentFanStatus = newStatus;
         }
 
-        currentFanStatus = newStatus;
-        updateFanStatus(currentFanStatus);
+        updateFanStatus(newStatus);
       }
 
       if (topic.endsWith('/kipas/mode')) {
         const newMode = payload.toLowerCase();
 
-        // Log perubahan mode
+        // Update mode jika berbeda
         if (newMode !== currentMode) {
+          console.log('🔄 Mode changed:', currentMode, '→', newMode);
           currentMode = newMode;
           updateMode(currentMode);
 
@@ -688,7 +701,12 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
       const isAuto = $(this).is(':checked');
       const newMode = isAuto ? 'auto' : 'manual';
 
+      console.log('🔄 Switching mode to:', newMode);
+
       client.publish(`${topicRoot}/kipas/mode`, newMode);
+
+      // Update UI immediately for better UX
+      updateMode(newMode);
 
       // Update database
       $.post('api/kipas_crud.php', {
@@ -698,30 +716,46 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         threshold_off: $('#thresholdOff').val()
       }, function(res) {
         if (res.success) {
-          showAlert('#controlResult', 'success', 'Mode berhasil diubah ke ' + newMode.toUpperCase());
+          showAlert('#controlResult', 'success', '✅ Mode berhasil diubah ke ' + newMode.toUpperCase());
+        } else {
+          showAlert('#controlResult', 'danger', '❌ Gagal mengubah mode: ' + (res.error || 'Unknown error'));
         }
-      }, 'json');
+      }, 'json').fail(function() {
+        showAlert('#controlResult', 'danger', '❌ Gagal menghubungi server');
+      });
     });
 
     // Manual Control Buttons
     $('#btnFanOn').click(function() {
-      client.publish(`${topicRoot}/kipas/control`, 'on');
-      showAlert('#controlResult', 'info', '<i class="fas fa-spinner fa-spin"></i> Mengirim perintah ON...');
+      console.log('🔵 Manual ON button clicked');
 
-      // Tunggu status update dari MQTT, tapi tetap log manual action
-      setTimeout(function() {
-        showAlert('#controlResult', 'success', '✅ Kipas berhasil dinyalakan secara manual');
-      }, 1000);
+      // Disable button to prevent double click
+      $(this).prop('disabled', true);
+
+      client.publish(`${topicRoot}/kipas/control`, 'on');
+      showAlert('#controlResult', 'info', '<i class="fas fa-spinner fa-spin"></i> Mengirim perintah ON ke ESP32...');
+
+      // Re-enable button after 2 seconds
+      setTimeout(() => {
+        $(this).prop('disabled', false);
+        showAlert('#controlResult', 'success', '✅ Perintah ON berhasil dikirim');
+      }, 2000);
     });
 
     $('#btnFanOff').click(function() {
-      client.publish(`${topicRoot}/kipas/control`, 'off');
-      showAlert('#controlResult', 'info', '<i class="fas fa-spinner fa-spin"></i> Mengirim perintah OFF...');
+      console.log('🔴 Manual OFF button clicked');
 
-      // Tunggu status update dari MQTT, tapi tetap log manual action
-      setTimeout(function() {
-        showAlert('#controlResult', 'success', '✅ Kipas berhasil dimatikan secara manual');
-      }, 1000);
+      // Disable button to prevent double click
+      $(this).prop('disabled', true);
+
+      client.publish(`${topicRoot}/kipas/control`, 'off');
+      showAlert('#controlResult', 'info', '<i class="fas fa-spinner fa-spin"></i> Mengirim perintah OFF ke ESP32...');
+
+      // Re-enable button after 2 seconds
+      setTimeout(() => {
+        $(this).prop('disabled', false);
+        showAlert('#controlResult', 'success', '✅ Perintah OFF berhasil dikirim');
+      }, 2000);
     });
 
     // Save Threshold
@@ -761,19 +795,29 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         if (res.success) {
           $('#thresholdOn').val(res.data.threshold_on);
           $('#thresholdOff').val(res.data.threshold_off);
-          updateMode(res.data.mode);
+
+          // Update mode and ensure UI is correct
+          const mode = res.data.mode || 'auto';
+          console.log('📥 Loaded mode from settings:', mode);
+          updateMode(mode);
         }
-      }, 'json');
+      }, 'json').fail(function(xhr) {
+        console.error('❌ Failed to load settings:', xhr.responseText);
+        // Default to auto mode if loading fails
+        updateMode('auto');
+      });
 
       // Load latest DHT
       $.get('api/kipas_crud.php?action=get_latest_dht', function(res) {
-        if (res.success) {
+        if (res.success && res.data) {
           updateTemperature(res.data.temperature);
           updateHumidity(res.data.humidity);
           currentTemp = res.data.temperature;
           currentHumidity = res.data.humidity;
         }
-      }, 'json');
+      }, 'json').fail(function(xhr) {
+        console.error('❌ Failed to load DHT data:', xhr.responseText);
+      });
     }
 
     // Load History
