@@ -790,11 +790,23 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             name: name
           }, function(res) {
             if (res.success) {
-              $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu <strong>' + data.uid + '</strong> (' + name + ') berhasil ditambahkan!</div>');
+              $('#addResult').html('<div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> Kartu <strong>' + data.uid + '</strong> (' + name + ') berhasil ditambahkan!<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
               $('#formAddRFID')[0].reset();
               loadRFID();
+              // Auto-hide setelah 5 detik
+              setTimeout(function() {
+                $('#addResult .alert').fadeOut(function() {
+                  $(this).remove();
+                });
+              }, 5000);
             } else {
-              $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> ' + (res.error || 'Gagal tambah kartu') + '</div>');
+              $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> ' + (res.error || 'Gagal tambah kartu') + '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
+              // Auto-hide setelah 8 detik untuk error
+              setTimeout(function() {
+                $('#addResult .alert').fadeOut(function() {
+                  $(this).remove();
+                });
+              }, 8000);
             }
           }, 'json');
         }
@@ -805,27 +817,37 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             uid: data.uid
           }, function(res) {
             if (res.success) {
-              $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu <strong>' + data.uid + '</strong> berhasil dihapus dari ESP32 dan database!</div>');
+              $('#addResult').html('<div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> Kartu <strong>' + data.uid + '</strong> berhasil dihapus dari ESP32 dan database!<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
               loadRFID();
+              setTimeout(function() {
+                $('#addResult .alert').fadeOut(function() {
+                  $(this).remove();
+                });
+              }, 5000);
             } else {
-              $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Kartu dihapus dari ESP32, tapi gagal hapus dari database: ' + (res.error || 'Unknown error') + '</div>');
+              $('#addResult').html('<div class="alert alert-warning alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> Kartu dihapus dari ESP32, tapi gagal hapus dari database: ' + (res.error || 'Unknown error') + '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
             }
           }, 'json').fail(function() {
-            $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server untuk hapus dari database</div>');
+            $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server untuk hapus dari database<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
           });
         }
 
         // Handle jika ESP32 tidak menemukan kartu saat hapus
         if (data.action === 'remove' && data.result === 'not_found' && data.uid) {
-          $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Kartu tidak ditemukan di ESP32, menghapus dari database saja...</div>');
+          $('#addResult').html('<div class="alert alert-warning alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> Kartu tidak ditemukan di ESP32, menghapus dari database saja...<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
 
           // Tetap hapus dari database
           $.post('api/rfid_crud.php?action=remove', {
             uid: data.uid
           }, function(res) {
             if (res.success) {
-              $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu berhasil dihapus dari database!</div>');
+              $('#addResult').html('<div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> Kartu berhasil dihapus dari database!<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
               loadRFID();
+              setTimeout(function() {
+                $('#addResult .alert').fadeOut(function() {
+                  $(this).remove();
+                });
+              }, 5000);
             }
           }, 'json');
         }
@@ -939,12 +961,12 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
           client.publish(`${topicRoot}/rfid/remove`, uid);
 
           // Also remove from database immediately to keep UI in sync
-          $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Menghapus kartu dari ESP32 dan database...</div>');
+          $('#addResult').html('<div class="alert alert-warning alert-dismissible fade show"><i class="fas fa-spinner fa-spin"></i> Menghapus kartu dari ESP32 dan database...<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
           $.post('api/rfid_crud.php?action=remove', {
             uid: uid
           }, function(res) {
             if (res.success) {
-              $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu berhasil dihapus (ESP32 & DB).</div>');
+              $('#addResult').html('<div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> Kartu berhasil dihapus (ESP32 & DB).<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
               loadRFID();
               loadLog(); // Refresh log juga
               Swal.fire({
@@ -953,8 +975,14 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
                 text: 'Kartu dihapus dari ESP32 dan database.',
                 timer: 2000
               });
+              // Auto-hide alert setelah 5 detik
+              setTimeout(function() {
+                $('#addResult .alert').fadeOut(function() {
+                  $(this).remove();
+                });
+              }, 5000);
             } else {
-              $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: ' + (res.error || 'Gagal menghapus') + '</div>');
+              $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> Error: ' + (res.error || 'Gagal menghapus') + '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
               Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
@@ -962,7 +990,7 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
               });
             }
           }, 'json').fail(function() {
-            $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server</div>');
+            $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
             Swal.fire({
               icon: 'error',
               title: 'Gagal',
@@ -982,12 +1010,12 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             cancelButtonColor: '#6c757d'
           }).then((sub) => {
             if (sub.isConfirmed) {
-              $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Menghapus dari database...</div>');
+              $('#addResult').html('<div class="alert alert-warning alert-dismissible fade show"><i class="fas fa-spinner fa-spin"></i> Menghapus dari database...<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
               $.post('api/rfid_crud.php?action=remove', {
                 uid: uid
               }, function(res) {
                 if (res.success) {
-                  $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu dihapus dari database</div>');
+                  $('#addResult').html('<div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> Kartu dihapus dari database<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
                   loadRFID();
                   loadLog(); // Refresh log juga
                   Swal.fire({
@@ -996,8 +1024,14 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
                     text: 'Kartu dihapus dari database.',
                     timer: 2000
                   });
+                  // Auto-hide alert setelah 5 detik
+                  setTimeout(function() {
+                    $('#addResult .alert').fadeOut(function() {
+                      $(this).remove();
+                    });
+                  }, 5000);
                 } else {
-                  $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: ' + (res.error || 'Gagal menghapus') + '</div>');
+                  $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> Error: ' + (res.error || 'Gagal menghapus') + '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
                   Swal.fire({
                     icon: 'error',
                     title: 'Gagal',
@@ -1005,7 +1039,7 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
                   });
                 }
               }, 'json').fail(function() {
-                $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server</div>');
+                $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
                 Swal.fire({
                   icon: 'error',
                   title: 'Gagal',
@@ -1031,12 +1065,12 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
       }).then((result) => {
         if (!result.isConfirmed) return;
 
-        $('#addResult').html('<div class="alert alert-warning"><i class="fas fa-spinner fa-spin"></i> Menghapus dari database...</div>');
+        $('#addResult').html('<div class="alert alert-warning alert-dismissible fade show"><i class="fas fa-spinner fa-spin"></i> Menghapus dari database...<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
         $.post('api/rfid_crud.php?action=remove', {
           uid: uid
         }, function(res) {
           if (res.success) {
-            $('#addResult').html('<div class="alert alert-success"><i class="fas fa-check-circle"></i> Kartu <strong>' + uid + '</strong> berhasil dihapus dari database!</div>');
+            $('#addResult').html('<div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check-circle"></i> Kartu <strong>' + uid + '</strong> berhasil dihapus dari database!<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
             loadRFID();
             loadLog();
             Swal.fire({
@@ -1044,8 +1078,14 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
               title: 'Berhasil',
               text: 'Kartu dihapus dari database.'
             });
+            // Auto-hide alert setelah 5 detik
+            setTimeout(function() {
+              $('#addResult .alert').fadeOut(function() {
+                $(this).remove();
+              });
+            }, 5000);
           } else {
-            $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Gagal menghapus: ' + (res.error || 'Unknown error') + '</div>');
+            $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> Gagal menghapus: ' + (res.error || 'Unknown error') + '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
             Swal.fire({
               icon: 'error',
               title: 'Gagal',
@@ -1053,7 +1093,7 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             });
           }
         }, 'json').fail(function() {
-          $('#addResult').html('<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server</div>');
+          $('#addResult').html('<div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-times-circle"></i> Error: Gagal menghubungi server<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
           Swal.fire({
             icon: 'error',
             title: 'Gagal',
