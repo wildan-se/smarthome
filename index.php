@@ -196,9 +196,10 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
             </div>
           </div>
 
-          <!-- Fan & RFID Status Cards -->
+          <!-- Row 2: Fan Status & Chart -->
           <div class="row">
-            <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <!-- Fan Status -->
+            <div class="col-lg-3 col-md-6 col-sm-12 mb-4">
               <div class="small-box bg-success fade-in" id="fan_card">
                 <div class="inner">
                   <h3 id="fan_status_text">OFF</h3>
@@ -212,24 +213,8 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
               </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-              <div class="small-box bg-primary fade-in">
-                <div class="inner">
-                  <h3 id="registered_cards">0</h3>
-                  <p>Kartu Terdaftar</p>
-                </div>
-                <div class="icon"><i class="fas fa-id-card"></i></div>
-                <div class="small-box-footer">
-                  <a href="rfid.php" class="text-white"><i class="fas fa-arrow-circle-right"></i> Kelola Kartu</a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Row 2: Chart & RFID Info -->
-          <div class="row">
             <!-- Temperature & Humidity Chart -->
-            <div class="col-lg-8 col-md-12 mb-4">
+            <div class="col-lg-9 col-md-12 mb-4">
               <div class="card card-primary shadow-md fade-in">
                 <div class="card-header">
                   <h3 class="card-title text-dark">
@@ -254,11 +239,13 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- RFID Info & Statistics -->
-            <div class="col-lg-4 col-md-12">
-              <!-- RFID Last Access -->
-              <div class="card card-info shadow-md fade-in mb-4">
+          <!-- Row 3: RFID Info & Statistics -->
+          <div class="row">
+            <!-- RFID Last Access -->
+            <div class="col-lg-6 col-md-12 mb-4">
+              <div class="card card-info shadow-md fade-in">
                 <div class="card-header">
                   <h3 class="card-title text-dark"><i class="fas fa-id-card mr-2 text-green"></i>Akses RFID Terakhir</h3>
                 </div>
@@ -282,11 +269,13 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
                   </table>
                 </div>
               </div>
+            </div>
 
-              <!-- Statistics Cards -->
+            <!-- Statistics Cards -->
+            <div class="col-lg-6 col-md-12 mb-4">
               <div class="card card-success shadow-md fade-in">
                 <div class="card-header">
-                  <h3 class="card-title"><i class="fas fa-chart-bar mr-2"></i>Statistik</h3>
+                  <h3 class="card-title"><i class="fas fa-chart-bar mr-2"></i>Statistik Sistem</h3>
                 </div>
                 <div class="card-body p-2">
                   <div class="info-box mb-2">
