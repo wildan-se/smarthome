@@ -763,10 +763,33 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
       const thresholdOn = parseFloat($('#thresholdOn').val());
       const thresholdOff = parseFloat($('#thresholdOff').val());
 
+      console.log('💾 Saving threshold - ON:', thresholdOn, 'OFF:', thresholdOff);
+
+      // Validasi input
+      if (isNaN(thresholdOn) || isNaN(thresholdOff)) {
+        showAlert('#thresholdResult', 'danger', '❌ Nilai suhu tidak valid. Masukkan angka yang benar.');
+        return;
+      }
+
       if (thresholdOn <= thresholdOff) {
         showAlert('#thresholdResult', 'danger', '❌ Suhu ON harus lebih tinggi dari suhu OFF');
         return;
       }
+
+      if (thresholdOn < 20 || thresholdOn > 60) {
+        showAlert('#thresholdResult', 'danger', '❌ Suhu ON harus antara 20°C - 60°C');
+        return;
+      }
+
+      if (thresholdOff < 15 || thresholdOff > 50) {
+        showAlert('#thresholdResult', 'danger', '❌ Suhu OFF harus antara 15°C - 50°C');
+        return;
+      }
+
+      // Disable button to prevent double click
+      const btn = $(this);
+      btn.prop('disabled', true);
+      showAlert('#thresholdResult', 'info', '<i class="fas fa-spinner fa-spin"></i> Menyimpan pengaturan...');
 
       $.post('api/kipas_crud.php', {
         action: 'update_settings',
@@ -780,13 +803,23 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             on: thresholdOn,
             off: thresholdOff
           });
+
+          console.log('📤 Publishing threshold to ESP32:', thresholdData);
           client.publish(`${topicRoot}/kipas/threshold`, thresholdData);
 
-          showAlert('#thresholdResult', 'success', '✅ Pengaturan threshold berhasil disimpan!');
+          showAlert('#thresholdResult', 'success', `✅ Pengaturan threshold berhasil disimpan! ON: ${thresholdOn}°C, OFF: ${thresholdOff}°C`);
+
+          // Re-enable button after 2 seconds
+          setTimeout(() => btn.prop('disabled', false), 2000);
         } else {
-          showAlert('#thresholdResult', 'danger', '❌ ' + res.error);
+          showAlert('#thresholdResult', 'danger', '❌ Gagal menyimpan: ' + (res.error || 'Unknown error'));
+          btn.prop('disabled', false);
         }
-      }, 'json');
+      }, 'json').fail(function(xhr) {
+        console.error('❌ Threshold save failed:', xhr.responseText);
+        showAlert('#thresholdResult', 'danger', '❌ Gagal menghubungi server. Silakan coba lagi.');
+        btn.prop('disabled', false);
+      });
     });
 
     // Load Settings
@@ -897,7 +930,14 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         </div>
       `;
       $(target).html(alert);
-      setTimeout(() => $(target).html(''), 5000);
+
+      // Auto-hide after different durations based on type
+      const duration = (type === 'danger' || type === 'warning') ? 8000 : 5000;
+      setTimeout(() => {
+        $(target).find('.alert').fadeOut(function() {
+          $(this).remove();
+        });
+      }, duration);
     }
 
     // Init
