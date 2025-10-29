@@ -895,11 +895,18 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
             status: data.status
           }, function(res) {
             if (res.success) {
-              loadLog();
+              // ✅ Reload log dengan delay kecil untuk sinkronisasi database
+              setTimeout(function() {
+                console.log('🔄 Refreshing RFID access log...');
+                loadLog();
+              }, 500);
+
               // Reset lastScannedUID setelah digunakan
               if (!data.uid) lastScannedUID = '';
             }
-          }, 'json');
+          }, 'json').fail(function(xhr) {
+            console.error('❌ Failed to log RFID access:', xhr.responseText);
+          });
         }
       }
     });
@@ -1131,18 +1138,21 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
           });
         }
         $('#tableLog tbody').html(rows || '<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada riwayat akses</td></tr>');
-      }, 'json');
+      }, 'json').fail(function(xhr, status, error) {
+        console.error('❌ Failed to load RFID logs:', error);
+        $('#tableLog tbody').html('<tr><td colspan="5" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i><br>Gagal memuat riwayat akses</td></tr>');
+      });
     }
 
     $(function() {
       loadRFID();
       loadLog();
 
-      // Auto-refresh log setiap 30 detik
+      // ✅ Auto-refresh log setiap 10 detik (lebih sering untuk sinkronisasi real-time)
       setInterval(function() {
-        console.log('⏰ Auto-refreshing logs...');
+        console.log('⏰ Auto-refreshing RFID logs...');
         loadLog();
-      }, 30000);
+      }, 10000);
     });
 
     // Real-time Clock Update (Waktu Indonesia)

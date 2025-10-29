@@ -656,21 +656,6 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
         if (status === 'granted' || status === 'denied') {
           console.log('✅ Dashboard: Physical tap detected for:', uid, 'Status:', status);
 
-          // Update UI secara langsung untuk responsivitas
-          const statusElem = $('#last_rfid_status');
-
-          if (status === 'granted') {
-            statusElem.removeClass('badge-danger badge-secondary').addClass('badge-success');
-            statusElem.html('<i class="fas fa-check-circle"></i> Akses Diterima');
-            $('#last_rfid').html('<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">' + uid + '</code>');
-          } else if (status === 'denied') {
-            statusElem.removeClass('badge-success badge-secondary').addClass('badge-danger');
-            statusElem.html('<i class="fas fa-times-circle"></i> Akses Ditolak');
-            $('#last_rfid').html('<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">' + uid + '</code>');
-          }
-
-          $('#last_rfid_time').text(new Date().toLocaleString('id-ID'));
-
           // ✅ Simpan log RFID (hanya dari kartu fisik yang di-scan)
           // API akan validasi apakah kartu terdaftar
           sendLog('rfid', {
@@ -678,10 +663,10 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
             status: status
           });
 
-          // ✅ Reload data dari database setelah 500ms untuk sinkronisasi
-          // Ini memastikan waktu dan data sesuai dengan yang ada di database
+          // ✅ Reload data lengkap dari database setelah 500ms untuk sinkronisasi
+          // Ini memastikan waktu, nama, dan data sesuai dengan yang ada di database
           setTimeout(function() {
-            console.log('🔄 Reloading last RFID access from database...');
+            console.log('🔄 Reloading last RFID access from database (with name)...');
             loadLastRFIDAccess();
           }, 500);
         } else {
@@ -945,7 +930,12 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           const status = lastLog.status || '-';
           const time = lastLog.access_time || '-';
 
-          console.log('✅ Loading last RFID access:', uid, name, status, time);
+          console.log('✅ Loading last RFID access:', {
+            uid,
+            name,
+            status,
+            time
+          });
 
           // Update UI dengan styling yang lebih jelas
           $('#last_rfid').html('<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">' + uid + '</code>');
@@ -959,6 +949,9 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           } else if (status === 'denied') {
             statusElem.removeClass('badge-success badge-secondary').addClass('badge-danger');
             statusElem.html('<i class="fas fa-times-circle"></i> Akses Ditolak');
+          } else {
+            statusElem.removeClass('badge-success badge-danger').addClass('badge-secondary');
+            statusElem.html('Status Tidak Dikenal');
           }
         } else {
           console.log('ℹ️ No RFID access history found');
@@ -968,7 +961,9 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
           $('#last_rfid_status').removeClass('badge-success badge-danger').addClass('badge-secondary').html('Belum Ada Data');
         }
       }, 'json').fail(function(xhr, status, error) {
-        console.log('⚠️ Failed to load last RFID access:', error);
+        console.error('❌ Failed to load last RFID access:', error);
+        $('#last_rfid').html('<code class="text-danger">Error</code>');
+        $('#last_rfid_name').html('<em class="text-danger">Gagal memuat data</em>');
       });
     }
 
