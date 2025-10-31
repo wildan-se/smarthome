@@ -743,6 +743,34 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
       client.subscribe(`${topicRoot}/rfid/info`);
       client.subscribe(`${topicRoot}/rfid/access`);
       console.log('✅ MQTT Connected - Subscribed to RFID topics');
+
+      // ✅ Reload data saat reconnect (untuk sinkronisasi setelah ESP32 restart)
+      console.log('🔄 Reloading RFID data after MQTT connect...');
+      loadLog();
+    });
+
+    // ✅ Handler saat MQTT offline - clear blacklist untuk mencegah bug
+    client.on('offline', function() {
+      console.log('⚠️ MQTT Offline - Clearing blacklist data');
+      localStorage.removeItem('lastAddedUID');
+      localStorage.removeItem('lastAddTime');
+    });
+
+    // ✅ Handler saat MQTT connection close - clear blacklist
+    client.on('close', function() {
+      console.log('🔌 MQTT Connection Closed - Clearing blacklist data');
+      localStorage.removeItem('lastAddedUID');
+      localStorage.removeItem('lastAddTime');
+    });
+
+    // ✅ Handler saat MQTT reconnecting
+    client.on('reconnect', function() {
+      console.log('🔄 MQTT Reconnecting...');
+    });
+
+    // ✅ Handler saat MQTT error
+    client.on('error', function(error) {
+      console.error('❌ MQTT Error:', error);
     });
 
     client.on('message', function(topic, message) {
@@ -877,12 +905,19 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
         const addTime = localStorage.getItem('lastAddTime');
         if (pendingUID && pendingUID === uid && addTime) {
           const timeDiff = Date.now() - parseInt(addTime);
-          if (timeDiff < 3000) { // 3 detik blacklist
+
+          // ✅ FIXED: Validasi timestamp - harus positif dan dalam range wajar (< 3 detik)
+          if (timeDiff > 0 && timeDiff < 3000) {
             console.log('⚠️ BLOCKED: Newly added card from access log:', uid, 'Time diff:', timeDiff, 'ms');
             return;
-          } else {
-            console.log('⏰ Time expired for blacklist:', uid, 'Time diff:', timeDiff, 'ms');
+          } else if (timeDiff >= 3000) {
+            console.log('⏰ Time expired for blacklist:', uid, 'Time diff:', timeDiff, 'ms - Clearing stale data');
             // Clear marker setelah expired
+            localStorage.removeItem('lastAddedUID');
+            localStorage.removeItem('lastAddTime');
+          } else {
+            // timeDiff <= 0 (corrupted timestamp)
+            console.warn('⚠️ Invalid timestamp detected - Clearing corrupted blacklist data');
             localStorage.removeItem('lastAddedUID');
             localStorage.removeItem('lastAddTime');
           }
@@ -1145,6 +1180,11 @@ $mqttProtocol = getConfig('mqtt_protocol', 'wss');
     }
 
     $(function() {
+      // ✅ Clear stale blacklist data saat page load (mencegah bug saat ESP32 restart)
+      console.log('🧹 Clearing stale blacklist data on page load...');
+      localStorage.removeItem('lastAddedUID');
+      localStorage.removeItem('lastAddTime');
+
       loadRFID();
       loadLog();
 

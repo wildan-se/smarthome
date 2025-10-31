@@ -635,12 +635,19 @@ $today_access = $stmt->get_result()->fetch_assoc()['total'];
         const addTime = localStorage.getItem('lastAddTime');
         if (pendingUID && pendingUID === uid && addTime) {
           const timeDiff = Date.now() - parseInt(addTime);
-          if (timeDiff < 3000) { // 3 detik - cukup untuk mencegah auto-scan tapi user bisa langsung test
+
+          // ✅ FIXED: Validasi timestamp - harus positif dan dalam range wajar (< 3 detik)
+          if (timeDiff > 0 && timeDiff < 3000) {
             console.log('⚠️ BLOCKED: Newly added card from dashboard display:', uid, 'Time diff:', timeDiff, 'ms', 'Pending:', pendingUID);
             return;
-          } else {
-            console.log('⏰ Time expired for dashboard blacklist:', uid, 'Time diff:', timeDiff, 'ms');
+          } else if (timeDiff >= 3000) {
+            console.log('⏰ Time expired for dashboard blacklist:', uid, 'Time diff:', timeDiff, 'ms - Clearing stale data');
             // Clear marker setelah expired untuk cleanup
+            localStorage.removeItem('lastAddedUID');
+            localStorage.removeItem('lastAddTime');
+          } else {
+            // timeDiff <= 0 (corrupted timestamp)
+            console.warn('⚠️ Invalid timestamp detected - Clearing corrupted blacklist data');
             localStorage.removeItem('lastAddedUID');
             localStorage.removeItem('lastAddTime');
           }
