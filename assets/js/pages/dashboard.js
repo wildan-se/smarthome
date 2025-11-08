@@ -716,6 +716,22 @@ $(function () {
 
   $('[data-card-widget="maximize"]').on("click", function () {
     setTimeout(function () {
+      const chartWrapper = document.getElementById("chartWrapper");
+      const cardBody = chartWrapper.closest(".card-body");
+      const isMaximized = cardBody
+        .closest(".card")
+        .classList.contains("maximized-card");
+
+      if (isMaximized) {
+        // Mode maximize - set height lebih besar
+        chartWrapper.style.height = "calc(100vh - 200px)";
+        console.log("📈 Chart maximized - height set to viewport");
+      } else {
+        // Mode normal - kembalikan ke height default
+        chartWrapper.style.height = "400px";
+        console.log("📉 Chart restored - height set to 400px");
+      }
+
       if (dhtChart) {
         dhtChart.resize();
         console.log("📊 Chart resized after maximize/restore");

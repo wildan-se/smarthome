@@ -56,6 +56,27 @@ $pageJS = [
   require_once 'components/layout/head.php';
   renderHead($pageTitle, $pageCSS);
   ?>
+  <style>
+    /* Chart Maximize Mode Enhancement */
+    .maximized-card .card-body {
+      padding: 20px !important;
+    }
+
+    .maximized-card #chartWrapper {
+      height: calc(100vh - 200px) !important;
+      min-height: 500px;
+    }
+
+    .maximized-card canvas {
+      max-height: 100% !important;
+    }
+
+    /* Better chart visibility */
+    #dhtChart {
+      max-width: 100%;
+      height: 100% !important;
+    }
+  </style>
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -271,7 +292,7 @@ $pageJS = [
                   </div>
                 </div>
                 <div class="card-body">
-                  <div style="position: relative; height: 400px;">
+                  <div style="position: relative; height: 400px;" id="chartWrapper">
                     <canvas id="dhtChart"></canvas>
                   </div>
                 </div>
