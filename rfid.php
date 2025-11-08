@@ -90,6 +90,12 @@ $pageJS = ['assets/js/pages/rfid.js'];
         transform: scale(1.05);
       }
     }
+
+    /* Scrollable table */
+    .scrollable-table {
+      max-height: 500px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 
@@ -112,12 +118,14 @@ $pageJS = ['assets/js/pages/rfid.js'];
         <div class="container-fluid">
           <div class="row mb-2">
             <div class="col-sm-6">
-              <h1><i class="fas fa-id-card"></i> Manajemen Kartu RFID</h1>
+              <h1 class="fadeInLeft">
+                <i class="fas fa-id-card text-primary"></i> Manajemen Kartu RFID
+              </h1>
             </div>
             <div class="col-sm-6">
               <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                <li class="breadcrumb-item active">Manajemen RFID</li>
+                <li class="breadcrumb-item active">RFID</li>
               </ol>
             </div>
           </div>
@@ -194,9 +202,7 @@ $pageJS = ['assets/js/pages/rfid.js'];
                 <i class="fas fa-id-card"></i> Daftar Kartu Terdaftar
               </h3>
               <div class="card-tools">
-                <span class="badge badge-success" id="cardCount">
-                  <i class="fas fa-spinner fa-spin"></i> Loading...
-                </span>
+                <span class="badge badge-success" id="cardCount">0 Kartu</span>
               </div>
             </div>
             <div class="card-body">
@@ -238,15 +244,15 @@ $pageJS = ['assets/js/pages/rfid.js'];
               </div>
             </div>
             <div class="card-body">
-              <div class="table-responsive">
+              <div class="table-responsive scrollable-table">
                 <table class="table table-hover table-striped modern-table" id="tableLog">
-                  <thead>
+                  <thead class="thead-sticky">
                     <tr>
                       <th width="50" class="text-center">#</th>
                       <th><i class="fas fa-fingerprint"></i> UID Kartu</th>
                       <th><i class="fas fa-user"></i> Nama</th>
+                      <th><i class="fas fa-shield-alt"></i> Status</th>
                       <th><i class="far fa-clock"></i> Waktu Akses</th>
-                      <th width="150" class="text-center"><i class="fas fa-info-circle"></i> Status</th>
                     </tr>
                   </thead>
                   <tbody>
