@@ -638,7 +638,7 @@ $(function () {
             statusUpdateInProgress = false;
           } else {
             console.log("✅ Fan OFF command sent via MQTT");
-            showSuccessToast("� Kipas Berhasil Dimatikan");
+            showSuccessToast("💤 Kipas Berhasil Dimatikan");
           }
 
           // Re-enable buttons
