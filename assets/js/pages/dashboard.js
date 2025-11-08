@@ -700,11 +700,10 @@ $(function () {
     loadLastRFIDAccess();
   }, 10000);
 
-  // Initialize AdminLTE Card Widget for collapse/maximize functionality
+  // Initialize AdminLTE Card Widget for collapse functionality
   console.log("🎯 Dashboard Page Initialized - Activating card widgets");
 
-  // ✅ FIX: Handle chart resize when card is collapsed/expanded or maximized
-  // AdminLTE CardWidget triggers events when card state changes
+  // ✅ Handle chart resize when card is collapsed/expanded
   $('[data-card-widget="collapse"]').on("click", function () {
     setTimeout(function () {
       if (dhtChart) {
@@ -712,31 +711,6 @@ $(function () {
         console.log("📊 Chart resized after collapse/expand");
       }
     }, 350); // Wait for animation to complete (AdminLTE default: 300ms)
-  });
-
-  $('[data-card-widget="maximize"]').on("click", function () {
-    setTimeout(function () {
-      const chartWrapper = document.getElementById("chartWrapper");
-      const cardBody = chartWrapper.closest(".card-body");
-      const isMaximized = cardBody
-        .closest(".card")
-        .classList.contains("maximized-card");
-
-      if (isMaximized) {
-        // Mode maximize - adjusted untuk sticky header & footer
-        chartWrapper.style.height = "calc(100vh - 240px)";
-        console.log("📈 Chart maximized - height adjusted for sticky header/footer");
-      } else {
-        // Mode normal - kembalikan ke height default
-        chartWrapper.style.height = "400px";
-        console.log("📉 Chart restored - height set to 400px");
-      }
-
-      if (dhtChart) {
-        dhtChart.resize();
-        console.log("📊 Chart resized after maximize/restore");
-      }
-    }, 350);
   });
 
   // ✅ Also handle window resize event
