@@ -26,12 +26,21 @@ $(function () {
   let modeUpdateInProgress = false;
   let lastModeUpdate = 0;
   const MODE_UPDATE_COOLDOWN = 2000; // 2 seconds cooldown
+  let pendingModeUpdate = null; // Track pending mode from user action
+  let modeUpdateSource = null; // Track update source: 'user' | 'mqtt' | 'init'
 
   // Bug fix: Prevent circular status updates (for manual control buttons)
   let statusUpdateInProgress = false;
   let lastStatusUpdate = 0;
   const STATUS_UPDATE_COOLDOWN = 1500; // 1.5 seconds cooldown
   let pendingStatusUpdate = null; // Track pending status from user action
+
+  // Advanced protection: Ignore duplicate MQTT messages within short window
+  let lastMqttMode = null;
+  let lastMqttModeTime = 0;
+  let lastMqttStatus = null;
+  let lastMqttStatusTime = 0;
+  const MQTT_DEDUPE_WINDOW = 800; // 800ms window for deduplication
 
   // Initialize MQTT Client
   const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
@@ -91,39 +100,121 @@ $(function () {
   // === MESSAGE HANDLERS ===
 
   function handleFanStatus(msg) {
-    const status = msg.toLowerCase();
+    const now = Date.now();
 
-    // If this is a response to our own action, skip the update to prevent loop
+    // Deduplicate identical MQTT status messages arriving rapidly
+    const raw = msg.toLowerCase().trim();
+    if (
+      lastMqttStatus === raw &&
+      now - lastMqttStatusTime < MQTT_DEDUPE_WINDOW
+    ) {
+      console.log(
+        `⏭️ MQTT status message ignored (duplicate within ${MQTT_DEDUPE_WINDOW}ms): ${raw}`
+      );
+      return;
+    }
+    lastMqttStatus = raw;
+    lastMqttStatusTime = now;
+
+    // Support payloads like "on" or "on,auto" (status[,mode])
+    const parts = raw.split(",").map((s) => s.trim());
+    const status = parts[0] || "";
+    const modeFromStatus = parts[1] || null;
+
+    // If this is a response to our own status action, clear pending and skip UI re-update
     if (pendingStatusUpdate === status) {
       console.log(`✅ Fan status confirmed by ESP32: ${status} (expected)`);
       pendingStatusUpdate = null; // Clear pending
       statusUpdateInProgress = false; // Release lock
-      return; // Don't update UI again, we already did optimistic update
+    } else {
+      // If status unchanged, skip
+      if (currentStatus === status) {
+        console.log(`⏭️ Fan status unchanged: ${status}`);
+      } else {
+        // Update from external source (auto mode, manual ESP32, etc)
+        console.log(`📥 Fan status changed: ${currentStatus} → ${status}`);
+        currentStatus = status;
+        updateFanUI(status);
+      }
     }
 
-    // If status unchanged, skip
-    if (currentStatus === status) {
-      console.log(`⏭️ Fan status unchanged: ${status}`);
-      return;
+    // If the status message also includes a mode (e.g. "on,auto"), process mode as well
+    if (modeFromStatus) {
+      // If this is a response to our own mode change, clear pending and avoid double-update
+      if (pendingModeUpdate === modeFromStatus) {
+        console.log(
+          `✅ Mode confirmed by ESP32 (via status): ${modeFromStatus} (expected)`
+        );
+        pendingModeUpdate = null;
+        modeUpdateInProgress = false;
+      } else {
+        // Let the normal mode handler process this (it has its own dedupe/cooldown checks)
+        handleModeChange(modeFromStatus);
+      }
     }
-
-    // Update from external source (auto mode, manual ESP32, etc)
-    console.log(`📥 Fan status changed: ${currentStatus} → ${status}`);
-    currentStatus = status;
-    updateFanUI(status);
   }
 
   function handleModeChange(msg) {
     const mode = msg.toLowerCase();
-
-    // Bug fix: Prevent update if in progress or within cooldown period
     const now = Date.now();
-    if (modeUpdateInProgress || now - lastModeUpdate < MODE_UPDATE_COOLDOWN) {
-      console.log("⏳ Mode update skipped (cooldown active)");
+
+    console.log(
+      `📨 MQTT Mode Message Received: "${mode}" | Current: "${currentMode}" | Pending: "${pendingModeUpdate}"`
+    );
+
+    // LAYER 1: MQTT Deduplication - Ignore duplicate MQTT messages within 800ms window
+    if (lastMqttMode === mode && now - lastMqttModeTime < MQTT_DEDUPE_WINDOW) {
+      console.log(
+        `⏭️ MQTT mode message ignored (duplicate within ${MQTT_DEDUPE_WINDOW}ms): ${mode}`
+      );
+      return;
+    }
+    lastMqttMode = mode;
+    lastMqttModeTime = now;
+
+    // LAYER 2: Pending State Check - If this is response to our own action
+    if (pendingModeUpdate === mode) {
+      console.log(
+        `✅ Mode confirmed by ESP32: ${mode} (expected, skipping UI update)`
+      );
+      pendingModeUpdate = null; // Clear pending
+      modeUpdateInProgress = false; // Release lock
+
+      // Auto-clear after confirmation
+      setTimeout(() => {
+        if (modeUpdateInProgress) {
+          console.warn("⚠️ Force clearing modeUpdateInProgress flag");
+          modeUpdateInProgress = false;
+        }
+      }, 500);
+      return; // Don't update UI again, we already did optimistic update
+    }
+
+    // LAYER 3: Cooldown Check - Prevent rapid mode changes
+    if (modeUpdateInProgress) {
+      console.log(`⏳ Mode update blocked (update in progress)`);
       return;
     }
 
+    if (now - lastModeUpdate < MODE_UPDATE_COOLDOWN) {
+      const remaining = Math.ceil(
+        (MODE_UPDATE_COOLDOWN - (now - lastModeUpdate)) / 1000
+      );
+      console.log(`⏳ Mode update blocked (cooldown: ${remaining}s remaining)`);
+      return;
+    }
+
+    // LAYER 4: Value Check - Skip if mode unchanged
+    if (currentMode === mode) {
+      console.log(`⏭️ Mode unchanged: ${mode}`);
+      return;
+    }
+
+    // LAYER 5: External source update (from ESP32 auto-mode, physical button, etc)
+    console.log(`📥 Mode changed by external source: ${currentMode} → ${mode}`);
     currentMode = mode;
+    lastModeUpdate = now;
+    modeUpdateSource = "mqtt";
     updateMode(mode);
   }
 
@@ -280,6 +371,8 @@ $(function () {
     // Set flags
     modeUpdateInProgress = true;
     lastModeUpdate = now;
+    pendingModeUpdate = newMode; // ← SET PENDING MODE (KEY!)
+    modeUpdateSource = "user";
 
     // Update mode immediately
     currentMode = newMode;
@@ -316,6 +409,17 @@ $(function () {
         modeUpdateInProgress = false;
       }, 500);
     });
+
+    // Auto-clear pending after cooldown if no ESP32 confirmation
+    setTimeout(() => {
+      if (pendingModeUpdate === newMode) {
+        console.warn(
+          `⚠️ No ESP32 confirmation after ${MODE_UPDATE_COOLDOWN}ms, clearing pending mode`
+        );
+        pendingModeUpdate = null;
+        modeUpdateInProgress = false;
+      }
+    }, MODE_UPDATE_COOLDOWN);
   }
 
   // Mode Switch Toggle - Attach handler
