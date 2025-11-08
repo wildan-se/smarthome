@@ -3,6 +3,35 @@ require_once '../config/config.php';
 
 header('Content-Type: application/json');
 
+$action = $_GET['action'] ?? 'filter';
+
+// Get latest single record
+if ($action === 'latest') {
+  $sql = "SELECT temperature, humidity, log_time 
+          FROM dht_logs 
+          ORDER BY log_time DESC 
+          LIMIT 1";
+
+  $result = $conn->query($sql);
+
+  if ($result && $result->num_rows > 0) {
+    $data = $result->fetch_assoc();
+    echo json_encode([
+      'success' => true,
+      'data' => $data
+    ]);
+  } else {
+    echo json_encode([
+      'success' => false,
+      'data' => null,
+      'message' => 'No data available'
+    ]);
+  }
+
+  $conn->close();
+  exit;
+}
+
 // Get filter parameters
 $timeFilter = $_GET['time'] ?? '60'; // default 1 hour
 $tempMin = isset($_GET['temp_min']) && $_GET['temp_min'] !== '' ? floatval($_GET['temp_min']) : 0;

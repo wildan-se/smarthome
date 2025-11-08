@@ -296,8 +296,12 @@ $(function () {
   }
 
   function handleHumidity(msg) {
+    console.log("💧 Humidity message received:", msg);
     const hum = parseFloat(msg);
+    console.log("💧 Parsed humidity:", hum);
+
     if (!isNaN(hum) && hum > 0 && hum <= 100) {
+      console.log("✅ Valid humidity value:", hum);
       $("#humidity").text(hum.toFixed(1));
       addChartData("humidity", hum);
       markESP32Online();
@@ -323,6 +327,8 @@ $(function () {
           humidity: window.lastDHTData.humidity,
         });
       }
+    } else {
+      console.warn("⚠️ Invalid humidity value:", msg, "parsed as:", hum);
     }
   }
 
@@ -691,8 +697,72 @@ $(function () {
   // Make function available globally for refresh button
   window.loadLastRFID = loadLastRFIDAccess;
 
+  // === LOAD LATEST DHT DATA FROM DATABASE ===
+  function loadLatestDHT() {
+    console.log("🌡️ Loading latest DHT data from database...");
+    $.get(
+      "api/dht_log.php?action=latest",
+      function (res) {
+        if (res.success && res.data) {
+          console.log("📊 Latest DHT data:", res.data);
+
+          // Update temperature if available
+          if (
+            res.data.temperature !== null &&
+            res.data.temperature !== undefined
+          ) {
+            const temp = parseFloat(res.data.temperature);
+            if (!isNaN(temp)) {
+              $("#temperature").text(temp.toFixed(1));
+              if (temp > 30) {
+                $("#temp_status").html('<i class="fas fa-fire"></i> Panas');
+              } else if (temp < 20) {
+                $("#temp_status").html(
+                  '<i class="fas fa-snowflake"></i> Dingin'
+                );
+              } else {
+                $("#temp_status").html(
+                  '<i class="fas fa-temperature-half"></i> Normal'
+                );
+              }
+              console.log("✅ Temperature loaded:", temp);
+            }
+          }
+
+          // Update humidity if available
+          if (res.data.humidity !== null && res.data.humidity !== undefined) {
+            const hum = parseFloat(res.data.humidity);
+            if (!isNaN(hum)) {
+              $("#humidity").text(hum.toFixed(1));
+              if (hum > 70) {
+                $("#humidity_status").html(
+                  '<i class="fas fa-tint"></i> Lembab'
+                );
+              } else if (hum < 30) {
+                $("#humidity_status").html(
+                  '<i class="fas fa-burn"></i> Kering'
+                );
+              } else {
+                $("#humidity_status").html(
+                  '<i class="fas fa-droplet"></i> Normal'
+                );
+              }
+              console.log("✅ Humidity loaded:", hum);
+            }
+          }
+        } else {
+          console.log("ℹ️ No DHT data available from database");
+        }
+      },
+      "json"
+    ).fail(function (xhr, status, error) {
+      console.warn("⚠️ Failed to load DHT data from database:", error);
+    });
+  }
+
   // Initial load
   loadLastRFIDAccess();
+  loadLatestDHT(); // Load DHT data on page load
 
   // Auto-refresh every 10 seconds
   setInterval(function () {
