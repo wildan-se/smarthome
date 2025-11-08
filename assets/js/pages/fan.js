@@ -22,6 +22,11 @@ $(function () {
   let thresholdOn = 30;
   let thresholdOff = 25;
 
+  // Bug fix: Prevent circular mode updates
+  let modeUpdateInProgress = false;
+  let lastModeUpdate = 0;
+  const MODE_UPDATE_COOLDOWN = 2000; // 2 seconds cooldown
+
   // Initialize MQTT Client
   const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
     username: mqttUser,
@@ -56,9 +61,9 @@ $(function () {
       handleFanStatus(msg);
     }
 
-    // Fan Mode
+    // Fan Mode - FIX: Call handleModeChange instead of handleFanMode
     if (topic.endsWith("/kipas/mode")) {
-      handleFanMode(msg);
+      handleModeChange(msg);
     }
 
     // Temperature
@@ -86,10 +91,17 @@ $(function () {
     updateFanUI(status);
   }
 
-  function handleFanMode(msg) {
+  function handleModeChange(msg) {
     const mode = msg.toLowerCase();
-    currentMode = mode;
 
+    // Bug fix: Prevent update if in progress or within cooldown period
+    const now = Date.now();
+    if (modeUpdateInProgress || now - lastModeUpdate < MODE_UPDATE_COOLDOWN) {
+      console.log("⏳ Mode update skipped (cooldown active)");
+      return;
+    }
+
+    currentMode = mode;
     updateMode(mode);
   }
 
@@ -183,8 +195,14 @@ $(function () {
     // Update mode text display
     $("#modeText").text(isAuto ? "AUTO" : "MANUAL");
 
-    // Update mode switch checkbox
+    // Update mode switch checkbox (without triggering change event)
+    $("#modeSwitch").off("change"); // Temporarily remove handler
     $("#modeSwitch").prop("checked", isAuto);
+
+    // Re-attach handler after a short delay
+    setTimeout(() => {
+      $("#modeSwitch").on("change", handleModeSwitch);
+    }, 100);
 
     // Update buttons if they exist
     $("#btnAuto").toggleClass("active", isAuto);
@@ -204,16 +222,45 @@ $(function () {
 
   // === BUTTON HANDLERS ===
 
-  // Mode Switch Toggle
-  $("#modeSwitch").change(function () {
+  // Mode Switch Handler Function (separated for better control)
+  function handleModeSwitch() {
     const isChecked = $(this).is(":checked");
     const newMode = isChecked ? "auto" : "manual";
 
-    if (currentMode === newMode) return;
+    // Prevent if same mode
+    if (currentMode === newMode) {
+      console.log("⏭️ Mode switch skipped (already in " + newMode + " mode)");
+      return;
+    }
+
+    // Prevent spam clicks with cooldown
+    const now = Date.now();
+    if (modeUpdateInProgress) {
+      console.log("⏳ Mode switch blocked (update in progress)");
+      // Revert checkbox state
+      $("#modeSwitch").prop("checked", currentMode === "auto");
+      return;
+    }
+
+    if (now - lastModeUpdate < MODE_UPDATE_COOLDOWN) {
+      const remaining = Math.ceil(
+        (MODE_UPDATE_COOLDOWN - (now - lastModeUpdate)) / 1000
+      );
+      console.log(`⏳ Mode switch blocked (cooldown: ${remaining}s remaining)`);
+      showWarningToast(`Tunggu ${remaining} detik sebelum mengubah mode lagi`);
+      // Revert checkbox state
+      $("#modeSwitch").prop("checked", currentMode === "auto");
+      return;
+    }
 
     console.log(`🔄 Mode switch toggled to: ${newMode.toUpperCase()}`);
 
-    // Update mode
+    // Set flags
+    modeUpdateInProgress = true;
+    lastModeUpdate = now;
+
+    // Update mode immediately
+    currentMode = newMode;
     updateMode(newMode);
 
     // Publish to MQTT
@@ -229,11 +276,28 @@ $(function () {
       function (res) {
         if (res.success) {
           showSuccessToast(`Mode ${newMode.toUpperCase()} diaktifkan`);
+        } else {
+          showErrorToast(
+            "Gagal mengubah mode: " + (res.error || "Unknown error")
+          );
         }
+        // Release flag after success/fail
+        setTimeout(() => {
+          modeUpdateInProgress = false;
+        }, 500);
       },
       "json"
-    ).fail(handleAjaxError);
-  });
+    ).fail(function (xhr) {
+      handleAjaxError(xhr);
+      // Release flag on error
+      setTimeout(() => {
+        modeUpdateInProgress = false;
+      }, 500);
+    });
+  }
+
+  // Mode Switch Toggle - Attach handler
+  $("#modeSwitch").on("change", handleModeSwitch);
 
   // Mode Switching (backup buttons if any)
   $("#btnAuto").click(function () {
@@ -453,6 +517,62 @@ $(function () {
     ).fail(function () {
       console.warn("⚠️ Failed to load settings, using defaults");
     });
+  }
+
+  // === HELPER FUNCTIONS ===
+
+  // Toast notification helpers
+  function showSuccessToast(message) {
+    if (typeof Swal !== "undefined") {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: message,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } else {
+      console.log("✅ " + message);
+    }
+  }
+
+  function showErrorToast(message) {
+    if (typeof Swal !== "undefined") {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: message,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } else {
+      console.error("❌ " + message);
+    }
+  }
+
+  function showWarningToast(message) {
+    if (typeof Swal !== "undefined") {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "warning",
+        title: message,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } else {
+      console.warn("⚠️ " + message);
+    }
+  }
+
+  function handleAjaxError(xhr) {
+    console.error("❌ AJAX Error:", xhr.status, xhr.statusText);
+    showErrorToast("Gagal menghubungi server. Coba lagi.");
   }
 
   // Initial load
