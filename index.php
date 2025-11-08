@@ -60,11 +60,51 @@ $pageJS = [
     /* Chart Maximize Mode Enhancement */
     .maximized-card .card-body {
       padding: 20px !important;
+      overflow-y: auto !important;
+      max-height: calc(100vh - 160px) !important;
+    }
+
+    .maximized-card .card-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 1050 !important;
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+      padding: 12px 20px !important;
+    }
+
+    .maximized-card .card-header .card-title {
+      color: white !important;
+      font-size: 1.3rem !important;
+      font-weight: 600 !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+      margin: 0 !important;
+    }
+
+    .maximized-card .card-header .card-title i {
+      display: none !important;
+    }
+
+    /* Hide card-tools (collapse button) saat maximize, hanya text title yang tampil */
+    .maximized-card .card-header .card-tools {
+      display: none !important;
+    }
+
+    .maximized-card .card-footer {
+      position: sticky !important;
+      bottom: 0 !important;
+      z-index: 1050 !important;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), white) !important;
+      border-top: 1px solid rgba(0, 0, 0, 0.125) !important;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
+      padding: 10px 20px !important;
+      backdrop-filter: blur(10px) !important;
     }
 
     .maximized-card #chartWrapper {
-      height: calc(100vh - 200px) !important;
-      min-height: 500px;
+      height: calc(100vh - 260px) !important;
+      min-height: 400px !important;
     }
 
     .maximized-card canvas {
