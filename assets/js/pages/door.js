@@ -18,6 +18,7 @@ $(function () {
   // State variables
   let currentDoorStatus = "tertutup";
   let isProcessing = false;
+  let manualServoControl = false; // Flag untuk kontrol manual slider
 
   // Initialize MQTT Client
   const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
@@ -86,17 +87,22 @@ $(function () {
 
     updateDoorUI(status);
 
-    // Update slider position based on status
-    if (status === "terbuka") {
-      $("#servoSlider").val(90);
-      $("#sliderValue").text(90);
-    } else if (status === "tertutup") {
-      $("#servoSlider").val(0);
-      $("#sliderValue").text(0);
+    // Update slider position based on status HANYA jika bukan dari kontrol manual slider
+    if (!manualServoControl) {
+      if (status === "terbuka") {
+        $("#servoSlider").val(90);
+        $("#sliderValue").text(90);
+      } else if (status === "tertutup") {
+        $("#servoSlider").val(0);
+        $("#sliderValue").text(0);
+      }
     }
 
-    // Reset processing flag
-    isProcessing = false;
+    // Reset processing flag dan manual control flag setelah delay
+    setTimeout(() => {
+      isProcessing = false;
+      manualServoControl = false;
+    }, 2000);
   }
 
   // === UI UPDATE FUNCTION ===
@@ -266,6 +272,7 @@ $(function () {
     const pos = parseInt($("#servoSlider").val());
     console.log(`🎚️ Setting servo to ${pos}°`);
     isProcessing = true;
+    manualServoControl = true; // Set flag bahwa ini kontrol manual slider
 
     // Disable button temporarily
     $(this).prop("disabled", true);
