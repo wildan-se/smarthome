@@ -259,11 +259,21 @@ $pageJS = [
                     <i class="fas fa-chart-line mr-2"></i>Grafik Suhu & Kelembapan Real-time
                   </h3>
                   <div class="card-tools">
-                    <span class="badge badge-light">Update setiap 10 detik</span>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                      <i class="fas fa-expand"></i>
+                    </button>
                   </div>
                 </div>
                 <div class="card-body">
-                  <canvas id="dhtChart" style="height: 300px;"></canvas>
+                  <canvas id="dhtChart" height="60"></canvas>
+                </div>
+                <div class="card-footer bg-white">
+                  <small class="text-muted">
+                    <i class="far fa-clock"></i> Update otomatis setiap data baru diterima
+                  </small>
                 </div>
               </div>
             </div>

@@ -35,16 +35,18 @@ $(function () {
         {
           label: "Suhu (°C)",
           data: [],
-          borderColor: "rgb(255, 99, 132)",
-          backgroundColor: "rgba(255, 99, 132, 0.1)",
+          borderColor: "rgb(255, 193, 7)",
+          backgroundColor: "rgba(255, 193, 7, 0.1)",
+          borderWidth: 3,
           tension: 0.4,
           fill: true,
         },
         {
           label: "Kelembapan (%)",
           data: [],
-          borderColor: "rgb(54, 162, 235)",
-          backgroundColor: "rgba(54, 162, 235, 0.1)",
+          borderColor: "rgb(23, 162, 184)",
+          backgroundColor: "rgba(23, 162, 184, 0.1)",
+          borderWidth: 3,
           tension: 0.4,
           fill: true,
         },
@@ -58,20 +60,29 @@ $(function () {
           display: true,
           position: "top",
         },
-        title: {
-          display: true,
-          text: "Data Sensor DHT22 Real-time",
+        tooltip: {
+          mode: "index",
+          intersect: false,
         },
       },
       scales: {
         y: {
           beginAtZero: true,
-          max: 100,
+          grid: {
+            display: true,
+            color: "rgba(0, 0, 0, 0.05)",
+          },
+        },
+        x: {
+          grid: {
+            display: false,
+          },
         },
       },
       interaction: {
+        mode: "nearest",
+        axis: "x",
         intersect: false,
-        mode: "index",
       },
     },
   });
@@ -609,7 +620,7 @@ $(function () {
 
   function loadLastRFIDAccess() {
     $.get(
-      "api/rfid_crud.php?action=getlogs",
+      "api/rfid_crud.php?action=getlogs&limit=1",
       function (res) {
         if (res.success && res.data && res.data.length > 0) {
           const lastLog = res.data[0];
