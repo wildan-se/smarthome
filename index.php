@@ -77,37 +77,95 @@ $pageJS = [
       height: 100% !important;
     }
 
-    /* Fix: Hanya tombol maximize yang floating di pojok kanan bawah saat maximize */
+    /* Enhanced: Tombol maximize floating dengan desain modern */
     .maximized-card [data-card-widget="maximize"] {
       position: fixed !important;
-      bottom: 20px !important;
-      right: 20px !important;
+      bottom: 30px !important;
+      right: 30px !important;
       z-index: 9999 !important;
-      background: rgba(255, 255, 255, 0.95) !important;
-      padding: 12px !important;
+
+      /* Modern Gradient Background */
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+
+      /* Perfect Circle */
+      width: 56px !important;
+      height: 56px !important;
       border-radius: 50% !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-      border: 1px solid rgba(0, 0, 0, 0.1) !important;
-      width: 45px !important;
-      height: 45px !important;
+
+      /* Centering */
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
+
+      /* Shadow & Border */
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.2) !important;
+      border: 2px solid rgba(255, 255, 255, 0.3) !important;
+
+      /* Smooth Transition */
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+      /* Text/Icon */
+      color: white !important;
+      cursor: pointer !important;
     }
 
+    /* Pulse Animation for Attention */
+    .maximized-card [data-card-widget="maximize"]::before {
+      content: '' !important;
+      position: absolute !important;
+      top: -2px !important;
+      left: -2px !important;
+      right: -2px !important;
+      bottom: -2px !important;
+      border-radius: 50% !important;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      z-index: -1 !important;
+      opacity: 0 !important;
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+
+      50% {
+        transform: scale(1.15);
+        opacity: 0.3;
+      }
+
+      100% {
+        transform: scale(1.3);
+        opacity: 0;
+      }
+    }
+
+    /* Enhanced Hover Effect */
     .maximized-card [data-card-widget="maximize"]:hover {
-      background: rgba(0, 123, 255, 0.95) !important;
-      color: white !important;
-      box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4) !important;
+      transform: scale(1.1) rotate(90deg) !important;
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6),
+        0 6px 16px rgba(118, 75, 162, 0.4) !important;
+    }
+
+    /* Active/Click Effect */
+    .maximized-card [data-card-widget="maximize"]:active {
+      transform: scale(0.95) !important;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+    }
+
+    /* Icon Styling */
+    .maximized-card [data-card-widget="maximize"] i {
+      font-size: 1.4rem !important;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+      transition: transform 0.3s ease !important;
     }
 
     /* Tombol collapse tetap di header (hidden saat maximize) */
     .maximized-card [data-card-widget="collapse"] {
       display: none !important;
-    }
-
-    .maximized-card [data-card-widget="maximize"] i {
-      font-size: 1.3rem !important;
     }
   </style>
 </head>
