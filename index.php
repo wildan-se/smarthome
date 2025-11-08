@@ -59,9 +59,10 @@ $pageJS = [
   <style>
     /* Chart Maximize Mode Enhancement - HANYA untuk card chart */
     #chartCard.maximized-card .card-body {
-      padding: 20px !important;
+      padding: 30px !important;
       overflow-y: auto !important;
-      max-height: calc(100vh - 160px) !important;
+      max-height: calc(100vh - 180px) !important;
+      background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%) !important;
     }
 
     #chartCard.maximized-card .card-header {
@@ -69,25 +70,31 @@ $pageJS = [
       top: 0 !important;
       z-index: 1050 !important;
       background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-      padding: 12px 20px !important;
+      border-bottom: 3px solid rgba(255, 255, 255, 0.4) !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+      padding: 16px 30px !important;
     }
 
     #chartCard.maximized-card .card-header .card-title {
       color: white !important;
-      font-size: 1.3rem !important;
+      font-size: 1.5rem !important;
       font-weight: 600 !important;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
       margin: 0 !important;
+      letter-spacing: 0.3px !important;
     }
 
     #chartCard.maximized-card .card-header .card-title i {
       display: none !important;
     }
 
-    /* Hide card-tools (collapse button) saat maximize, hanya text title yang tampil */
-    #chartCard.maximized-card .card-header .card-tools {
+    /* Hide hanya tombol collapse, biarkan maximize tetap tampil */
+    #chartCard.maximized-card .card-header .card-tools [data-card-widget="collapse"] {
+      display: none !important;
+    }
+
+    /* Sembunyikan tombol maximize di header karena ada floating button */
+    #chartCard.maximized-card .card-header .card-tools [data-card-widget="maximize"] {
       display: none !important;
     }
 
@@ -95,16 +102,20 @@ $pageJS = [
       position: sticky !important;
       bottom: 0 !important;
       z-index: 1050 !important;
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), white) !important;
-      border-top: 1px solid rgba(0, 0, 0, 0.125) !important;
-      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
-      padding: 10px 20px !important;
-      backdrop-filter: blur(10px) !important;
+      background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(248, 249, 250, 0.95)) !important;
+      border-top: 2px solid rgba(0, 123, 255, 0.2) !important;
+      box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.08) !important;
+      padding: 12px 30px !important;
+      backdrop-filter: blur(12px) !important;
     }
 
     #chartCard.maximized-card #chartWrapper {
-      height: calc(100vh - 260px) !important;
-      min-height: 400px !important;
+      height: calc(100vh - 240px) !important;
+      min-height: 450px !important;
+      padding: 10px !important;
+      background: white !important;
+      border-radius: 8px !important;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05) !important;
     }
 
     #chartCard.maximized-card canvas {
@@ -128,8 +139,8 @@ $pageJS = [
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 
       /* Perfect Circle */
-      width: 56px !important;
-      height: 56px !important;
+      width: 60px !important;
+      height: 60px !important;
       border-radius: 50% !important;
 
       /* Centering */
@@ -138,9 +149,9 @@ $pageJS = [
       justify-content: center !important;
 
       /* Shadow & Border */
-      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4),
-        0 4px 12px rgba(0, 0, 0, 0.2) !important;
-      border: 2px solid rgba(255, 255, 255, 0.3) !important;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5),
+        0 4px 12px rgba(0, 0, 0, 0.3) !important;
+      border: 3px solid rgba(255, 255, 255, 0.4) !important;
 
       /* Smooth Transition */
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -148,6 +159,9 @@ $pageJS = [
       /* Text/Icon */
       color: white !important;
       cursor: pointer !important;
+
+      /* Pastikan tidak transparent */
+      opacity: 1 !important;
     }
 
     /* Pulse Animation for Attention */
@@ -198,14 +212,24 @@ $pageJS = [
 
     /* Icon Styling */
     #chartCard.maximized-card [data-card-widget="maximize"] i {
-      font-size: 1.4rem !important;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+      font-size: 1.6rem !important;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3)) !important;
       transition: transform 0.3s ease !important;
     }
 
     /* Tombol collapse tetap di header (hidden saat maximize) - HANYA untuk chart card */
     #chartCard.maximized-card [data-card-widget="collapse"] {
       display: none !important;
+    }
+
+    /* Normal mode - card tidak maximize */
+    #chartCard:not(.maximized-card) #chartWrapper {
+      height: 400px !important;
+    }
+
+    /* Smooth transition untuk chart wrapper */
+    #chartWrapper {
+      transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
   </style>
 </head>

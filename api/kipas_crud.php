@@ -84,6 +84,31 @@ elseif ($action === 'update_settings') {
   $stmt->close();
 }
 
+// ==================== UPDATE MODE ONLY ====================
+elseif ($action === 'update_mode') {
+  $mode = $_POST['mode'] ?? 'auto';
+  $user_id = $_SESSION['user_id'];
+
+  if (!in_array($mode, ['auto', 'manual'])) {
+    echo json_encode(['success' => false, 'error' => 'Mode tidak valid']);
+    exit;
+  }
+
+  $stmt = $conn->prepare("UPDATE kipas_settings SET mode = ?, updated_by = ? WHERE id = 1");
+  $stmt->bind_param("si", $mode, $user_id);
+
+  if ($stmt->execute()) {
+    echo json_encode([
+      'success' => true,
+      'message' => 'Mode berhasil diupdate ke ' . strtoupper($mode),
+      'data' => ['mode' => $mode]
+    ]);
+  } else {
+    echo json_encode(['success' => false, 'error' => 'Gagal update mode']);
+  }
+  $stmt->close();
+}
+
 // ==================== LOG KIPAS STATUS ====================
 elseif ($action === 'log_status') {
   $status = $_POST['status'] ?? '';

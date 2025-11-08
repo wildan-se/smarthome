@@ -336,12 +336,12 @@ $(function () {
   // === LOAD ACCESS LOGS ===
   function loadLog() {
     $.get(
-      "api/rfid_crud.php?action=getlogs",
+      "api/rfid_crud.php?action=getlogs&limit=20",
       function (res) {
         let rows = "";
         if (res.success && res.data) {
-          const recentLogs = res.data.slice(0, 20);
-          recentLogs.forEach((l, index) => {
+          // Data sudah dibatasi 20 dari API, tidak perlu slice lagi
+          res.data.forEach((l, index) => {
             const name =
               l.name || '<em class="text-muted">Tidak terdaftar</em>';
             const statusClass = l.status === "granted" ? "success" : "danger";

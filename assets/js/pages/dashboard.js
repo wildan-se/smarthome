@@ -723,9 +723,9 @@ $(function () {
         .classList.contains("maximized-card");
 
       if (isMaximized) {
-        // Mode maximize - set height lebih besar
-        chartWrapper.style.height = "calc(100vh - 200px)";
-        console.log("📈 Chart maximized - height set to viewport");
+        // Mode maximize - adjusted untuk sticky header & footer
+        chartWrapper.style.height = "calc(100vh - 240px)";
+        console.log("📈 Chart maximized - height adjusted for sticky header/footer");
       } else {
         // Mode normal - kembalikan ke height default
         chartWrapper.style.height = "400px";
