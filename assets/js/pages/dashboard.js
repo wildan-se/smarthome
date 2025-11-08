@@ -303,11 +303,11 @@ $(function () {
       markESP32Online();
 
       if (hum > 70) {
-        $("#hum_status").html('<i class="fas fa-tint"></i> Lembab');
+        $("#humidity_status").html('<i class="fas fa-tint"></i> Lembab');
       } else if (hum < 30) {
-        $("#hum_status").html('<i class="fas fa-burn"></i> Kering');
+        $("#humidity_status").html('<i class="fas fa-burn"></i> Kering');
       } else {
-        $("#hum_status").html('<i class="fas fa-droplet"></i> Normal');
+        $("#humidity_status").html('<i class="fas fa-droplet"></i> Normal');
       }
 
       window.lastDHTData = window.lastDHTData || {};
