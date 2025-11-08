@@ -302,17 +302,31 @@ $(function () {
 
     if (!isNaN(hum) && hum > 0 && hum <= 100) {
       console.log("✅ Valid humidity value:", hum);
-      $("#humidity").text(hum.toFixed(1));
+
+      // Update humidity value
+      const humidityElem = $("#humidity");
+      console.log("💧 Humidity element found:", humidityElem.length > 0);
+      humidityElem.text(hum.toFixed(1));
+      console.log("💧 Humidity text set to:", hum.toFixed(1));
+
       addChartData("humidity", hum);
       markESP32Online();
 
+      // Update status
+      const statusElem = $("#humidity_status");
+      console.log("💧 Status element found:", statusElem.length > 0);
+
+      let statusText = "";
       if (hum > 70) {
-        $("#humidity_status").html('<i class="fas fa-tint"></i> Lembab');
+        statusText = '<i class="fas fa-tint"></i> Lembab';
       } else if (hum < 30) {
-        $("#humidity_status").html('<i class="fas fa-burn"></i> Kering');
+        statusText = '<i class="fas fa-burn"></i> Kering';
       } else {
-        $("#humidity_status").html('<i class="fas fa-droplet"></i> Normal');
+        statusText = '<i class="fas fa-droplet"></i> Normal';
       }
+
+      statusElem.html(statusText);
+      console.log("💧 Status set to:", statusText);
 
       window.lastDHTData = window.lastDHTData || {};
       window.lastDHTData.humidity = hum;
