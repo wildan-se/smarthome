@@ -354,45 +354,129 @@ $(function () {
     ).fail(handleAjaxError);
   });
 
-  // Manual ON/OFF Controls
+  // Manual ON/OFF Controls with enhanced feedback and protection
   $("#btnFanOn").click(function () {
+    // Check if in manual mode
     if (currentMode !== "manual") {
-      showErrorToast("Mode harus MANUAL untuk kontrol manual");
+      showErrorToast("⚠️ Mode harus MANUAL untuk kontrol manual!");
+      return;
+    }
+
+    // Check if already ON
+    if (currentStatus === "on") {
+      showWarningToast("Kipas sudah dalam keadaan menyala");
       return;
     }
 
     console.log("🔵 Turning fan ON (manual)");
 
-    // Disable button temporarily
-    $(this).prop("disabled", true);
+    // Disable both buttons temporarily
+    const btnOn = $(this);
+    const btnOff = $("#btnFanOff");
+    btnOn.prop("disabled", true);
+    btnOff.prop("disabled", true);
+
+    // Update UI immediately for better UX
+    updateFanUI("on");
 
     // Publish to MQTT
-    client.publish(`${topicRoot}/kipas/control`, "on");
+    try {
+      client.publish(
+        `${topicRoot}/kipas/control`,
+        "on",
+        { qos: 1 },
+        function (err) {
+          if (err) {
+            console.error("❌ MQTT publish failed:", err);
+            showErrorToast("Gagal mengirim perintah ke ESP32");
+            // Revert UI
+            updateFanUI(currentStatus);
+          } else {
+            console.log("✅ Fan ON command sent via MQTT");
+            showSuccessToast("🔵 Kipas berhasil dinyalakan");
+            currentStatus = "on";
+          }
 
-    // Re-enable after 2 seconds
-    setTimeout(() => {
-      $(this).prop("disabled", false);
-    }, 2000);
+          // Re-enable buttons after 2 seconds
+          setTimeout(() => {
+            btnOn.prop("disabled", false);
+            btnOff.prop("disabled", false);
+          }, 2000);
+        }
+      );
+    } catch (error) {
+      console.error("❌ Error publishing MQTT:", error);
+      showErrorToast("Error: Gagal mengirim perintah");
+      updateFanUI(currentStatus);
+
+      // Re-enable buttons
+      setTimeout(() => {
+        btnOn.prop("disabled", false);
+        btnOff.prop("disabled", false);
+      }, 2000);
+    }
   });
 
   $("#btnFanOff").click(function () {
+    // Check if in manual mode
     if (currentMode !== "manual") {
-      showErrorToast("Mode harus MANUAL untuk kontrol manual");
+      showErrorToast("⚠️ Mode harus MANUAL untuk kontrol manual!");
+      return;
+    }
+
+    // Check if already OFF
+    if (currentStatus === "off") {
+      showWarningToast("Kipas sudah dalam keadaan mati");
       return;
     }
 
     console.log("🔴 Turning fan OFF (manual)");
 
-    // Disable button temporarily
-    $(this).prop("disabled", true);
+    // Disable both buttons temporarily
+    const btnOff = $(this);
+    const btnOn = $("#btnFanOn");
+    btnOff.prop("disabled", true);
+    btnOn.prop("disabled", true);
+
+    // Update UI immediately for better UX
+    updateFanUI("off");
 
     // Publish to MQTT
-    client.publish(`${topicRoot}/kipas/control`, "off");
+    try {
+      client.publish(
+        `${topicRoot}/kipas/control`,
+        "off",
+        { qos: 1 },
+        function (err) {
+          if (err) {
+            console.error("❌ MQTT publish failed:", err);
+            showErrorToast("Gagal mengirim perintah ke ESP32");
+            // Revert UI
+            updateFanUI(currentStatus);
+          } else {
+            console.log("✅ Fan OFF command sent via MQTT");
+            showSuccessToast("🔴 Kipas berhasil dimatikan");
+            currentStatus = "off";
+          }
 
-    // Re-enable after 2 seconds
-    setTimeout(() => {
-      $(this).prop("disabled", false);
-    }, 2000);
+          // Re-enable buttons after 2 seconds
+          setTimeout(() => {
+            btnOff.prop("disabled", false);
+            btnOn.prop("disabled", false);
+          }, 2000);
+        }
+      );
+    } catch (error) {
+      console.error("❌ Error publishing MQTT:", error);
+      showErrorToast("Error: Gagal mengirim perintah");
+      updateFanUI(currentStatus);
+
+      // Re-enable buttons
+      setTimeout(() => {
+        btnOff.prop("disabled", false);
+        btnOn.prop("disabled", false);
+      }, 2000);
+    }
   });
 
   // Save Threshold Settings
