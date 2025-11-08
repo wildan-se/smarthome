@@ -20,9 +20,13 @@ if ($action === 'list') {
 
 // Ambil log akses dengan nama pengguna (semua riwayat, tidak hanya 1 per UID)
 if ($action === 'getlogs') {
+  // Parameter limit dari query string (default: 20, enforce 1..20)
+  // Pastikan API hanya mengembalikan maksimal 20 record untuk efisiensi
+  $limit = isset($_GET['limit']) ? min(max((int)$_GET['limit'], 1), 20) : 20;
+
   // ❌ Exclude MANUAL_CONTROL dari tampilan log RFID
   // ✅ LEFT JOIN agar tetap tampil meskipun kartu sudah dihapus
-  // ✅ Tampilkan SEMUA riwayat akses, urutkan dari yang terbaru
+  // ✅ Tampilkan riwayat akses sesuai limit, urutkan dari yang terbaru
   $sql = 'SELECT 
             l.uid, 
             l.access_time, 
@@ -32,7 +36,7 @@ if ($action === 'getlogs') {
           LEFT JOIN rfid_cards c ON l.uid = c.uid 
           WHERE l.uid != "MANUAL_CONTROL"
           ORDER BY l.access_time DESC 
-          LIMIT 100';
+          LIMIT ' . $limit;
   $result = $conn->query($sql);
   $data = [];
   while ($row = $result->fetch_assoc()) {
