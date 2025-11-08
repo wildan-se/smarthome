@@ -65,12 +65,14 @@ $pageJS = ['assets/js/pages/door.js'];
         <div class="container-fluid">
           <div class="row mb-2">
             <div class="col-sm-6">
-              <h1><i class="fas fa-door-open"></i> Kontrol Pintu Servo</h1>
+              <h1>
+                <i class="fas fa-door-open text-primary"></i> Kontrol Pintu Servo
+              </h1>
             </div>
             <div class="col-sm-6">
               <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                <li class="breadcrumb-item active">Kontrol Pintu</li>
+                <li class="breadcrumb-item active">Kontrol</li>
               </ol>
             </div>
           </div>
@@ -81,111 +83,116 @@ $pageJS = ['assets/js/pages/door.js'];
       <section class="content">
         <div class="container-fluid">
 
-          <!-- Info Alert -->
-          <div class="alert alert-info alert-dismissible fade show shadow-sm">
+          <!-- Alert Info -->
+          <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
             <h5><i class="icon fas fa-info-circle"></i> Informasi</h5>
-            Pintu dapat dibuka/ditutup secara otomatis dengan kartu RFID atau manual melalui tombol di bawah ini.
-            <button type="button" class="close" data-dismiss="alert">
-              <span>&times;</span>
+            Kontrol pintu servo secara manual atau otomatis melalui MQTT. Status akan tersinkronisasi real-time dengan ESP32.
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
             </button>
           </div>
 
-          <!-- Result Messages -->
-          <div id="doorResult"></div>
-
-          <!-- Row 1: Door Status Card -->
+          <!-- Status Cards -->
           <div class="row">
-            <div class="col-lg-6 mx-auto mb-4">
-              <?php
-              require_once 'components/cards/status-card.php';
-              renderStatusCard([
-                'id' => 'doorCard',
-                'title' => 'Status Pintu',
-                'value' => '<i class="fas fa-door-closed" id="doorIcon"></i> <span id="doorStatusText">TERTUTUP</span>',
-                'icon' => 'door-closed',
-                'color' => 'success',
-                'footer' => '<small id="lastUpdate">Waiting...</small>'
-              ]);
-              ?>
-            </div>
-          </div>
-
-          <!-- Row 2: Control Buttons -->
-          <div class="row">
-            <div class="col-12">
-              <div class="card card-primary card-outline shadow-sm">
+            <div class="col-lg-6 col-12">
+              <div class="card card-info card-outline shadow-sm hover-shadow fadeIn">
                 <div class="card-header">
                   <h3 class="card-title">
-                    <i class="fas fa-hand-pointer"></i> Kontrol Manual
+                    <i class="fas fa-door-open"></i> Status Pintu Real-time
                   </h3>
                 </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <button type="button" class="btn btn-warning btn-lg btn-block shadow" id="btnOpen">
-                        <i class="fas fa-door-open fa-2x"></i>
-                        <br>
-                        <strong>BUKA PINTU</strong>
-                        <br>
-                        <small>Buka pintu servo</small>
-                      </button>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <button type="button" class="btn btn-success btn-lg btn-block shadow" id="btnClose">
-                        <i class="fas fa-door-closed fa-2x"></i>
-                        <br>
-                        <strong>TUTUP PINTU</strong>
-                        <br>
-                        <small>Tutup pintu servo</small>
-                      </button>
-                    </div>
+                <div class="card-body text-center p-4">
+                  <div id="doorStatus" style="font-size: 4em; margin: 30px 0;">
+                    <i id="doorIcon" class="fas fa-door-closed text-secondary"></i>
                   </div>
+                  <h2 id="doorText" class="font-weight-bold mb-2">Tertutup</h2>
+                  <p class="text-muted mb-0">
+                    <i class="fas fa-sync-alt"></i> Status dari ESP32
+                  </p>
+                </div>
+              </div>
+            </div>
 
-                  <div class="alert alert-warning mt-3">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Perhatian:</strong> Pastikan tidak ada halangan saat mengontrol pintu.
+            <div class="col-lg-6 col-12">
+              <div class="card card-success card-outline shadow-sm hover-shadow fadeIn">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <i class="fas fa-microchip"></i> Status Koneksi ESP32
+                  </h3>
+                </div>
+                <div class="card-body text-center p-4">
+                  <div id="espStatus" style="font-size: 4em; margin: 30px 0;">
+                    <i class="fas fa-circle text-danger pulse"></i>
                   </div>
+                  <h2 id="espText" class="font-weight-bold mb-2 text-danger">Offline</h2>
+                  <p class="text-muted mb-0">
+                    <i class="fas fa-wifi"></i> Koneksi MQTT Broker
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Row 3: Door Activity Logs -->
-          <div class="row">
-            <div class="col-12">
-              <div class="card card-info card-outline shadow-sm">
-                <div class="card-header">
-                  <h3 class="card-title">
-                    <i class="fas fa-history"></i> Riwayat Aktivitas Pintu
-                  </h3>
-                  <div class="card-tools">
-                    <button type="button" class="btn btn-tool" onclick="loadDoorLogs()">
-                      <i class="fas fa-sync"></i>
-                    </button>
-                    <span class="badge badge-info">20 Terakhir</span>
-                  </div>
+          <!-- Kontrol Manual Pintu -->
+          <div class="card card-primary card-outline shadow-sm hover-shadow fadeIn mt-4">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-hand-pointer"></i> Kontrol Manual Pintu
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="row text-center">
+                <div class="col-md-6 mb-3">
+                  <button class="btn btn-success btn-lg btn-block shadow-sm" id="btnOpen" style="padding: 20px;">
+                    <i class="fas fa-door-open" style="font-size: 2em;"></i>
+                    <h4 class="mt-2 mb-0">Buka Pintu</h4>
+                    <small class="text-white-50">Servo 90°</small>
+                  </button>
                 </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table table-hover table-striped modern-table" id="tableDoorLogs">
-                      <thead>
-                        <tr>
-                          <th width="50" class="text-center">#</th>
-                          <th><i class="fas fa-door-open"></i> Status</th>
-                          <th><i class="fas fa-hand-pointer"></i> Sumber</th>
-                          <th><i class="far fa-clock"></i> Waktu</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td colspan="4" class="text-center text-muted">
-                            <i class="fas fa-spinner fa-spin"></i> Memuat data...
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                <div class="col-md-6 mb-3">
+                  <button class="btn btn-danger btn-lg btn-block shadow-sm" id="btnClose" style="padding: 20px;">
+                    <i class="fas fa-door-closed" style="font-size: 2em;"></i>
+                    <h4 class="mt-2 mb-0">Tutup Pintu</h4>
+                    <small class="text-white-50">Servo 0°</small>
+                  </button>
                 </div>
+              </div>
+              <div id="doorResult" class="mt-3"></div>
+            </div>
+          </div>
+
+          <!-- Door Activity Logs -->
+          <div class="card card-warning card-outline shadow-sm hover-shadow fadeIn mt-4">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-history"></i> Riwayat Aktivitas Pintu
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" onclick="loadDoorLogs()">
+                  <i class="fas fa-sync"></i>
+                </button>
+                <span class="badge badge-warning">20 Terakhir</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover table-striped modern-table" id="tableDoorLogs">
+                  <thead>
+                    <tr>
+                      <th width="50" class="text-center">#</th>
+                      <th><i class="fas fa-door-open"></i> Status</th>
+                      <th><i class="fas fa-hand-pointer"></i> Sumber</th>
+                      <th><i class="far fa-clock"></i> Waktu</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="4" class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

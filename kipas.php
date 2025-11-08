@@ -68,13 +68,91 @@ $pageJS = ['assets/js/pages/fan.js'];
       transition: all 0.3s ease;
     }
 
-    .mode-btn {
-      transition: all 0.3s ease;
+    /* Temperature Gauge */
+    .temp-gauge {
+      position: relative;
+      width: 100%;
+      height: 30px;
+      background: linear-gradient(to right, #17a2b8, #28a745, #ffc107, #dc3545);
+      border-radius: 15px;
+      overflow: hidden;
     }
 
-    .mode-btn.active {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    .temp-indicator {
+      position: absolute;
+      top: -5px;
+      width: 3px;
+      height: 40px;
+      background: #000;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      transition: left 0.3s ease;
+    }
+
+    /* Mode Switch */
+    .mode-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .mode-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .mode-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .mode-slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked+.mode-slider {
+      background-color: #28a745;
+    }
+
+    input:checked+.mode-slider:before {
+      transform: translateX(26px);
+    }
+
+    /* Thermometer Icon Animation */
+    .thermometer-icon {
+      transition: color 0.3s ease;
+    }
+
+    .temp-cold {
+      color: #17a2b8 !important;
+    }
+
+    .temp-cool {
+      color: #28a745 !important;
+    }
+
+    .temp-warm {
+      color: #ffc107 !important;
+    }
+
+    .temp-hot {
+      color: #dc3545 !important;
     }
   </style>
 </head>
@@ -98,12 +176,14 @@ $pageJS = ['assets/js/pages/fan.js'];
         <div class="container-fluid">
           <div class="row mb-2">
             <div class="col-sm-6">
-              <h1><i class="fas fa-fan"></i> Kontrol Kipas Otomatis</h1>
+              <h1 class="fadeInLeft">
+                <i class="fas fa-fan text-success"></i> Kontrol Kipas Otomatis
+              </h1>
             </div>
             <div class="col-sm-6">
               <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                <li class="breadcrumb-item active">Kontrol Kipas</li>
+                <li class="breadcrumb-item active">Kipas</li>
               </ol>
             </div>
           </div>
@@ -114,166 +194,149 @@ $pageJS = ['assets/js/pages/fan.js'];
       <section class="content">
         <div class="container-fluid">
 
-          <!-- Row 1: Status Cards -->
+          <!-- Monitoring Cards -->
           <div class="row">
-            <!-- Fan Status Card -->
-            <div class="col-lg-4 col-md-6 mb-4">
-              <?php
-              require_once 'components/cards/status-card.php';
-              renderStatusCard([
-                'id' => 'fanCard',
-                'title' => 'Status Kipas',
-                'value' => '<i class="fas fa-fan" id="fanIcon"></i> <span id="fanStatusText">OFF</span>',
-                'icon' => 'power-off',
-                'color' => 'danger',
-                'footer' => 'Real-time status'
-              ]);
-              ?>
-              <i class="fas fa-power-off" id="fanStatusIcon" style="display:none;"></i>
+            <!-- Suhu Card -->
+            <div class="col-lg-3 col-6">
+              <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-info elevation-1">
+                  <i class="fas fa-thermometer-half thermometer-icon temp-medium" id="tempIcon"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Suhu Ruangan</span>
+                  <span class="info-box-number" id="currentTemp">
+                    <small>Loading...</small>
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <!-- Temperature Card -->
-            <div class="col-lg-4 col-md-6 mb-4">
-              <?php
-              renderStatusCard([
-                'id' => 'tempCard',
-                'title' => 'Suhu Saat Ini',
-                'value' => '<span id="currentTemp">0.0</span>°C',
-                'icon' => 'thermometer-half',
-                'color' => 'warning',
-                'footer' => 'Sensor DHT22'
-              ]);
-              ?>
-              <div id="tempIndicator" class="small-box bg-success" style="display:none;"></div>
+            <!-- Kelembapan Card -->
+            <div class="col-lg-3 col-6">
+              <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-primary elevation-1">
+                  <i class="fas fa-tint"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Kelembapan</span>
+                  <span class="info-box-number" id="currentHumidity">
+                    <small>Loading...</small>
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <!-- Humidity Card -->
-            <div class="col-lg-4 col-md-6 mb-4">
-              <?php
-              renderStatusCard([
-                'title' => 'Kelembapan',
-                'value' => '<span id="currentHum">0.0</span>%',
-                'icon' => 'tint',
-                'color' => 'info',
-                'footer' => 'Sensor DHT22'
-              ]);
-              ?>
+            <!-- Status Kipas Card -->
+            <div class="col-lg-3 col-6">
+              <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-secondary elevation-1" id="fanStatusIcon">
+                  <i class="fas fa-fan" id="fanIcon"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Status Kipas</span>
+                  <span class="info-box-number" id="fanStatusText"><strong class="text-secondary">OFF</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mode Card -->
+            <div class="col-lg-3 col-6">
+              <div class="info-box shadow-sm">
+                <span class="info-box-icon bg-warning elevation-1">
+                  <i class="fas fa-cog"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Mode</span>
+                  <span class="info-box-number" id="modeText">AUTO</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Row 2: Mode Selection -->
+          <!-- Temperature Gauge -->
+          <div class="card card-info card-outline shadow-sm">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-chart-line"></i> Indikator Suhu</h3>
+            </div>
+            <div class="card-body">
+              <div class="temp-gauge">
+                <div class="temp-indicator" id="tempIndicator" style="left: 0%;"></div>
+              </div>
+              <div class="d-flex justify-content-between mt-2">
+                <small class="text-muted">0°C</small>
+                <small class="text-muted">25°C</small>
+                <small class="text-muted">50°C</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Control Panel -->
           <div class="row">
-            <div class="col-12">
-              <div class="card card-primary card-outline shadow-sm">
+            <!-- Manual Control -->
+            <div class="col-md-6">
+              <div class="card card-success card-outline shadow-sm">
                 <div class="card-header">
-                  <h3 class="card-title">
-                    <i class="fas fa-sliders-h"></i> Mode Kontrol
-                  </h3>
-                  <div class="card-tools">
-                    <span class="badge badge-primary">
-                      Mode: <span id="modeDisplay">AUTO</span>
-                    </span>
-                  </div>
+                  <h3 class="card-title"><i class="fas fa-hand-pointer"></i> Kontrol Manual</h3>
                 </div>
                 <div class="card-body">
-                  <div class="btn-group btn-group-lg d-flex" role="group">
-                    <button type="button" class="btn btn-success mode-btn w-50 active" id="btnAuto">
-                      <i class="fas fa-magic"></i> Mode AUTO
-                      <br><small>Otomatis berdasarkan suhu</small>
-                    </button>
-                    <button type="button" class="btn btn-primary mode-btn w-50" id="btnManual">
-                      <i class="fas fa-hand-pointer"></i> Mode MANUAL
-                      <br><small>Kontrol manual ON/OFF</small>
-                    </button>
-                  </div>
-
-                  <!-- Auto Mode Info -->
-                  <div id="autoInfo" class="alert alert-success mt-3">
-                    <h5><i class="fas fa-info-circle"></i> Mode AUTO Aktif</h5>
-                    <p class="mb-0">Kipas akan menyala/mati secara otomatis berdasarkan suhu yang telah diatur di pengaturan threshold.</p>
-                  </div>
-
-                  <!-- Manual Controls -->
-                  <div id="manualControls" class="mt-3" style="display: none;">
-                    <div class="alert alert-warning">
-                      <h5><i class="fas fa-hand-pointer"></i> Mode MANUAL Aktif</h5>
-                      <p class="mb-0">Kontrol kipas secara manual dengan tombol di bawah ini.</p>
+                  <div class="form-group">
+                    <label>Mode Kipas:</label>
+                    <div class="d-flex align-items-center">
+                      <span class="mr-3 font-weight-bold">MANUAL</span>
+                      <label class="mode-switch mb-0">
+                        <input type="checkbox" id="modeSwitch" checked>
+                        <span class="mode-slider"></span>
+                      </label>
+                      <span class="ml-3 font-weight-bold">AUTO</span>
                     </div>
-                    <div class="btn-group btn-group-lg d-flex" role="group">
-                      <button type="button" class="btn btn-success w-50" id="btnFanOn">
-                        <i class="fas fa-power-off"></i> NYALAKAN
+                    <small class="text-muted">Mode AUTO: Kipas nyala/mati otomatis sesuai suhu</small>
+                  </div>
+
+                  <div id="manualControls">
+                    <hr>
+                    <div class="d-flex justify-content-center gap-3">
+                      <button class="btn btn-success btn-lg mr-2" id="btnFanOn">
+                        <i class="fas fa-power-off"></i> Nyalakan Kipas
                       </button>
-                      <button type="button" class="btn btn-danger w-50" id="btnFanOff">
-                        <i class="fas fa-power-off"></i> MATIKAN
+                      <button class="btn btn-danger btn-lg" id="btnFanOff">
+                        <i class="fas fa-ban"></i> Matikan Kipas
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Row 3: Threshold Settings -->
-          <div class="row">
-            <div class="col-12">
+            <!-- Auto Mode Settings -->
+            <div class="col-md-6">
               <div class="card card-warning card-outline shadow-sm">
                 <div class="card-header">
-                  <h3 class="card-title">
-                    <i class="fas fa-cog"></i> Pengaturan Threshold Suhu
-                  </h3>
+                  <h3 class="card-title"><i class="fas fa-cog"></i> Pengaturan Auto Mode</h3>
                 </div>
                 <div class="card-body">
                   <div id="thresholdResult"></div>
 
-                  <div class="row">
-                    <div class="col-md-5">
-                      <div class="form-group">
-                        <label for="thresholdOn">
-                          <i class="fas fa-fire"></i> Suhu ON (Kipas Menyala)
-                        </label>
-                        <div class="input-group">
-                          <input type="number" class="form-control" id="thresholdOn"
-                            value="30" min="20" max="60" step="0.5">
-                          <div class="input-group-append">
-                            <span class="input-group-text">°C</span>
-                          </div>
-                        </div>
-                        <small class="form-text text-muted">
-                          Kipas akan menyala saat suhu mencapai nilai ini (20-60°C)
-                        </small>
-                      </div>
-                    </div>
-
-                    <div class="col-md-5">
-                      <div class="form-group">
-                        <label for="thresholdOff">
-                          <i class="fas fa-snowflake"></i> Suhu OFF (Kipas Mati)
-                        </label>
-                        <div class="input-group">
-                          <input type="number" class="form-control" id="thresholdOff"
-                            value="25" min="15" max="50" step="0.5">
-                          <div class="input-group-append">
-                            <span class="input-group-text">°C</span>
-                          </div>
-                        </div>
-                        <small class="form-text text-muted">
-                          Kipas akan mati saat suhu turun ke nilai ini (15-50°C)
-                        </small>
-                      </div>
-                    </div>
-
-                    <div class="col-md-2">
-                      <label>&nbsp;</label>
-                      <button type="button" class="btn btn-primary btn-block btn-lg" id="btnSaveThreshold">
-                        <i class="fas fa-save"></i> Simpan
-                      </button>
-                    </div>
+                  <div class="form-group">
+                    <label for="tempOn">
+                      <i class="fas fa-thermometer-full text-danger"></i>
+                      Suhu Nyala (°C):
+                    </label>
+                    <input type="number" class="form-control" id="tempOn" placeholder="30" min="20" max="60" step="0.1">
+                    <small class="text-muted">Kipas akan menyala jika suhu ≥ nilai ini</small>
                   </div>
 
-                  <div class="alert alert-info mt-3">
-                    <i class="fas fa-lightbulb"></i>
-                    <strong>Tips:</strong> Pastikan suhu ON lebih tinggi dari suhu OFF untuk mencegah kipas menyala-mati terus-menerus.
+                  <div class="form-group">
+                    <label for="tempOff">
+                      <i class="fas fa-thermometer-half text-success"></i>
+                      Suhu Mati (°C):
+                    </label>
+                    <input type="number" class="form-control" id="tempOff" placeholder="25" min="15" max="50" step="0.1">
+                    <small class="text-muted">Kipas akan mati jika suhu ≤ nilai ini</small>
                   </div>
+
+                  <button type="button" class="btn btn-primary btn-block" id="btnSaveThreshold">
+                    <i class="fas fa-save"></i> Simpan Pengaturan
+                  </button>
                 </div>
               </div>
             </div>

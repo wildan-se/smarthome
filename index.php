@@ -77,10 +77,12 @@ $pageJS = [
         <div class="container-fluid">
           <div class="row mb-2">
             <div class="col-sm-6">
-              <h1 class="m-0"><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+              <h1 class="m-0"><i class="fas fa-tachometer-alt text-primary"></i> Dashboard Real-time</h1>
+              <p class="text-muted mb-0">Monitor sistem smart home secara real-time</p>
             </div>
             <div class="col-sm-6">
               <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
                 <li class="breadcrumb-item active">Dashboard</li>
               </ol>
             </div>
@@ -92,146 +94,157 @@ $pageJS = [
       <section class="content">
         <div class="container-fluid">
 
-          <!-- Row 1: Status Cards (ESP32, Door, Temperature, Humidity, Fan) -->
+          <!-- Row 1: All Status Cards (ESP32, Door, Temperature, Humidity, Fan) - 5 Columns -->
           <div class="row">
-            <!-- ESP32 Status -->
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
-              <?php
-              require_once 'components/cards/status-card.php';
-              renderStatusCard([
-                'id' => 'esp32_card',
-                'title' => 'ESP32 Status',
-                'value' => '<span id="esp_status">Offline</span>',
-                'icon' => 'microchip',
-                'color' => 'danger',
-                'footer' => '<small id="esp_connection_time">Menghubungkan...</small>'
-              ]);
-              ?>
-            </div>
-
-            <!-- Door Status -->
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
-              <?php
-              renderStatusCard([
-                'id' => 'door_card',
-                'title' => 'Status Pintu',
-                'value' => '<span id="door_status">Tertutup</span>',
-                'icon' => 'door-closed',
-                'color' => 'success',
-                'footer' => '<small id="door_last_update">Waiting...</small>'
-              ]);
-              ?>
-              <i class="fas fa-door-closed" id="door_icon" style="display:none;"></i>
-            </div>
-
-            <!-- Temperature -->
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
-              <?php
-              renderStatusCard([
-                'title' => 'Suhu',
-                'value' => '<span id="temperature">0.0</span>°C',
-                'icon' => 'thermometer-half',
-                'color' => 'warning',
-                'footer' => '<small id="temp_status">Waiting...</small>'
-              ]);
-              ?>
-            </div>
-
-            <!-- Humidity -->
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
-              <?php
-              renderStatusCard([
-                'title' => 'Kelembapan',
-                'value' => '<span id="humidity">0.0</span>%',
-                'icon' => 'tint',
-                'color' => 'info',
-                'footer' => '<small id="hum_status">Waiting...</small>'
-              ]);
-              ?>
-            </div>
-
-            <!-- Fan Status -->
-            <div class="col-lg-4 col-md-8 col-sm-12 mb-3">
-              <?php
-              renderStatusCard([
-                'id' => 'fan_card',
-                'title' => 'Status Kipas',
-                'value' => '<i class="fas fa-fan" id="fan_icon_dashboard"></i> <span id="fan_status_text">OFF</span>',
-                'icon' => 'fan',
-                'color' => 'danger',
-                'footer' => '<small id="fan_mode_text">Mode: -</small>',
-                'link' => 'kipas.php'
-              ]);
-              ?>
-            </div>
-          </div>
-
-          <!-- Row 2: RFID Info & Statistics -->
-          <div class="row">
-            <!-- RFID Last Access -->
-            <div class="col-lg-6 col-md-12 mb-4">
-              <div class="card card-info shadow-md fade-in h-100">
-                <div class="card-header">
-                  <h3 class="card-title text-dark">
-                    <i class="fas fa-id-card mr-2"></i>Akses RFID Terakhir
-                  </h3>
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
+              <div class="small-box bg-danger fade-in">
+                <div class="inner">
+                  <h3 id="esp_status">Offline</h3>
+                  <p>Status ESP32</p>
                 </div>
-                <div class="card-body">
-                  <?php
-                  renderInfoBox([
-                    'icon' => 'fingerprint',
-                    'iconColor' => 'info',
-                    'text' => 'UID Kartu',
-                    'number' => '<span id="last_rfid">-</span>',
-                    'class' => 'mb-3 shadow-sm'
-                  ]);
-
-                  renderInfoBox([
-                    'icon' => 'user',
-                    'iconColor' => 'purple',
-                    'text' => 'Nama Pengguna',
-                    'number' => '<span id="last_rfid_name">-</span>',
-                    'class' => 'mb-3 shadow-sm'
-                  ]);
-
-                  renderInfoBox([
-                    'icon' => 'clock',
-                    'iconColor' => 'warning',
-                    'text' => 'Waktu & Status',
-                    'number' => '<div id="last_rfid_time" class="mb-1">-</div><span id="last_rfid_status" class="badge badge-secondary">-</span>',
-                    'class' => 'mb-0 shadow-sm'
-                  ]);
-                  ?>
+                <div class="icon"><i class="fas fa-microchip"></i></div>
+                <div class="small-box-footer">
+                  <span id="esp_connection_time">Menghubungkan...</span>
                 </div>
               </div>
             </div>
 
-            <!-- Statistics -->
-            <div class="col-lg-6 col-md-12 mb-4">
-              <div class="card card-success shadow-md fade-in h-100">
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
+              <div class="small-box bg-success fade-in">
+                <div class="inner">
+                  <h3 id="door_status">Tertutup</h3>
+                  <p>Status Pintu</p>
+                </div>
+                <div class="icon"><i class="fas fa-door-closed" id="door_icon"></i></div>
+                <div class="small-box-footer">
+                  <span id="door_last_update">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
+              <div class="small-box bg-warning fade-in">
+                <div class="inner">
+                  <h3 id="temperature">-</h3>
+                  <p>Suhu (°C)</p>
+                </div>
+                <div class="icon"><i class="fas fa-thermometer-half"></i></div>
+                <div class="small-box-footer">
+                  <span id="temp_status">Menunggu data...</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
+              <div class="small-box bg-info fade-in">
+                <div class="inner">
+                  <h3 id="humidity">-</h3>
+                  <p>Kelembapan (%)</p>
+                </div>
+                <div class="icon"><i class="fas fa-tint"></i></div>
+                <div class="small-box-footer">
+                  <span id="humidity_status">Menunggu data...</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg col-md-6 col-sm-6 mb-4">
+              <div class="small-box bg-success fade-in" id="fan_card">
+                <div class="inner">
+                  <h3><i class="fas fa-fan" id="fan_icon_dashboard"></i> <span id="fan_status_text">OFF</span></h3>
+                  <p>Status Kipas</p>
+                </div>
+                <div class="icon"><i class="fas fa-fan"></i></div>
+                <a href="kipas.php" class="small-box-footer">
+                  <span id="fan_mode_text">Mode: -</span> <i class="fas fa-arrow-circle-right"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: RFID Last Access & Statistics -->
+          <div class="row">
+            <!-- RFID Last Access Info -->
+            <div class="col-lg-6 mb-4">
+              <div class="card card-primary card-outline shadow-sm hover-shadow fade-in">
                 <div class="card-header">
-                  <h3 class="card-title text-dark">
-                    <i class="fas fa-chart-bar mr-2"></i>Statistik Sistem
+                  <h3 class="card-title">
+                    <i class="fas fa-id-card"></i> Akses RFID Terakhir
                   </h3>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool" onclick="loadLastRFID()">
+                      <i class="fas fa-sync"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="card-body">
-                  <?php
-                  renderInfoBox([
-                    'icon' => 'id-card-alt',
-                    'iconColor' => 'primary',
-                    'text' => 'Total Kartu Terdaftar',
-                    'number' => number_format($total_cards),
-                    'class' => 'mb-3 shadow-sm'
-                  ]);
+                  <div class="info-box mb-3 bg-light shadow-sm">
+                    <span class="info-box-icon bg-info">
+                      <i class="fas fa-fingerprint"></i>
+                    </span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">UID Kartu</span>
+                      <span class="info-box-number" id="last_rfid">-</span>
+                    </div>
+                  </div>
 
-                  renderInfoBox([
-                    'icon' => 'history',
-                    'iconColor' => 'success',
-                    'text' => 'Akses Hari Ini',
-                    'number' => number_format($today_access),
-                    'class' => 'mb-0 shadow-sm'
-                  ]);
-                  ?>
+                  <div class="info-box mb-3 bg-light shadow-sm">
+                    <span class="info-box-icon" style="background-color: #6f42c1; color: white;">
+                      <i class="fas fa-user"></i>
+                    </span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Nama Pengguna</span>
+                      <span class="info-box-number" id="last_rfid_name">-</span>
+                    </div>
+                  </div>
+
+                  <div class="info-box mb-0 bg-light shadow-sm">
+                    <span class="info-box-icon bg-warning">
+                      <i class="far fa-clock"></i>
+                    </span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Waktu Akses</span>
+                      <span class="info-box-number" id="last_rfid_time" style="font-size: 1rem;">-</span>
+                      <span id="last_rfid_status" class="badge badge-secondary mt-1">-</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="col-lg-6 mb-4">
+              <div class="row">
+                <div class="col-12 mb-3">
+                  <div class="info-box shadow-sm hover-shadow fade-in">
+                    <span class="info-box-icon bg-primary">
+                      <i class="fas fa-id-card"></i>
+                    </span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Total Kartu Terdaftar</span>
+                      <span class="info-box-number"><?= number_format($total_cards) ?></span>
+                      <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: 100%"></div>
+                      </div>
+                      <span class="progress-description">Kartu RFID aktif dalam sistem</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 mb-3">
+                  <div class="info-box shadow-sm hover-shadow fade-in">
+                    <span class="info-box-icon bg-success">
+                      <i class="fas fa-calendar-day"></i>
+                    </span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Akses Hari Ini</span>
+                      <span class="info-box-number"><?= number_format($today_access) ?></span>
+                      <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 70%"></div>
+                      </div>
+                      <span class="progress-description">Aktivitas akses pada <?= date('d/m/Y') ?></span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
