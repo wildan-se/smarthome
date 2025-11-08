@@ -699,4 +699,7 @@ $(function () {
     console.log("🔄 Auto-refreshing RFID access data...");
     loadLastRFIDAccess();
   }, 10000);
+
+  // Initialize AdminLTE Card Widget for collapse/maximize functionality
+  console.log("🎯 Dashboard Page Initialized - Activating card widgets");
 });

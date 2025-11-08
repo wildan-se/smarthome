@@ -166,7 +166,7 @@ $pageJS = [
           <div class="row">
             <!-- RFID Last Access Info -->
             <div class="col-lg-6 mb-4">
-              <div class="card card-primary card-outline shadow-sm hover-shadow fade-in">
+              <div class="card card-primary card-outline shadow-sm hover-shadow fade-in h-100">
                 <div class="card-header">
                   <h3 class="card-title">
                     <i class="fas fa-id-card"></i> Akses RFID Terakhir
@@ -214,9 +214,14 @@ $pageJS = [
 
             <!-- Statistics Cards -->
             <div class="col-lg-6 mb-4">
-              <div class="row">
-                <div class="col-12 mb-3">
-                  <div class="info-box shadow-sm hover-shadow fade-in">
+              <div class="card card-success card-outline shadow-sm hover-shadow fade-in h-100">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <i class="fas fa-chart-bar"></i> Statistik Sistem
+                  </h3>
+                </div>
+                <div class="card-body">
+                  <div class="info-box mb-3 shadow-sm">
                     <span class="info-box-icon bg-primary">
                       <i class="fas fa-id-card"></i>
                     </span>
@@ -229,10 +234,8 @@ $pageJS = [
                       <span class="progress-description">Kartu RFID aktif dalam sistem</span>
                     </div>
                   </div>
-                </div>
 
-                <div class="col-12 mb-3">
-                  <div class="info-box shadow-sm hover-shadow fade-in">
+                  <div class="info-box mb-0 shadow-sm">
                     <span class="info-box-icon bg-success">
                       <i class="fas fa-calendar-day"></i>
                     </span>
