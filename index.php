@@ -76,6 +76,30 @@ $pageJS = [
       max-width: 100%;
       height: 100% !important;
     }
+
+    /* Fix: Tombol maximize floating di pojok kanan bawah saat maximize */
+    .maximized-card .card-tools {
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
+      top: auto !important;
+      z-index: 9999 !important;
+      background: rgba(255, 255, 255, 0.95) !important;
+      padding: 8px 12px !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .maximized-card .card-tools .btn-tool {
+      color: #007bff !important;
+      font-size: 1.2rem !important;
+    }
+
+    .maximized-card .card-tools .btn-tool:hover {
+      color: #0056b3 !important;
+      background: rgba(0, 123, 255, 0.1) !important;
+    }
   </style>
 </head>
 
