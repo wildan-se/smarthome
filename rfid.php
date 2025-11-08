@@ -34,7 +34,7 @@ $mqttConfig = [
 $pageTitle = 'Manajemen RFID';
 $activePage = 'rfid';
 $pageCSS = [];
-$pageJS = ['assets/js/pages/rfid.js'];
+$pageJS = ['assets/js/utils.js', 'assets/js/pages/rfid.js'];
 ?>
 <!DOCTYPE html>
 <html lang="id">

@@ -6,6 +6,14 @@
 $(function () {
   "use strict";
 
+  // Fallback error handler if utils.js not loaded
+  if (typeof handleAjaxError === "undefined") {
+    window.handleAjaxError = function (xhr, status, error) {
+      console.error("❌ AJAX Error:", { xhr, status, error });
+      console.error("Response:", xhr.responseText);
+    };
+  }
+
   // Clear stale blacklist data on page load
   console.log("🧹 Clearing stale blacklist data on page load...");
   clearBlacklist();
@@ -334,12 +342,14 @@ $(function () {
   };
 
   // === LOAD ACCESS LOGS ===
-  function loadLog() {
+  window.loadLog = function () {
+    console.log("🔄 Loading RFID access logs...");
     $.get(
       "api/rfid_crud.php?action=getlogs&limit=20",
       function (res) {
+        console.log("📊 RFID Logs Response:", res);
         let rows = "";
-        if (res.success && res.data) {
+        if (res.success && res.data && res.data.length > 0) {
           // Data sudah dibatasi 20 dari API, tidak perlu slice lagi
           res.data.forEach((l, index) => {
             const name =
@@ -367,20 +377,23 @@ $(function () {
                         </tr>
                     `;
           });
+          console.log(`✅ Rendered ${res.data.length} log entries`);
+        } else {
+          console.warn("⚠️ No RFID logs found");
+          rows =
+            '<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada riwayat akses</td></tr>';
         }
-        $("#tableLog tbody").html(
-          rows ||
-            '<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada riwayat akses</td></tr>'
-        );
+        $("#tableLog tbody").html(rows);
       },
       "json"
     ).fail(function (xhr, status, error) {
       console.error("❌ Failed to load RFID logs:", error);
+      console.error("XHR:", xhr);
       $("#tableLog tbody").html(
         '<tr><td colspan="5" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i><br>Gagal memuat riwayat akses</td></tr>'
       );
     });
-  }
+  };
 
   // === REMOVE RFID CARD ===
   window.removeRFID = function (uid) {
@@ -456,6 +469,7 @@ $(function () {
   };
 
   // === INITIALIZATION ===
+  console.log("🚀 Initializing RFID page...");
   loadRFID();
   loadLog();
 
@@ -464,4 +478,6 @@ $(function () {
     console.log("⏰ Auto-refreshing RFID logs...");
     loadLog();
   }, 10000);
+
+  console.log("✅ RFID page initialization complete");
 });
