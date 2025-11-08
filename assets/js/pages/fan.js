@@ -797,7 +797,7 @@ $(function () {
 
   // === HELPER FUNCTIONS ===
 
-  // Enhanced Toast notification helpers with beautiful design
+  // Simple and clean toast notifications
   function showSuccessToast(message) {
     if (typeof Swal !== "undefined") {
       Swal.fire({
@@ -806,50 +806,15 @@ $(function () {
         icon: "success",
         title: message,
         showConfirmButton: false,
-        timer: 3500,
+        timer: 3000,
         timerProgressBar: true,
+        customClass: {
+          popup: "simple-toast",
+        },
         didOpen: (toast) => {
-          toast.style.borderRadius = "12px";
-          toast.style.padding = "16px 20px";
-          toast.style.fontSize = "15px";
-          toast.style.fontWeight = "500";
-          toast.style.boxShadow = "0 8px 24px rgba(40, 167, 69, 0.35)";
-          toast.style.background =
-            "linear-gradient(135deg, #28a745 0%, #20c997 100%)";
-          toast.style.color = "#fff";
-          toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-
-          const icon = toast.querySelector(".swal2-icon.swal2-success");
-          if (icon) {
-            icon.style.borderColor = "#fff";
-            const iconLines = icon.querySelectorAll(
-              ".swal2-success-line-tip, .swal2-success-line-long"
-            );
-            iconLines.forEach((line) => {
-              line.style.backgroundColor = "#fff";
-            });
-            const ring = icon.querySelector(".swal2-success-ring");
-            if (ring) ring.style.borderColor = "rgba(255, 255, 255, 0.3)";
-          }
-
-          const title = toast.querySelector(".swal2-title");
-          if (title) {
-            title.style.color = "#fff";
-            title.style.fontSize = "15px";
-            title.style.fontWeight = "600";
-          }
-
-          const progressBar = toast.querySelector(".swal2-timer-progress-bar");
-          if (progressBar) {
-            progressBar.style.background = "rgba(255, 255, 255, 0.5)";
-            progressBar.style.height = "4px";
-          }
-        },
-        showClass: {
-          popup: "animate__animated animate__fadeInRight animate__faster",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutRight animate__faster",
+          toast.style.background = "#fff";
+          toast.style.borderLeft = "4px solid #28a745";
+          toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
         },
       });
     } else {
@@ -865,48 +830,15 @@ $(function () {
         icon: "error",
         title: message,
         showConfirmButton: false,
-        timer: 4000,
+        timer: 3500,
         timerProgressBar: true,
+        customClass: {
+          popup: "simple-toast",
+        },
         didOpen: (toast) => {
-          toast.style.borderRadius = "12px";
-          toast.style.padding = "16px 20px";
-          toast.style.fontSize = "15px";
-          toast.style.fontWeight = "500";
-          toast.style.boxShadow = "0 8px 24px rgba(220, 53, 69, 0.35)";
-          toast.style.background =
-            "linear-gradient(135deg, #dc3545 0%, #e63946 100%)";
-          toast.style.color = "#fff";
-          toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-
-          const icon = toast.querySelector(".swal2-icon.swal2-error");
-          if (icon) {
-            icon.style.borderColor = "#fff";
-            const iconX = icon.querySelectorAll(
-              ".swal2-x-mark-line-left, .swal2-x-mark-line-right"
-            );
-            iconX.forEach((line) => {
-              line.style.backgroundColor = "#fff";
-            });
-          }
-
-          const title = toast.querySelector(".swal2-title");
-          if (title) {
-            title.style.color = "#fff";
-            title.style.fontSize = "15px";
-            title.style.fontWeight = "600";
-          }
-
-          const progressBar = toast.querySelector(".swal2-timer-progress-bar");
-          if (progressBar) {
-            progressBar.style.background = "rgba(255, 255, 255, 0.5)";
-            progressBar.style.height = "4px";
-          }
-        },
-        showClass: {
-          popup: "animate__animated animate__shakeX animate__faster",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutRight animate__faster",
+          toast.style.background = "#fff";
+          toast.style.borderLeft = "4px solid #dc3545";
+          toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
         },
       });
     } else {
@@ -922,45 +854,15 @@ $(function () {
         icon: "warning",
         title: message,
         showConfirmButton: false,
-        timer: 3500,
+        timer: 3000,
         timerProgressBar: true,
+        customClass: {
+          popup: "simple-toast",
+        },
         didOpen: (toast) => {
-          toast.style.borderRadius = "12px";
-          toast.style.padding = "16px 20px";
-          toast.style.fontSize = "15px";
-          toast.style.fontWeight = "500";
-          toast.style.boxShadow = "0 8px 24px rgba(255, 193, 7, 0.35)";
-          toast.style.background =
-            "linear-gradient(135deg, #ffc107 0%, #ffb300 100%)";
-          toast.style.color = "#fff";
-          toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-
-          const icon = toast.querySelector(".swal2-icon.swal2-warning");
-          if (icon) {
-            icon.style.borderColor = "#fff";
-            icon.style.color = "#fff";
-            const iconBody = icon.querySelector(".swal2-icon-content");
-            if (iconBody) iconBody.style.color = "#fff";
-          }
-
-          const title = toast.querySelector(".swal2-title");
-          if (title) {
-            title.style.color = "#fff";
-            title.style.fontSize = "15px";
-            title.style.fontWeight = "600";
-          }
-
-          const progressBar = toast.querySelector(".swal2-timer-progress-bar");
-          if (progressBar) {
-            progressBar.style.background = "rgba(255, 255, 255, 0.5)";
-            progressBar.style.height = "4px";
-          }
-        },
-        showClass: {
-          popup: "animate__animated animate__headShake animate__faster",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutRight animate__faster",
+          toast.style.background = "#fff";
+          toast.style.borderLeft = "4px solid #ffc107";
+          toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
         },
       });
     } else {
@@ -976,45 +878,15 @@ $(function () {
         icon: "info",
         title: message,
         showConfirmButton: false,
-        timer: 3500,
+        timer: 3000,
         timerProgressBar: true,
+        customClass: {
+          popup: "simple-toast",
+        },
         didOpen: (toast) => {
-          toast.style.borderRadius = "12px";
-          toast.style.padding = "16px 20px";
-          toast.style.fontSize = "15px";
-          toast.style.fontWeight = "500";
-          toast.style.boxShadow = "0 8px 24px rgba(23, 162, 184, 0.35)";
-          toast.style.background =
-            "linear-gradient(135deg, #17a2b8 0%, #138496 100%)";
-          toast.style.color = "#fff";
-          toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-
-          const icon = toast.querySelector(".swal2-icon.swal2-info");
-          if (icon) {
-            icon.style.borderColor = "#fff";
-            icon.style.color = "#fff";
-            const iconBody = icon.querySelector(".swal2-icon-content");
-            if (iconBody) iconBody.style.color = "#fff";
-          }
-
-          const title = toast.querySelector(".swal2-title");
-          if (title) {
-            title.style.color = "#fff";
-            title.style.fontSize = "15px";
-            title.style.fontWeight = "600";
-          }
-
-          const progressBar = toast.querySelector(".swal2-timer-progress-bar");
-          if (progressBar) {
-            progressBar.style.background = "rgba(255, 255, 255, 0.5)";
-            progressBar.style.height = "4px";
-          }
-        },
-        showClass: {
-          popup: "animate__animated animate__bounceInRight animate__faster",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutRight animate__faster",
+          toast.style.background = "#fff";
+          toast.style.borderLeft = "4px solid #17a2b8";
+          toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
         },
       });
     } else {
