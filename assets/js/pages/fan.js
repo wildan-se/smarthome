@@ -27,6 +27,12 @@ $(function () {
   let lastModeUpdate = 0;
   const MODE_UPDATE_COOLDOWN = 2000; // 2 seconds cooldown
 
+  // Bug fix: Prevent circular status updates (for manual control buttons)
+  let statusUpdateInProgress = false;
+  let lastStatusUpdate = 0;
+  const STATUS_UPDATE_COOLDOWN = 1500; // 1.5 seconds cooldown
+  let pendingStatusUpdate = null; // Track pending status from user action
+
   // Initialize MQTT Client
   const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
     username: mqttUser,
@@ -86,8 +92,24 @@ $(function () {
 
   function handleFanStatus(msg) {
     const status = msg.toLowerCase();
-    currentStatus = status;
 
+    // If this is a response to our own action, skip the update to prevent loop
+    if (pendingStatusUpdate === status) {
+      console.log(`✅ Fan status confirmed by ESP32: ${status} (expected)`);
+      pendingStatusUpdate = null; // Clear pending
+      statusUpdateInProgress = false; // Release lock
+      return; // Don't update UI again, we already did optimistic update
+    }
+
+    // If status unchanged, skip
+    if (currentStatus === status) {
+      console.log(`⏭️ Fan status unchanged: ${status}`);
+      return;
+    }
+
+    // Update from external source (auto mode, manual ESP32, etc)
+    console.log(`📥 Fan status changed: ${currentStatus} → ${status}`);
+    currentStatus = status;
     updateFanUI(status);
   }
 
@@ -368,7 +390,27 @@ $(function () {
       return;
     }
 
-    console.log("🔵 Turning fan ON (manual)");
+    // Cooldown protection
+    const now = Date.now();
+    if (statusUpdateInProgress) {
+      showWarningToast("Tunggu, perintah sedang diproses...");
+      return;
+    }
+
+    if (now - lastStatusUpdate < STATUS_UPDATE_COOLDOWN) {
+      const remaining = Math.ceil(
+        (STATUS_UPDATE_COOLDOWN - (now - lastStatusUpdate)) / 1000
+      );
+      showWarningToast(`Tunggu ${remaining} detik lagi`);
+      return;
+    }
+
+    console.log("� Turning fan ON (manual)");
+
+    // Set flags
+    statusUpdateInProgress = true;
+    lastStatusUpdate = now;
+    pendingStatusUpdate = "on"; // Expect "on" response from ESP32
 
     // Disable both buttons temporarily
     const btnOn = $(this);
@@ -376,7 +418,8 @@ $(function () {
     btnOn.prop("disabled", true);
     btnOff.prop("disabled", true);
 
-    // Update UI immediately for better UX
+    // Update status variable and UI immediately
+    currentStatus = "on";
     updateFanUI("on");
 
     // Publish to MQTT
@@ -389,31 +432,43 @@ $(function () {
           if (err) {
             console.error("❌ MQTT publish failed:", err);
             showErrorToast("Gagal mengirim perintah ke ESP32");
-            // Revert UI
-            updateFanUI(currentStatus);
+            // Revert on error
+            currentStatus = "off";
+            updateFanUI("off");
+            pendingStatusUpdate = null;
+            statusUpdateInProgress = false;
           } else {
             console.log("✅ Fan ON command sent via MQTT");
-            showSuccessToast("🔵 Kipas berhasil dinyalakan");
-            currentStatus = "on";
+            showSuccessToast("� Kipas berhasil dinyalakan");
           }
 
-          // Re-enable buttons after 2 seconds
+          // Re-enable buttons
           setTimeout(() => {
             btnOn.prop("disabled", false);
             btnOff.prop("disabled", false);
-          }, 2000);
+
+            // Clear pending if no response
+            if (pendingStatusUpdate === "on") {
+              console.warn("⚠️ No confirmation from ESP32 after 1.5s");
+              pendingStatusUpdate = null;
+              statusUpdateInProgress = false;
+            }
+          }, STATUS_UPDATE_COOLDOWN);
         }
       );
     } catch (error) {
       console.error("❌ Error publishing MQTT:", error);
       showErrorToast("Error: Gagal mengirim perintah");
-      updateFanUI(currentStatus);
+      currentStatus = "off";
+      updateFanUI("off");
+      pendingStatusUpdate = null;
+      statusUpdateInProgress = false;
 
       // Re-enable buttons
       setTimeout(() => {
         btnOn.prop("disabled", false);
         btnOff.prop("disabled", false);
-      }, 2000);
+      }, 1000);
     }
   });
 
@@ -430,7 +485,27 @@ $(function () {
       return;
     }
 
+    // Cooldown protection
+    const now = Date.now();
+    if (statusUpdateInProgress) {
+      showWarningToast("Tunggu, perintah sedang diproses...");
+      return;
+    }
+
+    if (now - lastStatusUpdate < STATUS_UPDATE_COOLDOWN) {
+      const remaining = Math.ceil(
+        (STATUS_UPDATE_COOLDOWN - (now - lastStatusUpdate)) / 1000
+      );
+      showWarningToast(`Tunggu ${remaining} detik lagi`);
+      return;
+    }
+
     console.log("🔴 Turning fan OFF (manual)");
+
+    // Set flags
+    statusUpdateInProgress = true;
+    lastStatusUpdate = now;
+    pendingStatusUpdate = "off"; // Expect "off" response from ESP32
 
     // Disable both buttons temporarily
     const btnOff = $(this);
@@ -438,7 +513,8 @@ $(function () {
     btnOff.prop("disabled", true);
     btnOn.prop("disabled", true);
 
-    // Update UI immediately for better UX
+    // Update status variable and UI immediately
+    currentStatus = "off";
     updateFanUI("off");
 
     // Publish to MQTT
@@ -451,31 +527,43 @@ $(function () {
           if (err) {
             console.error("❌ MQTT publish failed:", err);
             showErrorToast("Gagal mengirim perintah ke ESP32");
-            // Revert UI
-            updateFanUI(currentStatus);
+            // Revert on error
+            currentStatus = "on";
+            updateFanUI("on");
+            pendingStatusUpdate = null;
+            statusUpdateInProgress = false;
           } else {
             console.log("✅ Fan OFF command sent via MQTT");
             showSuccessToast("🔴 Kipas berhasil dimatikan");
-            currentStatus = "off";
           }
 
-          // Re-enable buttons after 2 seconds
+          // Re-enable buttons
           setTimeout(() => {
             btnOff.prop("disabled", false);
             btnOn.prop("disabled", false);
-          }, 2000);
+
+            // Clear pending if no response
+            if (pendingStatusUpdate === "off") {
+              console.warn("⚠️ No confirmation from ESP32 after 1.5s");
+              pendingStatusUpdate = null;
+              statusUpdateInProgress = false;
+            }
+          }, STATUS_UPDATE_COOLDOWN);
         }
       );
     } catch (error) {
       console.error("❌ Error publishing MQTT:", error);
       showErrorToast("Error: Gagal mengirim perintah");
-      updateFanUI(currentStatus);
+      currentStatus = "on";
+      updateFanUI("on");
+      pendingStatusUpdate = null;
+      statusUpdateInProgress = false;
 
       // Re-enable buttons
       setTimeout(() => {
         btnOff.prop("disabled", false);
         btnOn.prop("disabled", false);
-      }, 2000);
+      }, 1000);
     }
   });
 
