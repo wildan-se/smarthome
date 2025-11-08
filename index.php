@@ -57,14 +57,14 @@ $pageJS = [
   renderHead($pageTitle, $pageCSS);
   ?>
   <style>
-    /* Chart Maximize Mode Enhancement */
-    .maximized-card .card-body {
+    /* Chart Maximize Mode Enhancement - HANYA untuk card chart */
+    #chartCard.maximized-card .card-body {
       padding: 20px !important;
       overflow-y: auto !important;
       max-height: calc(100vh - 160px) !important;
     }
 
-    .maximized-card .card-header {
+    #chartCard.maximized-card .card-header {
       position: sticky !important;
       top: 0 !important;
       z-index: 1050 !important;
@@ -74,7 +74,7 @@ $pageJS = [
       padding: 12px 20px !important;
     }
 
-    .maximized-card .card-header .card-title {
+    #chartCard.maximized-card .card-header .card-title {
       color: white !important;
       font-size: 1.3rem !important;
       font-weight: 600 !important;
@@ -82,16 +82,16 @@ $pageJS = [
       margin: 0 !important;
     }
 
-    .maximized-card .card-header .card-title i {
+    #chartCard.maximized-card .card-header .card-title i {
       display: none !important;
     }
 
     /* Hide card-tools (collapse button) saat maximize, hanya text title yang tampil */
-    .maximized-card .card-header .card-tools {
+    #chartCard.maximized-card .card-header .card-tools {
       display: none !important;
     }
 
-    .maximized-card .card-footer {
+    #chartCard.maximized-card .card-footer {
       position: sticky !important;
       bottom: 0 !important;
       z-index: 1050 !important;
@@ -102,12 +102,12 @@ $pageJS = [
       backdrop-filter: blur(10px) !important;
     }
 
-    .maximized-card #chartWrapper {
+    #chartCard.maximized-card #chartWrapper {
       height: calc(100vh - 260px) !important;
       min-height: 400px !important;
     }
 
-    .maximized-card canvas {
+    #chartCard.maximized-card canvas {
       max-height: 100% !important;
     }
 
@@ -117,8 +117,8 @@ $pageJS = [
       height: 100% !important;
     }
 
-    /* Enhanced: Tombol maximize floating dengan desain modern */
-    .maximized-card [data-card-widget="maximize"] {
+    /* Enhanced: Tombol maximize floating dengan desain modern - HANYA untuk chart card */
+    #chartCard.maximized-card [data-card-widget="maximize"] {
       position: fixed !important;
       bottom: 30px !important;
       right: 30px !important;
@@ -151,7 +151,7 @@ $pageJS = [
     }
 
     /* Pulse Animation for Attention */
-    .maximized-card [data-card-widget="maximize"]::before {
+    #chartCard.maximized-card [data-card-widget="maximize"]::before {
       content: '' !important;
       position: absolute !important;
       top: -2px !important;
@@ -183,7 +183,7 @@ $pageJS = [
     }
 
     /* Enhanced Hover Effect */
-    .maximized-card [data-card-widget="maximize"]:hover {
+    #chartCard.maximized-card [data-card-widget="maximize"]:hover {
       transform: scale(1.1) rotate(90deg) !important;
       background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
       box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6),
@@ -191,20 +191,20 @@ $pageJS = [
     }
 
     /* Active/Click Effect */
-    .maximized-card [data-card-widget="maximize"]:active {
+    #chartCard.maximized-card [data-card-widget="maximize"]:active {
       transform: scale(0.95) !important;
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
     }
 
     /* Icon Styling */
-    .maximized-card [data-card-widget="maximize"] i {
+    #chartCard.maximized-card [data-card-widget="maximize"] i {
       font-size: 1.4rem !important;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
       transition: transform 0.3s ease !important;
     }
 
-    /* Tombol collapse tetap di header (hidden saat maximize) */
-    .maximized-card [data-card-widget="collapse"] {
+    /* Tombol collapse tetap di header (hidden saat maximize) - HANYA untuk chart card */
+    #chartCard.maximized-card [data-card-widget="collapse"] {
       display: none !important;
     }
   </style>
@@ -408,7 +408,7 @@ $pageJS = [
           <!-- Row 3: Chart Full Width -->
           <div class="row">
             <div class="col-12">
-              <div class="card card-primary shadow-md fade-in">
+              <div class="card card-primary shadow-md fade-in" id="chartCard">
                 <div class="card-header">
                   <h3 class="card-title">
                     <i class="fas fa-chart-line mr-2"></i>Grafik Suhu & Kelembapan Real-time
