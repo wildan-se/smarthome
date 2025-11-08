@@ -77,28 +77,37 @@ $pageJS = [
       height: 100% !important;
     }
 
-    /* Fix: Tombol maximize floating di pojok kanan bawah saat maximize */
-    .maximized-card .card-tools {
+    /* Fix: Hanya tombol maximize yang floating di pojok kanan bawah saat maximize */
+    .maximized-card [data-card-widget="maximize"] {
       position: fixed !important;
       bottom: 20px !important;
       right: 20px !important;
-      top: auto !important;
       z-index: 9999 !important;
       background: rgba(255, 255, 255, 0.95) !important;
-      padding: 8px 12px !important;
-      border-radius: 8px !important;
+      padding: 12px !important;
+      border-radius: 50% !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
       border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      width: 45px !important;
+      height: 45px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
 
-    .maximized-card .card-tools .btn-tool {
-      color: #007bff !important;
-      font-size: 1.2rem !important;
+    .maximized-card [data-card-widget="maximize"]:hover {
+      background: rgba(0, 123, 255, 0.95) !important;
+      color: white !important;
+      box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4) !important;
     }
 
-    .maximized-card .card-tools .btn-tool:hover {
-      color: #0056b3 !important;
-      background: rgba(0, 123, 255, 0.1) !important;
+    /* Tombol collapse tetap di header (hidden saat maximize) */
+    .maximized-card [data-card-widget="collapse"] {
+      display: none !important;
+    }
+
+    .maximized-card [data-card-widget="maximize"] i {
+      font-size: 1.3rem !important;
     }
   </style>
 </head>
