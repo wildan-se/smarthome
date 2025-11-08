@@ -161,8 +161,46 @@ $pageJS = ['assets/js/pages/door.js'];
             </div>
           </div>
 
-          <!-- Door Activity Logs -->
+          <!-- Slider Manual Servo -->
           <div class="card card-warning card-outline shadow-sm hover-shadow fadeIn mt-4">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-sliders-h"></i> Kontrol Presisi Servo (0° - 180°)
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-10">
+                  <label for="servoSlider" class="font-weight-bold">
+                    Posisi Servo: <span id="sliderValue" class="badge badge-primary" style="font-size: 1.2em;">0</span>°
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="180"
+                    value="0"
+                    id="servoSlider"
+                    class="custom-range"
+                    style="cursor: pointer;">
+                  <div class="d-flex justify-content-between text-muted small">
+                    <span><i class="fas fa-door-closed"></i> 0° (Tertutup)</span>
+                    <span><i class="fas fa-door-open"></i> 90° (Terbuka)</span>
+                    <span>180° (Maksimal)</span>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <button class="btn btn-primary btn-block btn-lg shadow-sm" id="btnApplyServo">
+                    <i class="fas fa-check-circle"></i><br>
+                    <small>Terapkan</small>
+                  </button>
+                </div>
+              </div>
+              <div id="sliderResult" class="mt-3"></div>
+            </div>
+          </div>
+
+          <!-- Door Activity Logs -->
+          <div class="card card-secondary card-outline shadow-sm hover-shadow fadeIn mt-4">
             <div class="card-header">
               <h3 class="card-title">
                 <i class="fas fa-history"></i> Riwayat Aktivitas Pintu
@@ -171,7 +209,7 @@ $pageJS = ['assets/js/pages/door.js'];
                 <button type="button" class="btn btn-tool" onclick="loadDoorLogs()">
                   <i class="fas fa-sync"></i>
                 </button>
-                <span class="badge badge-warning">20 Terakhir</span>
+                <span class="badge badge-secondary">20 Terakhir</span>
               </div>
             </div>
             <div class="card-body">
