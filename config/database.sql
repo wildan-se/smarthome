@@ -41,6 +41,7 @@ CREATE TABLE dht_logs (
 CREATE TABLE door_status (
   id INT AUTO_INCREMENT PRIMARY KEY,
   status ENUM('terbuka','tertutup') NOT NULL,
+  source ENUM('manual', 'rfid', 'auto') DEFAULT 'manual',
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

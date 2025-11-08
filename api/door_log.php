@@ -11,9 +11,9 @@ if ($action === 'get_logs') {
   $limit = intval($_GET['limit'] ?? 20);
   $limit = min($limit, 100); // Max 100
 
-  $sql = "SELECT id, status, source, DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i:%s') as timestamp 
+  $sql = "SELECT id, status, source, DATE_FORMAT(updated_at, '%d/%m/%Y %H:%i:%s') as timestamp 
           FROM door_status 
-          ORDER BY timestamp DESC 
+          ORDER BY updated_at DESC 
           LIMIT ?";
 
   $stmt = $conn->prepare($sql);
@@ -41,9 +41,9 @@ if ($action === 'get_logs') {
 
 // ==================== GET LATEST STATUS ====================
 elseif ($action === 'get_latest') {
-  $sql = "SELECT status, source, timestamp 
+  $sql = "SELECT status, source, updated_at as timestamp 
           FROM door_status 
-          ORDER BY timestamp DESC 
+          ORDER BY updated_at DESC 
           LIMIT 1";
 
   $result = $conn->query($sql);
