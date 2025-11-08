@@ -97,9 +97,23 @@ $(function () {
     const temp = parseFloat(msg);
     if (!isNaN(temp) && temp > 0 && temp < 100) {
       currentTemp = temp;
-      $("#currentTemp").text(temp.toFixed(1));
+      $("#currentTemp").text(temp.toFixed(1) + "°C");
 
-      // Update temperature indicator
+      // Update temperature icon color
+      const tempIcon = $("#tempIcon");
+      tempIcon.removeClass("temp-cold temp-cool temp-warm temp-hot");
+
+      if (temp < 20) {
+        tempIcon.addClass("temp-cold");
+      } else if (temp < 25) {
+        tempIcon.addClass("temp-cool");
+      } else if (temp < 30) {
+        tempIcon.addClass("temp-warm");
+      } else {
+        tempIcon.addClass("temp-hot");
+      }
+
+      // Update temperature indicator gauge
       if (temp > thresholdOn) {
         $("#tempIndicator")
           .removeClass("bg-success bg-warning")
@@ -113,6 +127,10 @@ $(function () {
           .removeClass("bg-danger bg-warning")
           .addClass("bg-success");
       }
+
+      // Update gauge position (0-50°C scale)
+      const gaugePercent = Math.min((temp / 50) * 100, 100);
+      $("#tempIndicator").css("left", gaugePercent + "%");
     }
   }
 
@@ -120,7 +138,7 @@ $(function () {
     const hum = parseFloat(msg);
     if (!isNaN(hum) && hum > 0 && hum <= 100) {
       currentHum = hum;
-      $("#currentHum").text(hum.toFixed(1));
+      $("#currentHumidity").text(hum.toFixed(1) + "%");
     }
   }
 
@@ -139,18 +157,21 @@ $(function () {
 
     // Update fan icon
     const fanIcon = $("#fanIcon");
+    const fanStatusIcon = $("#fanStatusIcon");
+
     if (isOn) {
       fanIcon.addClass("fan-spinning");
-      $("#fanStatusIcon").removeClass("fa-power-off").addClass("fa-fan");
-      $("#fanCard").removeClass("bg-danger bg-warning").addClass("bg-success");
+      fanStatusIcon
+        .removeClass("bg-secondary bg-danger")
+        .addClass("bg-success");
+      $("#fanStatusText").html('<strong class="text-success">ON</strong>');
     } else {
       fanIcon.removeClass("fan-spinning");
-      $("#fanStatusIcon").removeClass("fa-fan").addClass("fa-power-off");
-      $("#fanCard").removeClass("bg-success bg-warning").addClass("bg-danger");
+      fanStatusIcon
+        .removeClass("bg-success bg-secondary")
+        .addClass("bg-danger");
+      $("#fanStatusText").html('<strong class="text-danger">OFF</strong>');
     }
-
-    // Update status text
-    $("#fanStatusText").text(isOn ? "ON" : "OFF");
 
     console.log("🔄 Fan UI updated:", status);
   }
@@ -159,20 +180,23 @@ $(function () {
     currentMode = mode;
     const isAuto = mode === "auto";
 
-    // Update mode display
-    $("#modeDisplay").text(isAuto ? "AUTO" : "MANUAL");
+    // Update mode text display
+    $("#modeText").text(isAuto ? "AUTO" : "MANUAL");
 
-    // Update buttons
+    // Update mode switch checkbox
+    $("#modeSwitch").prop("checked", isAuto);
+
+    // Update buttons if they exist
     $("#btnAuto").toggleClass("active", isAuto);
     $("#btnManual").toggleClass("active", !isAuto);
 
     // Show/hide manual controls
     if (isAuto) {
       $("#manualControls").slideUp();
-      $("#autoInfo").slideDown();
+      if ($("#autoInfo").length) $("#autoInfo").slideDown();
     } else {
       $("#manualControls").slideDown();
-      $("#autoInfo").slideUp();
+      if ($("#autoInfo").length) $("#autoInfo").slideUp();
     }
 
     console.log("🎛️ Mode updated:", mode);
@@ -180,7 +204,38 @@ $(function () {
 
   // === BUTTON HANDLERS ===
 
-  // Mode Switching
+  // Mode Switch Toggle
+  $("#modeSwitch").change(function () {
+    const isChecked = $(this).is(":checked");
+    const newMode = isChecked ? "auto" : "manual";
+
+    if (currentMode === newMode) return;
+
+    console.log(`🔄 Mode switch toggled to: ${newMode.toUpperCase()}`);
+
+    // Update mode
+    updateMode(newMode);
+
+    // Publish to MQTT
+    client.publish(`${topicRoot}/kipas/mode`, newMode);
+
+    // Save to database
+    $.post(
+      "api/kipas_crud.php",
+      {
+        action: "update_mode",
+        mode: newMode,
+      },
+      function (res) {
+        if (res.success) {
+          showSuccessToast(`Mode ${newMode.toUpperCase()} diaktifkan`);
+        }
+      },
+      "json"
+    ).fail(handleAjaxError);
+  });
+
+  // Mode Switching (backup buttons if any)
   $("#btnAuto").click(function () {
     if (currentMode === "auto") return;
 
@@ -278,8 +333,8 @@ $(function () {
 
   // Save Threshold Settings
   $("#btnSaveThreshold").click(function () {
-    const newThresholdOn = parseFloat($("#thresholdOn").val());
-    const newThresholdOff = parseFloat($("#thresholdOff").val());
+    const newThresholdOn = parseFloat($("#tempOn").val());
+    const newThresholdOff = parseFloat($("#tempOff").val());
 
     // Comprehensive validation
     if (isNaN(newThresholdOn) || isNaN(newThresholdOff)) {
@@ -380,8 +435,8 @@ $(function () {
           thresholdOn = parseFloat(data.threshold_on) || 30;
           thresholdOff = parseFloat(data.threshold_off) || 25;
 
-          $("#thresholdOn").val(thresholdOn);
-          $("#thresholdOff").val(thresholdOff);
+          $("#tempOn").val(thresholdOn);
+          $("#tempOff").val(thresholdOff);
 
           // Update mode
           currentMode = data.mode || "auto";
