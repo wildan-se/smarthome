@@ -677,6 +677,9 @@ $(function () {
     });
   }
 
+  // Make function available globally for refresh button
+  window.loadLastRFID = loadLastRFIDAccess;
+
   // Initial load
   loadLastRFIDAccess();
 

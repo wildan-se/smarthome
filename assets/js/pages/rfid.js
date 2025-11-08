@@ -356,14 +356,14 @@ $(function () {
                             }</strong></td>
                             <td><code class="code-badge">${l.uid}</code></td>
                             <td><i class="fas fa-user text-muted"></i> ${name}</td>
-                            <td><i class="far fa-clock text-muted"></i> ${
-                              l.access_time
-                            }</td>
                             <td class="text-center">
                                 <span class="badge badge-${statusClass} pulse">
                                     <i class="fas fa-${statusIcon}"></i> ${statusText}
                                 </span>
                             </td>
+                            <td><i class="far fa-clock text-muted"></i> ${
+                              l.access_time
+                            }</td>
                         </tr>
                     `;
           });
