@@ -333,6 +333,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <a href="#">
         <i class="fas fa-home"></i>
         <span><b>Smart</b>Home</span>
+        <span><b>I</b>Home</span>
       </a>
     </div>
     <!-- /.login-logo -->
