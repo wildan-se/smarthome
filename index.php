@@ -271,7 +271,9 @@ $pageJS = [
                   </div>
                 </div>
                 <div class="card-body">
-                  <canvas id="dhtChart" height="60"></canvas>
+                  <div style="position: relative; height: 400px;">
+                    <canvas id="dhtChart"></canvas>
+                  </div>
                 </div>
                 <div class="card-footer bg-white">
                   <small class="text-muted">

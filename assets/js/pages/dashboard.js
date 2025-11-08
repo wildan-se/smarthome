@@ -54,7 +54,7 @@ $(function () {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           display: true,
@@ -702,4 +702,31 @@ $(function () {
 
   // Initialize AdminLTE Card Widget for collapse/maximize functionality
   console.log("🎯 Dashboard Page Initialized - Activating card widgets");
+
+  // ✅ FIX: Handle chart resize when card is collapsed/expanded or maximized
+  // AdminLTE CardWidget triggers events when card state changes
+  $('[data-card-widget="collapse"]').on("click", function () {
+    setTimeout(function () {
+      if (dhtChart) {
+        dhtChart.resize();
+        console.log("📊 Chart resized after collapse/expand");
+      }
+    }, 350); // Wait for animation to complete (AdminLTE default: 300ms)
+  });
+
+  $('[data-card-widget="maximize"]').on("click", function () {
+    setTimeout(function () {
+      if (dhtChart) {
+        dhtChart.resize();
+        console.log("📊 Chart resized after maximize/restore");
+      }
+    }, 350);
+  });
+
+  // ✅ Also handle window resize event
+  $(window).on("resize", function () {
+    if (dhtChart) {
+      dhtChart.resize();
+    }
+  });
 });
