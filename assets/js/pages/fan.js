@@ -484,20 +484,20 @@ $(function () {
   $("#btnFanOn").click(function () {
     // Check if in manual mode
     if (currentMode !== "manual") {
-      showErrorToast("⚠️ Mode harus MANUAL untuk kontrol manual!");
+      showErrorToast("⚠️ Mode Harus MANUAL Untuk Kontrol Manual!");
       return;
     }
 
     // Check if already ON
     if (currentStatus === "on") {
-      showWarningToast("Kipas sudah dalam keadaan menyala");
+      showWarningToast("⚡ Kipas Sudah Dalam Keadaan Menyala");
       return;
     }
 
     // Cooldown protection
     const now = Date.now();
     if (statusUpdateInProgress) {
-      showWarningToast("Tunggu, perintah sedang diproses...");
+      showWarningToast("⏳ Tunggu, Perintah Sedang Diproses...");
       return;
     }
 
@@ -505,7 +505,7 @@ $(function () {
       const remaining = Math.ceil(
         (STATUS_UPDATE_COOLDOWN - (now - lastStatusUpdate)) / 1000
       );
-      showWarningToast(`Tunggu ${remaining} detik lagi`);
+      showWarningToast(`⏱️ Tunggu ${remaining} Detik Lagi`);
       return;
     }
 
@@ -535,7 +535,7 @@ $(function () {
         function (err) {
           if (err) {
             console.error("❌ MQTT publish failed:", err);
-            showErrorToast("Gagal mengirim perintah ke ESP32");
+            showErrorToast("❌ Gagal Mengirim Perintah ke ESP32");
             // Revert on error
             currentStatus = "off";
             updateFanUI("off");
@@ -543,7 +543,7 @@ $(function () {
             statusUpdateInProgress = false;
           } else {
             console.log("✅ Fan ON command sent via MQTT");
-            showSuccessToast("� Kipas berhasil dinyalakan");
+            showSuccessToast("💨 Kipas Berhasil Dinyalakan");
           }
 
           // Re-enable buttons
@@ -562,7 +562,7 @@ $(function () {
       );
     } catch (error) {
       console.error("❌ Error publishing MQTT:", error);
-      showErrorToast("Error: Gagal mengirim perintah");
+      showErrorToast("❌ Error: Gagal Mengirim Perintah");
       currentStatus = "off";
       updateFanUI("off");
       pendingStatusUpdate = null;
@@ -579,20 +579,20 @@ $(function () {
   $("#btnFanOff").click(function () {
     // Check if in manual mode
     if (currentMode !== "manual") {
-      showErrorToast("⚠️ Mode harus MANUAL untuk kontrol manual!");
+      showErrorToast("⚠️ Mode Harus MANUAL Untuk Kontrol Manual!");
       return;
     }
 
     // Check if already OFF
     if (currentStatus === "off") {
-      showWarningToast("Kipas sudah dalam keadaan mati");
+      showWarningToast("💤 Kipas Sudah Dalam Keadaan Mati");
       return;
     }
 
     // Cooldown protection
     const now = Date.now();
     if (statusUpdateInProgress) {
-      showWarningToast("Tunggu, perintah sedang diproses...");
+      showWarningToast("⏳ Tunggu, Perintah Sedang Diproses...");
       return;
     }
 
@@ -600,7 +600,7 @@ $(function () {
       const remaining = Math.ceil(
         (STATUS_UPDATE_COOLDOWN - (now - lastStatusUpdate)) / 1000
       );
-      showWarningToast(`Tunggu ${remaining} detik lagi`);
+      showWarningToast(`⏱️ Tunggu ${remaining} Detik Lagi`);
       return;
     }
 
@@ -630,7 +630,7 @@ $(function () {
         function (err) {
           if (err) {
             console.error("❌ MQTT publish failed:", err);
-            showErrorToast("Gagal mengirim perintah ke ESP32");
+            showErrorToast("❌ Gagal Mengirim Perintah ke ESP32");
             // Revert on error
             currentStatus = "on";
             updateFanUI("on");
@@ -638,7 +638,7 @@ $(function () {
             statusUpdateInProgress = false;
           } else {
             console.log("✅ Fan OFF command sent via MQTT");
-            showSuccessToast("🔴 Kipas berhasil dimatikan");
+            showSuccessToast("� Kipas Berhasil Dimatikan");
           }
 
           // Re-enable buttons
@@ -657,7 +657,7 @@ $(function () {
       );
     } catch (error) {
       console.error("❌ Error publishing MQTT:", error);
-      showErrorToast("Error: Gagal mengirim perintah");
+      showErrorToast("❌ Error: Gagal Mengirim Perintah");
       currentStatus = "on";
       updateFanUI("on");
       pendingStatusUpdate = null;
@@ -797,7 +797,7 @@ $(function () {
 
   // === HELPER FUNCTIONS ===
 
-  // Toast notification helpers
+  // Enhanced Toast notification helpers with beautiful design
   function showSuccessToast(message) {
     if (typeof Swal !== "undefined") {
       Swal.fire({
@@ -806,8 +806,51 @@ $(function () {
         icon: "success",
         title: message,
         showConfirmButton: false,
-        timer: 3000,
+        timer: 3500,
         timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.style.borderRadius = "12px";
+          toast.style.padding = "16px 20px";
+          toast.style.fontSize = "15px";
+          toast.style.fontWeight = "500";
+          toast.style.boxShadow = "0 8px 24px rgba(40, 167, 69, 0.35)";
+          toast.style.background =
+            "linear-gradient(135deg, #28a745 0%, #20c997 100%)";
+          toast.style.color = "#fff";
+          toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+
+          const icon = toast.querySelector(".swal2-icon.swal2-success");
+          if (icon) {
+            icon.style.borderColor = "#fff";
+            const iconLines = icon.querySelectorAll(
+              ".swal2-success-line-tip, .swal2-success-line-long"
+            );
+            iconLines.forEach((line) => {
+              line.style.backgroundColor = "#fff";
+            });
+            const ring = icon.querySelector(".swal2-success-ring");
+            if (ring) ring.style.borderColor = "rgba(255, 255, 255, 0.3)";
+          }
+
+          const title = toast.querySelector(".swal2-title");
+          if (title) {
+            title.style.color = "#fff";
+            title.style.fontSize = "15px";
+            title.style.fontWeight = "600";
+          }
+
+          const progressBar = toast.querySelector(".swal2-timer-progress-bar");
+          if (progressBar) {
+            progressBar.style.background = "rgba(255, 255, 255, 0.5)";
+            progressBar.style.height = "4px";
+          }
+        },
+        showClass: {
+          popup: "animate__animated animate__fadeInRight animate__faster",
+        },
+        hideClass: {
+          popup: "animate__animated animate__fadeOutRight animate__faster",
+        },
       });
     } else {
       console.log("✅ " + message);
@@ -822,8 +865,49 @@ $(function () {
         icon: "error",
         title: message,
         showConfirmButton: false,
-        timer: 3000,
+        timer: 4000,
         timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.style.borderRadius = "12px";
+          toast.style.padding = "16px 20px";
+          toast.style.fontSize = "15px";
+          toast.style.fontWeight = "500";
+          toast.style.boxShadow = "0 8px 24px rgba(220, 53, 69, 0.35)";
+          toast.style.background =
+            "linear-gradient(135deg, #dc3545 0%, #e63946 100%)";
+          toast.style.color = "#fff";
+          toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+
+          const icon = toast.querySelector(".swal2-icon.swal2-error");
+          if (icon) {
+            icon.style.borderColor = "#fff";
+            const iconX = icon.querySelectorAll(
+              ".swal2-x-mark-line-left, .swal2-x-mark-line-right"
+            );
+            iconX.forEach((line) => {
+              line.style.backgroundColor = "#fff";
+            });
+          }
+
+          const title = toast.querySelector(".swal2-title");
+          if (title) {
+            title.style.color = "#fff";
+            title.style.fontSize = "15px";
+            title.style.fontWeight = "600";
+          }
+
+          const progressBar = toast.querySelector(".swal2-timer-progress-bar");
+          if (progressBar) {
+            progressBar.style.background = "rgba(255, 255, 255, 0.5)";
+            progressBar.style.height = "4px";
+          }
+        },
+        showClass: {
+          popup: "animate__animated animate__shakeX animate__faster",
+        },
+        hideClass: {
+          popup: "animate__animated animate__fadeOutRight animate__faster",
+        },
       });
     } else {
       console.error("❌ " + message);
@@ -838,17 +922,109 @@ $(function () {
         icon: "warning",
         title: message,
         showConfirmButton: false,
-        timer: 3000,
+        timer: 3500,
         timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.style.borderRadius = "12px";
+          toast.style.padding = "16px 20px";
+          toast.style.fontSize = "15px";
+          toast.style.fontWeight = "500";
+          toast.style.boxShadow = "0 8px 24px rgba(255, 193, 7, 0.35)";
+          toast.style.background =
+            "linear-gradient(135deg, #ffc107 0%, #ffb300 100%)";
+          toast.style.color = "#fff";
+          toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+
+          const icon = toast.querySelector(".swal2-icon.swal2-warning");
+          if (icon) {
+            icon.style.borderColor = "#fff";
+            icon.style.color = "#fff";
+            const iconBody = icon.querySelector(".swal2-icon-content");
+            if (iconBody) iconBody.style.color = "#fff";
+          }
+
+          const title = toast.querySelector(".swal2-title");
+          if (title) {
+            title.style.color = "#fff";
+            title.style.fontSize = "15px";
+            title.style.fontWeight = "600";
+          }
+
+          const progressBar = toast.querySelector(".swal2-timer-progress-bar");
+          if (progressBar) {
+            progressBar.style.background = "rgba(255, 255, 255, 0.5)";
+            progressBar.style.height = "4px";
+          }
+        },
+        showClass: {
+          popup: "animate__animated animate__headShake animate__faster",
+        },
+        hideClass: {
+          popup: "animate__animated animate__fadeOutRight animate__faster",
+        },
       });
     } else {
       console.warn("⚠️ " + message);
     }
   }
 
+  function showInfoToast(message) {
+    if (typeof Swal !== "undefined") {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "info",
+        title: message,
+        showConfirmButton: false,
+        timer: 3500,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.style.borderRadius = "12px";
+          toast.style.padding = "16px 20px";
+          toast.style.fontSize = "15px";
+          toast.style.fontWeight = "500";
+          toast.style.boxShadow = "0 8px 24px rgba(23, 162, 184, 0.35)";
+          toast.style.background =
+            "linear-gradient(135deg, #17a2b8 0%, #138496 100%)";
+          toast.style.color = "#fff";
+          toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+
+          const icon = toast.querySelector(".swal2-icon.swal2-info");
+          if (icon) {
+            icon.style.borderColor = "#fff";
+            icon.style.color = "#fff";
+            const iconBody = icon.querySelector(".swal2-icon-content");
+            if (iconBody) iconBody.style.color = "#fff";
+          }
+
+          const title = toast.querySelector(".swal2-title");
+          if (title) {
+            title.style.color = "#fff";
+            title.style.fontSize = "15px";
+            title.style.fontWeight = "600";
+          }
+
+          const progressBar = toast.querySelector(".swal2-timer-progress-bar");
+          if (progressBar) {
+            progressBar.style.background = "rgba(255, 255, 255, 0.5)";
+            progressBar.style.height = "4px";
+          }
+        },
+        showClass: {
+          popup: "animate__animated animate__bounceInRight animate__faster",
+        },
+        hideClass: {
+          popup: "animate__animated animate__fadeOutRight animate__faster",
+        },
+      });
+    } else {
+      console.info("ℹ️ " + message);
+    }
+  }
+
   function handleAjaxError(xhr) {
     console.error("❌ AJAX Error:", xhr.status, xhr.statusText);
-    showErrorToast("Gagal menghubungi server. Coba lagi.");
+    showErrorToast("❌ Gagal Menghubungi Server. Coba Lagi.");
   }
 
   // Initial load
