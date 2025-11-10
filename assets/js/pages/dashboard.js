@@ -792,9 +792,64 @@ $(function () {
     });
   }
 
+  // === LOAD LATEST FAN STATUS FROM DATABASE ===
+  function loadLatestFanStatus() {
+    console.log("💨 Loading latest fan status from database...");
+    $.get(
+      "api/kipas_crud.php?action=get_latest_status",
+      function (res) {
+        if (res.success && res.data) {
+          console.log("📊 Latest fan data:", res.data);
+
+          const status = res.data.status ? res.data.status.toLowerCase() : "";
+          const mode = res.data.mode ? res.data.mode.toLowerCase() : "";
+
+          if (status) {
+            const isOn = status === "on";
+
+            // Update fan status
+            $("#fan_status_text").text(isOn ? "ON" : "OFF");
+            $("#fan_card")
+              .removeClass(
+                "bg-success bg-danger bg-purple bg-warning bg-secondary"
+              )
+              .addClass(isOn ? "bg-success" : "bg-danger");
+
+            const fanIcon = $("#fan_icon_dashboard");
+            if (isOn) {
+              fanIcon.addClass("fan-spinning");
+            } else {
+              fanIcon.removeClass("fan-spinning");
+            }
+
+            console.log("✅ Fan status loaded:", status.toUpperCase());
+          }
+
+          // Update mode if present
+          if (mode) {
+            const isAuto = mode === "auto";
+            $("#fan_mode_text").html(
+              '<i class="fas fa-' +
+                (isAuto ? "magic" : "hand-pointer") +
+                '"></i> Mode: ' +
+                (isAuto ? "Auto" : "Manual")
+            );
+            console.log("✅ Fan mode loaded:", mode.toUpperCase());
+          }
+        } else {
+          console.log("ℹ️ No fan status data available from database");
+        }
+      },
+      "json"
+    ).fail(function (xhr, status, error) {
+      console.warn("⚠️ Failed to load fan status from database:", error);
+    });
+  }
+
   // Initial load
   loadLastRFIDAccess();
   loadLatestDHT(); // Load DHT data on page load
+  loadLatestFanStatus(); // Load fan status on page load
 
   // Auto-refresh every 10 seconds
   setInterval(function () {
