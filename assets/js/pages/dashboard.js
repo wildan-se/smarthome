@@ -177,9 +177,25 @@ $(function () {
       handleHumidity(msg);
     }
 
-    // Fan Status
+    // Fan Status - use relay/status instead
     if (topic === `${topicRoot}/kipas/status`) {
-      handleFanStatus(msg);
+      // Update from kipas/status topic (simple ON/OFF only)
+      const fanStatus = msg.toLowerCase();
+      const isOn = fanStatus === "on";
+
+      $("#fan_status_text").text(isOn ? "ON" : "OFF");
+      $("#fan_card")
+        .removeClass("bg-success bg-danger bg-purple bg-warning bg-secondary")
+        .addClass(isOn ? "bg-success" : "bg-danger");
+
+      const fanIcon = $("#fan_icon_dashboard");
+      if (isOn) {
+        fanIcon.addClass("fan-spinning");
+      } else {
+        fanIcon.removeClass("fan-spinning");
+      }
+
+      markESP32Online();
     }
 
     // Fan Mode
@@ -344,25 +360,6 @@ $(function () {
     } else {
       console.warn("⚠️ Invalid humidity value:", msg, "parsed as:", hum);
     }
-  }
-
-  function handleFanStatus(msg) {
-    const fanStatus = msg.toLowerCase();
-    const isOn = fanStatus === "on";
-
-    $("#fan_status_text").text(isOn ? "ON" : "OFF");
-    $("#fan_card")
-      .removeClass("bg-success bg-danger bg-purple bg-warning bg-secondary")
-      .addClass(isOn ? "bg-success" : "bg-danger");
-
-    const fanIcon = $("#fan_icon_dashboard");
-    if (isOn) {
-      fanIcon.addClass("fan-spinning");
-    } else {
-      fanIcon.removeClass("fan-spinning");
-    }
-
-    markESP32Online();
   }
 
   function handleFanMode(msg) {
