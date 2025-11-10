@@ -608,30 +608,52 @@ body {
 }
 
 /* ===================================================
-   COLLAPSED MODE OVERRIDE - FORCE NO TRANSFORM
-   (Must be BEFORE other hover rules to be overridden)
+   COLLAPSED MODE - COMPLETELY DISABLE HOVER
    =================================================== */
 
-/* CRITICAL: Disable ALL transforms when collapsed */
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link,
+/* CRITICAL: Disable ALL hover effects when collapsed */
 body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover,
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-item .nav-link:hover,
+body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover,
+body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover,
+body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar .nav-sidebar .nav-link:hover {
+  transform: none !important;
+  background: transparent !important; /* NO background change */
+  box-shadow: none !important;
+  color: inherit !important; /* Keep original color */
+  cursor: pointer; /* Still show it's clickable */
+}
+
+/* Disable icon hover effects */
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover .nav-icon,
+body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover .nav-icon {
+  transform: none !important;
+  color: inherit !important; /* Keep original icon color */
+  filter: none !important;
+}
+
+/* Disable text hover effects */
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover p,
+body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover p {
+  transform: none !important;
+  font-weight: inherit !important;
+}
+
+/* Disable ripple effect on collapsed */
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover::before,
+body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover::before {
+  display: none !important;
+}
+
+/* Active state - Keep this working */
 body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link.active {
   transform: none !important;
+  background: rgba(52, 152, 219, 0.3) !important;
 }
 
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover .nav-icon,
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover p,
 body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link.active .nav-icon {
-  transform: none !important;
-}
-
-/* Only color change on collapsed hover */
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover {
-  background: rgba(52, 152, 219, 0.25) !important;
-}
-
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover .nav-icon {
   color: #3498db !important;
+  transform: none !important;
 }
 
 /* ===================================================
@@ -809,45 +831,6 @@ body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
   body.sidebar-collapse .main-sidebar .brand-image {
     margin-left: 0 !important;
     margin-right: 0 !important;
-  }
-
-  /* ===================================================
-     COLLAPSED MODE - SIMPLE HOVER (NO ANIMATION)
-     =================================================== */
-  
-  /* FORCE: Completely disable all transforms on collapsed mode */
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link,
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover,
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover,
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:hover,
-  body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar .nav-sidebar .nav-link:hover {
-    transform: none !important; /* NO TRANSFORM AT ALL */
-  }
-
-  /* Only background color change on hover - SIMPLE */
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover {
-    background: rgba(52, 152, 219, 0.25) !important;
-  }
-
-  /* Icon - Only color change, no transform, no rotation */
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover .nav-icon {
-    transform: none !important; /* NO SCALE, NO ROTATION */
-    color: #3498db !important;
-  }
-
-  /* Text - Hidden and no transform */
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover p {
-    transform: none !important;
-  }
-
-  /* Active state on collapsed mode - also no transform */
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link.active {
-    transform: none !important;
-    background: rgba(52, 152, 219, 0.4) !important;
-  }
-
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link.active .nav-icon {
-    color: #fff !important;
   }
 
   /* Active indicator saat collapsed */
