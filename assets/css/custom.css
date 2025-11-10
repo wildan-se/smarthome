@@ -614,19 +614,23 @@ body {
   box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
 }
 
-/* Only apply translateX when sidebar is NOT collapsed */
-body:not(.sidebar-collapse) .nav-sidebar .nav-link:hover {
-  transform: translateX(5px) scale(1.02);
+/* Only apply translateX when sidebar is NOT collapsed - More specific selector */
+body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover {
+  transform: translateX(5px) scale(1.02) !important;
 }
 
 .nav-sidebar .nav-link:hover .nav-icon {
-  transform: rotate(360deg) scale(1.2);
   color: #3498db;
   filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.8));
 }
 
+/* Icon rotation only when NOT collapsed */
+body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover .nav-icon {
+  transform: rotate(360deg) scale(1.2) !important;
+}
+
 /* Only move text when sidebar is NOT collapsed */
-body:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
+body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
   transform: translateX(3px);
   font-weight: 600;
 }
@@ -776,29 +780,29 @@ body:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
   }
 
   /* Hover effect pada collapsed sidebar - NO TRANSFORM X */
-  body.sidebar-collapse .main-sidebar .nav-link {
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
     position: relative;
   }
 
-  body.sidebar-collapse .main-sidebar .nav-link:hover {
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover {
     transform: scale(1.08) !important; /* Only scale, no translateX */
     background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(46, 204, 113, 0.3) 100%) !important;
   }
 
   /* Icon pada collapsed mode - no rotation, just glow */
-  body.sidebar-collapse .main-sidebar .nav-link:hover .nav-icon {
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover .nav-icon {
     transform: scale(1.15) !important; /* No rotation when collapsed */
-    color: #3498db;
+    color: #3498db !important;
     filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.9));
   }
 
   /* Prevent text transform when collapsed (text is hidden anyway) */
-  body.sidebar-collapse .main-sidebar .nav-link:hover p {
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover p {
     transform: none !important;
   }
 
   /* Active state pada collapsed mode */
-  body.sidebar-collapse .main-sidebar .nav-link.active {
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link.active {
     transform: scale(1.05) !important; /* Only scale for active too */
   }
 
