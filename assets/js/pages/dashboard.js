@@ -3,6 +3,8 @@
  * Handle MQTT, real-time updates, and chart
  */
 
+console.log("🚀 Dashboard.js loaded - Version:", new Date().toISOString());
+
 $(function () {
   "use strict";
 

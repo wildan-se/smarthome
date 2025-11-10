@@ -45,7 +45,7 @@ $activePage = 'dashboard';
 $pageCSS = [];
 $pageJS = [
   'https://cdn.jsdelivr.net/npm/chart.js',
-  'assets/js/pages/dashboard.js'
+  'assets/js/pages/dashboard.js?v=' . time() // Force cache refresh
 ];
 ?>
 <!DOCTYPE html>
