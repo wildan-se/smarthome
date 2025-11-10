@@ -607,6 +607,37 @@ body {
   transition: all 0.3s ease;
 }
 
+/* ===================================================
+   COLLAPSED MODE OVERRIDE - FORCE NO TRANSFORM
+   (Must be BEFORE other hover rules to be overridden)
+   =================================================== */
+
+/* CRITICAL: Disable ALL transforms when collapsed */
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link,
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover,
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link.active {
+  transform: none !important;
+}
+
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover .nav-icon,
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover p,
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link.active .nav-icon {
+  transform: none !important;
+}
+
+/* Only color change on collapsed hover */
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover {
+  background: rgba(52, 152, 219, 0.25) !important;
+}
+
+body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover .nav-icon {
+  color: #3498db !important;
+}
+
+/* ===================================================
+   EXPANDED MODE HOVER EFFECTS
+   =================================================== */
+
 /* Hover State - Eye-Catching (DEFAULT - for expanded sidebar) */
 .nav-sidebar .nav-link:hover {
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(46, 204, 113, 0.2) 100%) !important;
