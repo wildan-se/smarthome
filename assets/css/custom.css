@@ -607,12 +607,16 @@ body {
   transition: all 0.3s ease;
 }
 
-/* Hover State - Eye-Catching */
+/* Hover State - Eye-Catching (DEFAULT - for expanded sidebar) */
 .nav-sidebar .nav-link:hover {
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(46, 204, 113, 0.2) 100%) !important;
   color: #fff !important;
-  transform: translateX(5px) scale(1.02);
   box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+/* Only apply translateX when sidebar is NOT collapsed */
+body:not(.sidebar-collapse) .nav-sidebar .nav-link:hover {
+  transform: translateX(5px) scale(1.02);
 }
 
 .nav-sidebar .nav-link:hover .nav-icon {
@@ -621,8 +625,13 @@ body {
   filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.8));
 }
 
-.nav-sidebar .nav-link:hover p {
+/* Only move text when sidebar is NOT collapsed */
+body:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
   transform: translateX(3px);
+  font-weight: 600;
+}
+
+.nav-sidebar .nav-link:hover p {
   font-weight: 600;
 }
 
