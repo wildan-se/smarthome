@@ -180,8 +180,13 @@ $(function () {
     // Fan Status - ESP32 sends "status,mode" format (e.g., "on,manual" or "off,auto")
     if (topic === `${topicRoot}/kipas/status`) {
       const parts = msg.split(",");
-      const fanStatus = parts[0] ? parts[0].toLowerCase() : "";
-      const fanMode = parts[1] ? parts[1].toLowerCase() : "";
+      const fanStatus = parts[0] ? parts[0].toLowerCase().trim() : "";
+      const fanMode = parts[1] ? parts[1].toLowerCase().trim() : "";
+
+      if (!fanStatus) {
+        console.warn("⚠️ Empty fan status received:", msg);
+        return;
+      }
 
       const isOn = fanStatus === "on";
 
@@ -207,11 +212,13 @@ $(function () {
             '"></i> Mode: ' +
             (isAuto ? "Auto" : "Manual")
         );
+        console.log(
+          `📊 Fan Updated: ${fanStatus.toUpperCase()} | Mode: ${fanMode.toUpperCase()}`
+        );
+      } else {
+        console.log(`📊 Fan Status: ${fanStatus.toUpperCase()} (no mode)`);
       }
 
-      console.log(
-        `📊 Fan Updated: ${fanStatus.toUpperCase()} (Mode: ${fanMode || "N/A"})`
-      );
       markESP32Online();
     } // Fan Mode
     if (topic === `${topicRoot}/kipas/mode`) {
