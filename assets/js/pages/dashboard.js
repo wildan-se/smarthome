@@ -107,11 +107,6 @@ $(function () {
     // Request status from ESP32
     client.publish(`${topicRoot}/system/ping`, "request_status");
 
-    // Request relay status specifically
-    setTimeout(() => {
-      client.publish(`${topicRoot}/relay/request_status`, "1");
-    }, 500);
-
     // Set initial checking status
     updateESP32Status("checking");
     updateFanStatus("checking");
@@ -182,12 +177,15 @@ $(function () {
       handleHumidity(msg);
     }
 
-    // Fan Status - use relay/status instead
+    // Fan Status - ESP32 sends "status,mode" format (e.g., "on,manual" or "off,auto")
     if (topic === `${topicRoot}/kipas/status`) {
-      // Update from kipas/status topic (simple ON/OFF only)
-      const fanStatus = msg.toLowerCase();
+      const parts = msg.split(",");
+      const fanStatus = parts[0] ? parts[0].toLowerCase() : "";
+      const fanMode = parts[1] ? parts[1].toLowerCase() : "";
+
       const isOn = fanStatus === "on";
 
+      // Update fan status
       $("#fan_status_text").text(isOn ? "ON" : "OFF");
       $("#fan_card")
         .removeClass("bg-success bg-danger bg-purple bg-warning bg-secondary")
@@ -200,10 +198,22 @@ $(function () {
         fanIcon.removeClass("fan-spinning");
       }
 
-      markESP32Online();
-    }
+      // Update mode if present
+      if (fanMode) {
+        const isAuto = fanMode === "auto";
+        $("#fan_mode_text").html(
+          '<i class="fas fa-' +
+            (isAuto ? "magic" : "hand-pointer") +
+            '"></i> Mode: ' +
+            (isAuto ? "Auto" : "Manual")
+        );
+      }
 
-    // Fan Mode
+      console.log(
+        `📊 Fan Updated: ${fanStatus.toUpperCase()} (Mode: ${fanMode || "N/A"})`
+      );
+      markESP32Online();
+    } // Fan Mode
     if (topic === `${topicRoot}/kipas/mode`) {
       const mode = msg.toLowerCase();
       const isAuto = mode === "auto";
