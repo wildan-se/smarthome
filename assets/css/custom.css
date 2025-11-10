@@ -780,38 +780,43 @@ body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
     margin-right: 0 !important;
   }
 
-  /* Hover effect pada collapsed sidebar - FORCE NO TRANSFORM X */
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
-    position: relative;
-  }
-
-  /* CRITICAL: Override all possible transform on collapsed hover */
+  /* ===================================================
+     COLLAPSED MODE - SIMPLE HOVER (NO ANIMATION)
+     =================================================== */
+  
+  /* FORCE: Completely disable all transforms on collapsed mode */
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link,
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover,
   body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover,
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:hover {
-    transform: none !important; /* First, reset everything */
-    background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(46, 204, 113, 0.3) 100%) !important;
-  }
-
-  /* Then apply only scale with higher specificity */
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:hover,
   body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar .nav-sidebar .nav-link:hover {
-    transform: scale(1.08) !important;
+    transform: none !important; /* NO TRANSFORM AT ALL */
   }
 
-  /* Icon pada collapsed mode - no rotation, just glow */
+  /* Only background color change on hover - SIMPLE */
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover {
+    background: rgba(52, 152, 219, 0.25) !important;
+  }
+
+  /* Icon - Only color change, no transform, no rotation */
   body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover .nav-icon {
-    transform: scale(1.15) !important; /* No rotation when collapsed */
+    transform: none !important; /* NO SCALE, NO ROTATION */
     color: #3498db !important;
-    filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.9));
   }
 
-  /* Prevent text transform when collapsed (text is hidden anyway) */
+  /* Text - Hidden and no transform */
   body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover p {
     transform: none !important;
   }
 
-  /* Active state pada collapsed mode */
+  /* Active state on collapsed mode - also no transform */
   body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link.active {
-    transform: scale(1.05) !important; /* Only scale for active too */
+    transform: none !important;
+    background: rgba(52, 152, 219, 0.4) !important;
+  }
+
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link.active .nav-icon {
+    color: #fff !important;
   }
 
   /* Active indicator saat collapsed */
