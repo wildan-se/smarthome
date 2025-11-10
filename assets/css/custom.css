@@ -619,14 +619,15 @@ body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover {
   transform: translateX(5px) scale(1.02) !important;
 }
 
+/* Icon color for all hover states */
 .nav-sidebar .nav-link:hover .nav-icon {
   color: #3498db;
-  filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.8));
 }
 
-/* Icon rotation only when NOT collapsed */
+/* Icon rotation + glow only when NOT collapsed */
 body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover .nav-icon {
   transform: rotate(360deg) scale(1.2) !important;
+  filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.8));
 }
 
 /* Only move text when sidebar is NOT collapsed */
@@ -779,14 +780,21 @@ body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
     margin-right: 0 !important;
   }
 
-  /* Hover effect pada collapsed sidebar - NO TRANSFORM X */
+  /* Hover effect pada collapsed sidebar - FORCE NO TRANSFORM X */
   body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
     position: relative;
   }
 
-  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover {
-    transform: scale(1.08) !important; /* Only scale, no translateX */
+  /* CRITICAL: Override all possible transform on collapsed hover */
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover,
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:hover {
+    transform: none !important; /* First, reset everything */
     background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(46, 204, 113, 0.3) 100%) !important;
+  }
+
+  /* Then apply only scale with higher specificity */
+  body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar .nav-sidebar .nav-link:hover {
+    transform: scale(1.08) !important;
   }
 
   /* Icon pada collapsed mode - no rotation, just glow */
