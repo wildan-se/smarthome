@@ -28,6 +28,9 @@ function renderFooter($pageJS = [], $mqttConfig = null)
   <!-- MQTT.js -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
+  <!-- Sidebar Collapse Fix - MUST load after AdminLTE -->
+  <script src="assets/js/sidebar-fix.js"></script>
+
   <!-- Global MQTT Config -->
   <?php if ($mqttConfig): ?>
     <script>

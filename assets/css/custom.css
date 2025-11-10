@@ -608,52 +608,79 @@ body {
 }
 
 /* ===================================================
-   COLLAPSED MODE - COMPLETELY DISABLE HOVER
+   COLLAPSED MODE - NUCLEAR OVERRIDE (ULTIMATE FIX)
+   Maximum specificity to override AdminLTE
    =================================================== */
 
-/* CRITICAL: Disable ALL hover effects when collapsed */
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover,
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-item .nav-link:hover,
-body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover,
-body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover,
-body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar .nav-sidebar .nav-link:hover {
+/* ULTIMATE: Force disable ALL transforms and movements */
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link,
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:hover,
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:active,
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:focus,
+html body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar .nav-sidebar .nav-item .nav-link:hover,
+html body.sidebar-mini.sidebar-collapse .wrapper .main-sidebar .nav-sidebar .nav-link:hover {
   transform: none !important;
-  background: transparent !important; /* NO background change */
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  -o-transform: none !important;
+  translate: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
   box-shadow: none !important;
-  color: inherit !important; /* Keep original color */
-  cursor: pointer; /* Still show it's clickable */
+  position: relative !important; /* Ensure no position changes */
+  left: 0 !important;
+  right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
 }
 
-/* Disable icon hover effects */
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover .nav-icon,
-body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover .nav-icon {
+/* Icon - Force no transform */
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover .nav-icon,
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover i,
+html body.sidebar-mini.sidebar-collapse .wrapper .main-sidebar .nav-sidebar .nav-link:hover .nav-icon {
   transform: none !important;
-  color: inherit !important; /* Keep original icon color */
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  color: inherit !important;
   filter: none !important;
 }
 
-/* Disable text hover effects */
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover p,
-body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover p {
+/* Text - Force no transform */
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover p {
   transform: none !important;
-  font-weight: inherit !important;
+  -webkit-transform: none !important;
+  transition: none !important;
+  animation: none !important;
 }
 
-/* Disable ripple effect on collapsed */
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link:hover::before,
-body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link:hover::before {
+/* Ripple - Force hide */
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link::before,
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover::before {
   display: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-/* Active state - Keep this working */
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link.active {
+/* Active state - Also no transform */
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link.active {
   transform: none !important;
+  -webkit-transform: none !important;
   background: rgba(52, 152, 219, 0.3) !important;
+  position: relative !important;
+  left: 0 !important;
 }
 
-body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link.active .nav-icon {
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link.active .nav-icon {
   color: #3498db !important;
   transform: none !important;
+  -webkit-transform: none !important;
 }
 
 /* ===================================================
