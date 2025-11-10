@@ -151,10 +151,10 @@ $pageJS = [
             <div class="col-lg col-md-6 col-sm-6 mb-4">
               <div class="small-box bg-success fade-in" id="fan_card">
                 <div class="inner">
-                  <h3><i class="fas fa-fan" id="fan_icon_dashboard"></i> <span id="fan_status_text">OFF</span></h3>
+                  <h3 id="fan_status_text">OFF</h3>
                   <p>Status Kipas</p>
                 </div>
-                <div class="icon"><i class="fas fa-fan"></i></div>
+                <div class="icon"><i class="fas fa-fan" id="fan_icon_dashboard"></i></div>
                 <a href="kipas.php" class="small-box-footer">
                   <span id="fan_mode_text">Mode: -</span> <i class="fas fa-arrow-circle-right"></i>
                 </a>
