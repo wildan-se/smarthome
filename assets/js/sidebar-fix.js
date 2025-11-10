@@ -1,53 +1,42 @@
 /**
- * Sidebar State Manager
+ * Sidebar State Manager - Clean & Responsive
  *
  * Features:
- * - Prevents hover transform issues on collapsed sidebar
- * - Persists sidebar state across navigation using localStorage
- * - Auto-restore state on page load
+ * - Desktop: Collapse/expand with localStorage persistence
+ * - Mobile: Slide-in drawer with backdrop overlay
+ * - Smooth transitions and proper event handling
  *
- * @version 2.0.0
+ * @version 3.0.0
  * @author Smart Home System
  */
 
 const SidebarManager = (function () {
   "use strict";
 
-  // ==================== Constants ====================
+  // Configuration
   const CONFIG = {
-    STORAGE_KEY: "sidebar_collapsed_state",
-    ANIMATION_DELAY: 350,
-    RESTORE_DELAY: 100,
-    SIDEBAR_CLASS: "sidebar-collapse",
-    SIDEBAR_OPEN_CLASS: "sidebar-open",
-    MOBILE_BREAKPOINT: 992, // px
+    STORAGE_KEY: "sidebar_state",
+    MOBILE_BREAKPOINT: 992,
+    ANIMATION_DELAY: 300,
+    CLASSES: {
+      SIDEBAR_COLLAPSE: "sidebar-collapse",
+      SIDEBAR_OPEN: "sidebar-open",
+      SIDEBAR_NO_EXPAND: "sidebar-no-expand",
+    },
     SELECTORS: {
       BODY: "body",
       MAIN_SIDEBAR: ".main-sidebar",
+      SIDEBAR_OVERLAY: ".sidebar-overlay",
       PUSH_MENU_BTN: '[data-widget="pushmenu"]',
-      NAV_LINKS: ".sidebar-mini.sidebar-collapse .nav-sidebar .nav-link",
-      NAV_ICON: ".nav-icon, i",
-      NAV_TEXT: "p",
-      WRAPPER: ".wrapper",
-    },
-    STATES: {
-      COLLAPSED: "collapsed",
-      EXPANDED: "expanded",
     },
   };
 
-  // ==================== Device Detection ====================
-  const DeviceDetector = {
-    /**
-     * Check if current device is mobile (< 992px)
-     */
+  // Utility Functions
+  const Utils = {
     isMobile() {
       return window.innerWidth < CONFIG.MOBILE_BREAKPOINT;
     },
 
-    /**
-     * Check if device has touch capability
-     */
     isTouch() {
       return (
         "ontouchstart" in window ||
@@ -56,400 +45,186 @@ const SidebarManager = (function () {
       );
     },
 
-    /**
-     * Get current orientation
-     */
-    getOrientation() {
-      return window.innerWidth > window.innerHeight ? "landscape" : "portrait";
-    },
-
-    /**
-     * Check if iOS device
-     */
-    isIOS() {
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    log(message, type) {
+      type = type || "info";
+      const prefix = {
+        info: "[INFO]",
+        success: "[SUCCESS]",
+        warning: "[WARNING]",
+        mobile: "[MOBILE]",
+        desktop: "[DESKTOP]",
+      };
+      console.log((prefix[type] || "[LOG]") + " " + message);
     },
   };
 
-  // ==================== State Management ====================
-  const StateManager = {
-    /**
-     * Check if sidebar is currently collapsed
-     */
-    isCollapsed() {
-      return document.body.classList.contains(CONFIG.SIDEBAR_CLASS);
-    },
-
-    /**
-     * Check if sidebar is currently open (mobile)
-     */
-    isOpen() {
-      return document.body.classList.contains(CONFIG.SIDEBAR_OPEN_CLASS);
-    },
-
-    /**
-     * Get current sidebar state
-     */
-    getCurrentState() {
-      return this.isCollapsed()
-        ? CONFIG.STATES.COLLAPSED
-        : CONFIG.STATES.EXPANDED;
-    },
-
-    /**
-     * Save sidebar state to localStorage (desktop only)
-     */
-    save() {
-      // Don't save state on mobile devices
-      if (DeviceDetector.isMobile()) {
-        console.log("📱 Mobile device - state not saved");
-        return;
-      }
-
-      const state = this.getCurrentState();
+  // State Management
+  const State = {
+    save(collapsed) {
+      if (Utils.isMobile()) return;
       try {
-        localStorage.setItem(CONFIG.STORAGE_KEY, state);
-        console.log(`💾 Sidebar state saved: ${state}`);
-      } catch (error) {
-        console.error("Failed to save sidebar state:", error);
+        localStorage.setItem(CONFIG.STORAGE_KEY, collapsed ? "1" : "0");
+        Utils.log("State saved: " + (collapsed ? "collapsed" : "expanded"), "success");
+      } catch (e) {
+        Utils.log("Failed to save state: " + e.message, "warning");
       }
     },
 
-    /**
-     * Load sidebar state from localStorage
-     */
     load() {
+      if (Utils.isMobile()) return null;
       try {
-        return localStorage.getItem(CONFIG.STORAGE_KEY);
-      } catch (error) {
-        console.error("Failed to load sidebar state:", error);
+        return localStorage.getItem(CONFIG.STORAGE_KEY) === "1";
+      } catch (e) {
         return null;
       }
     },
 
-    /**
-     * Apply saved state to sidebar (desktop only)
-     */
     restore() {
-      // Don't restore state on mobile devices
-      if (DeviceDetector.isMobile()) {
-        console.log("📱 Mobile device - using default sidebar state");
+      if (Utils.isMobile()) {
+        Utils.log("Mobile mode - no state restoration", "mobile");
         return;
       }
 
-      const savedState = this.load();
+      const collapsed = this.load();
+      if (collapsed === null) return;
 
-      if (!savedState) return;
-
-      if (savedState === CONFIG.STATES.COLLAPSED && !this.isCollapsed()) {
-        document.body.classList.add(CONFIG.SIDEBAR_CLASS);
-        console.log("🔄 Sidebar restored: collapsed");
-      } else if (savedState === CONFIG.STATES.EXPANDED && this.isCollapsed()) {
-        document.body.classList.remove(CONFIG.SIDEBAR_CLASS);
-        console.log("🔄 Sidebar restored: expanded");
-      }
-    },
-  };
-
-  // ==================== Transform Fix ====================
-  const TransformFix = {
-    /**
-     * Apply inline styles to element
-     */
-    applyStyles(element, styles) {
-      if (!element) return;
-      Object.assign(element.style, styles);
-    },
-
-    /**
-     * Fix main sidebar transform issues (desktop only)
-     */
-    fixMainSidebar() {
-      // Don't apply fix on mobile
-      if (DeviceDetector.isMobile()) return;
-
-      const mainSidebar = document.querySelector(CONFIG.SELECTORS.MAIN_SIDEBAR);
-      this.applyStyles(mainSidebar, {
-        position: "fixed",
-        left: "0",
-        transform: "none",
-        webkitTransform: "none",
-        translate: "none",
-        marginLeft: "0",
-      });
-    },
-
-    /**
-     * Fix navigation link transforms (desktop only)
-     */
-    fixNavLinks() {
-      // Don't apply fix on mobile
-      if (DeviceDetector.isMobile()) return;
-
-      const navLinks = document.querySelectorAll(CONFIG.SELECTORS.NAV_LINKS);
-
-      navLinks.forEach((link) => {
-        // Fix link itself
-        this.applyStyles(link, {
-          transform: "none",
-          webkitTransform: "none",
-          position: "relative",
-          left: "0",
-          right: "0",
-        });
-
-        // Fix icon
-        const icon = link.querySelector(CONFIG.SELECTORS.NAV_ICON);
-        this.applyStyles(icon, {
-          transform: "none",
-          webkitTransform: "none",
-        });
-
-        // Fix text
-        const text = link.querySelector(CONFIG.SELECTORS.NAV_TEXT);
-        this.applyStyles(text, {
-          transform: "none",
-          webkitTransform: "none",
-        });
-      });
-    },
-
-    /**
-     * Apply all transform fixes if sidebar is collapsed
-     */
-    apply() {
-      if (!StateManager.isCollapsed()) return;
-      if (DeviceDetector.isMobile()) return;
-
-      this.fixMainSidebar();
-      this.fixNavLinks();
-    },
-  };
-
-  // ==================== Event Handlers ====================
-  const EventHandlers = {
-    /**
-     * Handle sidebar toggle button click
-     */
-    onToggleClick() {
-      setTimeout(() => {
-        // Mobile: toggle sidebar-open (slide-in) and don't persist
-        if (DeviceDetector.isMobile()) {
-          document.body.classList.toggle(CONFIG.SIDEBAR_OPEN_CLASS);
-          // ensure desktop collapse class is removed on mobile open
-          document.body.classList.remove(CONFIG.SIDEBAR_CLASS);
-          // small delay for transition then cleanup
-          setTimeout(() => {
-            TransformFix.apply();
-          }, 180);
-          return;
-        }
-
-        // Desktop: persist collapsed/expanded state
-        StateManager.save();
-        TransformFix.apply();
-      }, CONFIG.ANIMATION_DELAY);
-    },
-
-    /**
-     * Handle body class mutations
-     */
-    onBodyClassChange(mutations) {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === "class") {
-          setTimeout(() => {
-            StateManager.save();
-            TransformFix.apply();
-          }, CONFIG.RESTORE_DELAY);
-        }
-      });
-    },
-
-    /**
-     * Handle mouseover on sidebar elements (desktop only)
-     */
-    onMouseOver(event) {
-      // Disable on mobile/touch devices
-      if (DeviceDetector.isMobile() || DeviceDetector.isTouch()) return;
-      if (!StateManager.isCollapsed()) return;
-
-      // Fix main sidebar
-      const mainSidebar = document.querySelector(CONFIG.SELECTORS.MAIN_SIDEBAR);
-      TransformFix.applyStyles(mainSidebar, {
-        transform: "none",
-        webkitTransform: "none",
-        left: "0",
-        position: "fixed",
-      });
-
-      // Fix nav link if hovering over one
-      const navLink = event.target.closest(".nav-sidebar .nav-link");
-      TransformFix.applyStyles(navLink, {
-        transform: "none",
-        webkitTransform: "none",
-      });
-    },
-
-    /**
-     * Handle window resize
-     */
-    onResize() {
-      // Clear transform fixes when switching between mobile/desktop
-      const isMobile = DeviceDetector.isMobile();
-
-      if (isMobile) {
-        // Remove desktop-specific fixes on mobile
-        const mainSidebar = document.querySelector(
-          CONFIG.SELECTORS.MAIN_SIDEBAR
-        );
-        if (mainSidebar) {
-          mainSidebar.style.cssText = "";
-        }
-
-        // Remove sidebar-collapse class on mobile
-        if (StateManager.isCollapsed()) {
-          document.body.classList.remove(CONFIG.SIDEBAR_CLASS);
-        }
+      if (collapsed) {
+        document.body.classList.add(CONFIG.CLASSES.SIDEBAR_COLLAPSE);
+        Utils.log("State restored: collapsed", "desktop");
       } else {
-        // Restore saved state when switching back to desktop
-        StateManager.restore();
-        setTimeout(() => {
-          TransformFix.apply();
-        }, CONFIG.RESTORE_DELAY);
-      }
-
-      console.log(
-        `📏 Window resized - Mode: ${isMobile ? "Mobile" : "Desktop"}`
-      );
-    },
-
-    /**
-     * Handle orientation change (mobile)
-     */
-    onOrientationChange() {
-      const orientation = DeviceDetector.getOrientation();
-      console.log(`🔄 Orientation changed: ${orientation}`);
-
-      // Close sidebar on orientation change (mobile)
-      if (DeviceDetector.isMobile() && StateManager.isOpen()) {
-        document.body.classList.remove(CONFIG.SIDEBAR_OPEN_CLASS);
-      }
-    },
-
-    /**
-     * Handle page load
-     */
-    onPageLoad() {
-      StateManager.restore();
-      setTimeout(() => {
-        TransformFix.apply();
-      }, CONFIG.RESTORE_DELAY);
-
-      // Log device info
-      console.log(
-        `📱 Device: ${DeviceDetector.isMobile() ? "Mobile" : "Desktop"}`
-      );
-      console.log(`👆 Touch: ${DeviceDetector.isTouch() ? "Yes" : "No"}`);
-      if (DeviceDetector.isMobile()) {
-        console.log(`📐 Orientation: ${DeviceDetector.getOrientation()}`);
+        document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_COLLAPSE);
+        Utils.log("State restored: expanded", "desktop");
       }
     },
   };
 
-  // ==================== Initialization ====================
-  const init = () => {
-    // Restore state immediately (before DOMContentLoaded)
-    StateManager.restore();
+  // Event Handlers
+  const Events = {
+    handleToggle() {
+      setTimeout(function() {
+        if (Utils.isMobile()) {
+          document.body.classList.toggle(CONFIG.CLASSES.SIDEBAR_OPEN);
+          var status = document.body.classList.contains(CONFIG.CLASSES.SIDEBAR_OPEN) ? "opened" : "closed";
+          Utils.log("Mobile sidebar " + status, "mobile");
+        } else {
+          var isCollapsed = document.body.classList.contains(CONFIG.CLASSES.SIDEBAR_COLLAPSE);
+          State.save(isCollapsed);
+        }
+      }, 50);
+    },
 
-    // Setup event listeners when DOM is ready
-    document.addEventListener("DOMContentLoaded", () => {
-      EventHandlers.onPageLoad();
-
-      // Toggle button listener
-      const pushMenuBtn = document.querySelector(
-        CONFIG.SELECTORS.PUSH_MENU_BTN
-      );
-      if (pushMenuBtn) {
-        pushMenuBtn.addEventListener("click", EventHandlers.onToggleClick);
+    handleOverlayClick() {
+      if (document.body.classList.contains(CONFIG.CLASSES.SIDEBAR_OPEN)) {
+        document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_OPEN);
+        Utils.log("Sidebar closed via overlay click", "mobile");
       }
+    },
 
-      // Body class mutation observer
-      const observer = new MutationObserver(EventHandlers.onBodyClassChange);
-      observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ["class"],
-      });
+    handleOutsideClick(event) {
+      if (!Utils.isMobile()) return;
+      if (!document.body.classList.contains(CONFIG.CLASSES.SIDEBAR_OPEN)) return;
 
-      // Mouseover listener for aggressive fix (desktop only)
-      if (!DeviceDetector.isTouch()) {
-        document.addEventListener("mouseover", EventHandlers.onMouseOver, true);
+      var sidebar = document.querySelector(CONFIG.SELECTORS.MAIN_SIDEBAR);
+      var toggle = document.querySelector(CONFIG.SELECTORS.PUSH_MENU_BTN);
+
+      if (
+        sidebar &&
+        !sidebar.contains(event.target) &&
+        toggle &&
+        !toggle.contains(event.target)
+      ) {
+        document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_OPEN);
+        Utils.log("Sidebar closed via outside click", "mobile");
       }
+    },
 
-      // Window resize listener with debounce
-      let resizeTimer;
-      window.addEventListener("resize", () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-          EventHandlers.onResize();
-        }, 250);
-      });
+    handleResize: (function () {
+      var timer;
+      return function () {
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+          var wasMobile = document.body.hasAttribute("data-mobile-mode");
+          var isMobile = Utils.isMobile();
 
-      // Orientation change listener (mobile)
-      window.addEventListener("orientationchange", () => {
-        setTimeout(() => {
-          EventHandlers.onOrientationChange();
-        }, 300);
-      });
-
-      // Close sidebar when clicking outside (mobile)
-      if (DeviceDetector.isMobile()) {
-        document.addEventListener("click", (event) => {
-          const sidebar = document.querySelector(CONFIG.SELECTORS.MAIN_SIDEBAR);
-          const toggleBtn = document.querySelector(
-            CONFIG.SELECTORS.PUSH_MENU_BTN
-          );
-
-          // Check if sidebar is open and click is outside
-          if (
-            StateManager.isOpen() &&
-            sidebar &&
-            !sidebar.contains(event.target) &&
-            !toggleBtn.contains(event.target)
-          ) {
-            document.body.classList.remove(CONFIG.SIDEBAR_OPEN_CLASS);
-            console.log("📱 Sidebar closed - clicked outside");
+          if (wasMobile !== isMobile) {
+            if (isMobile) {
+              document.body.setAttribute("data-mobile-mode", "true");
+              document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_COLLAPSE);
+              document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_OPEN);
+              Utils.log("Switched to mobile mode", "mobile");
+            } else {
+              document.body.removeAttribute("data-mobile-mode");
+              document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_OPEN);
+              State.restore();
+              Utils.log("Switched to desktop mode", "desktop");
+            }
           }
-        });
-      }
+        }, 200);
+      };
+    })(),
 
-      // Click on explicit overlay to close sidebar (works regardless of device)
-      const overlayEl = document.querySelector(".sidebar-overlay");
-      if (overlayEl) {
-        overlayEl.addEventListener("click", () => {
-          if (document.body.classList.contains(CONFIG.SIDEBAR_OPEN_CLASS)) {
-            document.body.classList.remove(CONFIG.SIDEBAR_OPEN_CLASS);
-            console.log("📱 Sidebar closed - overlay click");
+    handleOrientationChange() {
+      if (Utils.isMobile()) {
+        setTimeout(function() {
+          if (document.body.classList.contains(CONFIG.CLASSES.SIDEBAR_OPEN)) {
+            document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_OPEN);
+            Utils.log("Sidebar closed due to orientation change", "mobile");
           }
-        });
+        }, CONFIG.ANIMATION_DELAY);
+      }
+    },
+
+    handleEscape(event) {
+      if (
+        event.key === "Escape" &&
+        document.body.classList.contains(CONFIG.CLASSES.SIDEBAR_OPEN)
+      ) {
+        document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_OPEN);
+        Utils.log("Sidebar closed via ESC key", "mobile");
+      }
+    },
+  };
+
+  // Initialization
+  var init = function() {
+    if (Utils.isMobile()) {
+      document.body.setAttribute("data-mobile-mode", "true");
+    }
+
+    State.restore();
+
+    document.addEventListener("DOMContentLoaded", function() {
+      var toggleBtn = document.querySelector(CONFIG.SELECTORS.PUSH_MENU_BTN);
+      if (toggleBtn) {
+        toggleBtn.addEventListener("click", Events.handleToggle);
       }
 
-      console.log(
-        `✅ Sidebar Manager initialized - ${
-          DeviceDetector.isMobile() ? "Mobile" : "Desktop"
-        } mode`
-      );
+      var overlay = document.querySelector(CONFIG.SELECTORS.SIDEBAR_OVERLAY);
+      if (overlay) {
+        overlay.addEventListener("click", Events.handleOverlayClick);
+      }
+
+      document.addEventListener("click", Events.handleOutsideClick);
+      window.addEventListener("resize", Events.handleResize);
+      window.addEventListener("orientationchange", Events.handleOrientationChange);
+      document.addEventListener("keydown", Events.handleEscape);
+
+      var mode = Utils.isMobile() ? "Mobile" : "Desktop";
+      Utils.log("Sidebar Manager initialized - " + mode + " mode", "success");
     });
   };
 
-  // Auto-initialize
   init();
 
-  // Public API (for debugging/testing)
+  // Public API
   return {
-    getState: () => StateManager.getCurrentState(),
-    isCollapsed: () => StateManager.isCollapsed(),
-    isMobile: () => DeviceDetector.isMobile(),
-    isTouch: () => DeviceDetector.isTouch(),
-    applyFix: () => TransformFix.apply(),
+    isMobile: function() { return Utils.isMobile(); },
+    isOpen: function() { return document.body.classList.contains(CONFIG.CLASSES.SIDEBAR_OPEN); },
+    isCollapsed: function() { return document.body.classList.contains(CONFIG.CLASSES.SIDEBAR_COLLAPSE); },
+    close: function() {
+      if (Utils.isMobile()) {
+        document.body.classList.remove(CONFIG.CLASSES.SIDEBAR_OPEN);
+      }
+    },
   };
 })();

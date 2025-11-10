@@ -64,6 +64,13 @@
   --transition-fast: 0.15s ease-in-out;
   --transition-normal: 0.3s ease-in-out;
   --transition-slow: 0.5s ease-in-out;
+
+  /* Sidebar Variables */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 70px;
+  --sidebar-bg-start: #1e293b;
+  --sidebar-bg-end: #0f172a;
+  --sidebar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* === GLOBAL STYLES === */
@@ -501,700 +508,721 @@ body {
   color: var(--primary-color);
 }
 
-/* === SIDEBAR ANIMATION - PROFESSIONAL & SMOOTH === */
-
 /* ====================================
-   SIDEBAR - MODERN & EYE-CATCHING
+   SIDEBAR - CLEAN MODERN RESPONSIVE DESIGN
    ==================================== */
 
-/* Main Sidebar - Modern Gradient Background */
+/* Base Sidebar Styling */
 .main-sidebar {
-  background: linear-gradient(180deg, #0f1724 0%, #081224 100%) !important;
-  box-shadow: 6px 0 30px rgba(2, 6, 23, 0.55);
-  transition: width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.36s cubic-bezier(0.22, 1, 0.36, 1) !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
+  background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
+  transition: var(--sidebar-transition);
+  position: fixed;
+  top: 0;
+  left: 0;
   height: 100vh;
-  z-index: 1035;
-  overflow: hidden;
-  will-change: width, transform;
+  z-index: 1038;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* CRITICAL: Force main-sidebar to stay in place when collapsed */
-body.sidebar-mini.sidebar-collapse .main-sidebar {
-  position: fixed !important;
-  left: 0 !important;
-  transform: none !important;
-  -webkit-transform: none !important;
-  margin-left: 0 !important;
-  transition: width 0.28s cubic-bezier(0.2, 1, 0.2, 1) !important; /* fast width transition */
-  will-change: width;
+/* Scrollbar Styling */
+.main-sidebar::-webkit-scrollbar {
+  width: 4px;
 }
 
-/* Also ensure no hover effect on main-sidebar itself */
-/* no hover expansion when collapsed */
-body.sidebar-mini.sidebar-collapse .main-sidebar:hover {
-  transform: none !important;
-  -webkit-transform: none !important;
-  left: 0 !important;
-  position: fixed !important;
+.main-sidebar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
 }
 
-/* NUCLEAR: Disable pointer events on sidebar container when collapsed */
-/* When collapsed, keep clicks working only on interactive items */
-body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar {
-  pointer-events: none !important;
+.main-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }
 
-/* Re-enable only for nav-links (for clicking) */
-body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
-  pointer-events: auto !important;
-  cursor: pointer !important;
+.main-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
-/* Brand Link - Enhanced with Glow */
+/* Brand Link */
 .brand-link {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
-  padding: 1rem 1rem !important;
-  transition: background 0.24s ease, transform 0.24s ease;
-  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  padding: 1.2rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease;
+  text-decoration: none;
+  overflow: visible; /* Allow content to show */
+  width: 100%; /* Full width */
+  box-sizing: border-box; /* Include padding in width */
 }
 
 .brand-link:hover {
-  background: rgba(255, 255, 255, 0.04);
-  transform: translateX(2px);
-}
-
-.brand-text {
-  font-size: 1.05rem !important;
-  font-weight: 700 !important;
-  color: #e6eef7;
-  letter-spacing: 0.4px;
+  background: rgba(255, 255, 255, 0.05);
+  text-decoration: none;
 }
 
 .brand-image {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #7fd1ff;
-  transition: transform 0.6s cubic-bezier(0.2,1,0.3,1);
+  font-size: 1.8rem;
+  color: #60a5fa;
+  margin-right: 0;
+  margin-left: 0;
+  flex-shrink: 0;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.3s ease;
 }
 
 .brand-link:hover .brand-image {
-  transform: rotate(360deg) scale(1.08);
+  transform: rotate(10deg) scale(1.1);
 }
 
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 0.8; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+.brand-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: -0.02em;
+  margin-left: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden; /* Hide overflow for collapsed mode */
+  flex: 1;
+  transition: opacity 0.3s ease, visibility 0.3s ease, width 0.3s ease, max-width 0.3s ease;
 }
 
-/* Sidebar Menu Items - Modern Design */
+/* Sidebar Inner Container */
+.sidebar {
+  padding: 0.5rem 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+/* Navigation Container */
+.nav-sidebar {
+  padding: 0 0.5rem; /* Reduced from 0.75rem */
+  list-style: none !important;
+  margin: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Remove AdminLTE default spacing */
 .nav-sidebar .nav-item {
-  margin: 0.25rem 0.4rem;
+  margin-bottom: 0.25rem;
+  list-style: none !important;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
 }
 
+/* Navigation Links */
 .nav-sidebar .nav-link {
-  border-radius: 10px !important;
-  padding: 0.65rem 0.9rem !important;
-  margin: 0;
-  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1),
-              box-shadow 0.32s ease, color 0.2s ease;
-  position: relative;
-  overflow: hidden;
-  color: rgba(255, 255, 255, 0.85) !important;
+  display: flex !important;
+  align-items: flex-start; /* Align to top for multi-line text */
+  gap: 0.65rem; /* Consistent gap */
+  padding: 0.7rem 0.75rem; /* Optimized padding */
+  border-radius: 8px;
+  color: rgba(241, 245, 249, 0.8);
+  font-size: 0.9rem; /* Slightly smaller for mobile */
   font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: visible;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
+  min-height: 40px; /* Minimum touch target */
 }
 
-/* Ripple Effect Background */
 .nav-sidebar .nav-link::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(80, 190, 255, 0.12);
-  transform: translate(-50%, -50%);
-  transition: width 0.48s ease, height 0.48s ease, opacity 0.48s ease;
-  z-index: 0;
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #60a5fa;
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
 }
 
-.nav-sidebar .nav-link:hover::before {
-  width: 220px;
-  height: 220px;
-  opacity: 1;
-}
-
-/* Icon Styling */
-.nav-sidebar .nav-icon {
-  margin-right: 0.6rem;
-  font-size: 1.08rem;
-  transition: transform 0.6s cubic-bezier(0.2,1,0.3,1), color 0.28s ease;
-  position: relative;
-  z-index: 1;
-}
-
-/* Text Styling */
-.nav-sidebar .nav-link p {
-  margin: 0;
-  display: inline-block;
-  position: relative;
-  z-index: 1;
-  transition: transform 0.3s ease, opacity 0.22s ease;
-}
-
-/* ===================================================
-   COLLAPSED MODE - NUCLEAR OVERRIDE (ULTIMATE FIX)
-   Maximum specificity to override AdminLTE
-   =================================================== */
-
-/* STEP 1: Disable AdminLTE hover expand behavior */
-body.sidebar-mini.sidebar-collapse .main-sidebar:not(.sidebar-no-expand):hover {
-  width: 70px !important;
-  overflow: hidden !important;
-}
-
-/* STEP 2: ULTIMATE Force disable ALL transforms and movements */
-/* Aggressive overrides for collapsed mode */
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link,
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:hover,
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:active,
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:focus {
-  transform: none !important;
-  -webkit-transform: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  position: relative !important;
-  left: 0 !important;
-  right: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
-}
-
-/* Icon - Force no transform */
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover .nav-icon,
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover i {
-  transform: none !important;
-  -webkit-transform: none !important;
-  transition: none !important;
-  animation: none !important;
-  color: inherit !important;
-}
-
-/* Text - Force no transform */
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover p {
-  transform: none !important;
-  -webkit-transform: none !important;
-  transition: none !important;
-}
-
-/* Ripple - Force hide */
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link::before,
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover::before {
-  display: none !important;
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-/* Active state - Also no transform */
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link.active {
-  transform: none !important;
-  -webkit-transform: none !important;
-  background: rgba(80, 190, 255, 0.12) !important;
-  position: relative !important;
-  left: 0 !important;
-}
-
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link.active .nav-icon {
-  color: #7fd1ff !important;
-  transform: none !important;
-  -webkit-transform: none !important;
-}
-
-/* ===================================================
-   EXPANDED MODE HOVER EFFECTS
-   =================================================== */
-
-/* Hover State - Eye-Catching (DEFAULT - for expanded sidebar) */
 .nav-sidebar .nav-link:hover {
-  background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(46, 204, 113, 0.2) 100%) !important;
-  color: #fff !important;
-  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+  background: rgba(96, 165, 250, 0.1);
+  color: #f1f5f9;
+  transform: translateX(2px);
 }
 
-/* Only apply translateX when sidebar is NOT collapsed - More specific selector */
-body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover {
-  transform: translateX(5px) scale(1.02) !important;
-}
-
-/* Icon color for all hover states */
-.nav-sidebar .nav-link:hover .nav-icon {
-  color: #3498db;
-}
-
-/* Icon rotation + glow only when NOT collapsed */
-body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover .nav-icon {
-  transform: rotate(360deg) scale(1.2) !important;
-  filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.8));
-}
-
-/* Only move text when sidebar is NOT collapsed */
-body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
-  transform: translateX(3px);
-  font-weight: 600;
-}
-
-.nav-sidebar .nav-link:hover p {
-  font-weight: 600;
-}
-
-/* Active State - Modern & Bold */
 .nav-sidebar .nav-link.active {
-  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%) !important;
-  color: #fff !important;
-  box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transform: scale(1.02);
-  font-weight: 600;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(96, 165, 250, 0.1));
+  color: #fff;
 }
 
-.nav-sidebar .nav-link.active::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 60%;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 2px 0 0 2px;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+.nav-sidebar .nav-link.active::before {
+  transform: scaleY(1);
+}
+
+/* Navigation Icon */
+.nav-sidebar .nav-icon {
+  font-size: 1rem;
+  width: 20px;
+  min-width: 20px;
+  max-width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  flex-grow: 0;
+  margin-top: 0.1rem; /* Align with first line */
+  transition: transform 0.2s ease;
+}
+
+.nav-sidebar .nav-link:hover .nav-icon {
+  transform: scale(1.08);
 }
 
 .nav-sidebar .nav-link.active .nav-icon {
-  color: #fff;
-  transform: scale(1.1);
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+  color: #60a5fa;
 }
 
-/* Logout Button - Special Styling */
-.nav-sidebar .nav-link:has(.text-danger) {
-  border: 1px solid rgba(231, 76, 60, 0.3);
+/* Navigation Text */
+.nav-sidebar .nav-link p {
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: auto;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  line-height: 1.35;
+  transition: opacity 0.3s ease, visibility 0.3s ease, width 0.3s ease;
 }
 
+/* Nav Header (Section Divider) */
+.nav-header {
+  padding: 1rem 1rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(241, 245, 249, 0.5);
+  margin-top: 0.5rem;
+}
+
+/* Logout Link Styling */
 .nav-sidebar .nav-link:has(.text-danger):hover {
-  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.2) 100%) !important;
-  border-color: rgba(231, 76, 60, 0.6);
-  box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .nav-sidebar .nav-link:has(.text-danger):hover .nav-icon {
-  color: #e74c3c !important;
-  filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.8));
-}
-
-/* Nav Header - Section Divider */
-.nav-header {
-  padding: 0.75rem 1rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.4) !important;
-  margin-top: 1rem;
-  position: relative;
-}
-
-.nav-header::before {
-  content: '';
-  position: absolute;
-  left: 1rem;
-  right: 1rem;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.2) 50%, 
-    transparent 100%);
-}
-
-/* Content Wrapper - Smooth Adjustment */
-.content-wrapper,
-.main-footer,
-.main-header {
-  transition: margin-left 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+  color: #ef4444;
 }
 
 /* ===================================
-   DESKTOP MODE (> 992px)
+   DESKTOP MODE (≥ 992px)
    =================================== */
 @media (min-width: 992px) {
-  /* Default State - Sidebar Open */
+  /* Sidebar padding for desktop */
+  .nav-sidebar {
+    padding: 0 0.75rem;
+  }
+
+  .nav-sidebar .nav-link {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+    font-size: 0.9375rem;
+    align-items: center !important; /* Center align on desktop */
+  }
+
+  .nav-sidebar .nav-icon {
+    font-size: 1.1rem;
+    width: 24px;
+    min-width: 24px;
+    max-width: 24px;
+    margin-top: 0 !important; /* Reset margin for desktop */
+  }
+
+  .nav-sidebar .nav-link p {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  /* Expanded Sidebar */
   body:not(.sidebar-collapse) .main-sidebar {
-    width: 250px;
-    margin-left: 0;
+    width: var(--sidebar-width);
   }
 
   body:not(.sidebar-collapse) .content-wrapper,
   body:not(.sidebar-collapse) .main-footer,
   body:not(.sidebar-collapse) .main-header {
-    margin-left: 250px;
+    margin-left: var(--sidebar-width);
   }
 
-  /* Collapsed State - Mini Sidebar dengan Icon */
+  /* Collapsed Sidebar */
   body.sidebar-collapse .main-sidebar {
-    width: 70px !important;
-    margin-left: 0 !important;
+    width: var(--sidebar-collapsed-width);
   }
 
   body.sidebar-collapse .content-wrapper,
   body.sidebar-collapse .main-footer,
   body.sidebar-collapse .main-header {
-    margin-left: 70px !important;
+    margin-left: var(--sidebar-collapsed-width);
   }
 
-  /* Hide Text dalam Collapsed Mode */
-  body.sidebar-collapse .main-sidebar .nav-link p,
-  body.sidebar-collapse .main-sidebar .brand-text,
-  body.sidebar-collapse .main-sidebar .user-panel .info {
+  /* Hide text in collapsed mode */
+  body.sidebar-collapse .brand-text,
+  body.sidebar-collapse .nav-sidebar .nav-link p,
+  body.sidebar-collapse .nav-header {
     opacity: 0 !important;
     visibility: hidden !important;
     width: 0 !important;
+    max-width: 0 !important;
     overflow: hidden !important;
-    transition: opacity 0.2s ease, visibility 0.2s ease !important;
+    white-space: nowrap !important;
   }
 
-  /* Center Icon saat Collapsed */
-  body.sidebar-collapse .main-sidebar .nav-link {
-    text-align: center;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+  /* Center icons in collapsed mode */
+  body.sidebar-collapse .brand-link {
     justify-content: center;
+    padding: 1.2rem 0.5rem;
   }
 
-  body.sidebar-collapse .main-sidebar .nav-icon {
-    margin-right: 0 !important;
-    font-size: 1.4rem;
-  }
-
-  body.sidebar-collapse .main-sidebar .brand-link {
-    justify-content: center;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-
-  body.sidebar-collapse .main-sidebar .brand-image {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-
-  /* Active indicator saat collapsed */
-  body.sidebar-collapse .main-sidebar .nav-link.active::after {
-    width: 3px;
-    height: 80%;
-    right: 5px;
-  }
-
-  /* Show Text saat Expanded */
-  body:not(.sidebar-collapse) .main-sidebar .nav-link p,
-  body:not(.sidebar-collapse) .main-sidebar .brand-text {
-    opacity: 1 !important;
-    visibility: visible !important;
-    width: auto !important;
-    transition: opacity 0.4s ease 0.1s, visibility 0.4s ease 0.1s !important;
-  }
-}
-
-/* ===================================
-   TABLET MODE (768px - 991px)
-   =================================== */
-@media (max-width: 991.98px) and (min-width: 768px) {
-  /* Sidebar default hidden */
-  .main-sidebar {
-    transform: translateX(-250px) !important;
-    width: 250px !important;
-    transition: transform 0.3s ease !important;
-    z-index: 1035;
-  }
-
-  /* When sidebar is opened */
-  body.sidebar-open .main-sidebar {
-    transform: translateX(0) !important;
-    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.4);
-  }
-
-  /* Content always full width */
-  .content-wrapper,
-  .main-footer {
-    margin-left: 0 !important;
-    transition: none !important;
-  }
-
-  .main-header {
+  body.sidebar-collapse .brand-image {
+    margin: 0 !important;
     margin-left: 0 !important;
   }
 
-  /* Overlay backdrop */
-  body.sidebar-open::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 1034;
-    animation: fadeIn 0.3s ease;
-    backdrop-filter: blur(2px);
+  body.sidebar-collapse .nav-sidebar .nav-link {
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0.75rem 0.5rem;
+    gap: 0 !important; /* No gap when collapsed */
   }
 
-  /* Show all text in mobile */
-  .main-sidebar .nav-link p,
-  .main-sidebar .brand-text {
-    opacity: 1 !important;
-    visibility: visible !important;
-    width: auto !important;
-  }
-
-  /* Reset icon centering */
-  .main-sidebar .nav-link {
-    text-align: left;
-    justify-content: flex-start;
-  }
-
-  .main-sidebar .nav-icon {
-    margin-right: 0.75rem !important;
-    font-size: 1.1rem;
-  }
-
-  /* Header toggle button more prominent */
-  .nav-link[data-widget="pushmenu"] {
-    padding: 0.75rem 1rem !important;
-  }
-}
-
-/* ===================================
-   MOBILE MODE (< 768px)
-   =================================== */
-@media (max-width: 767.98px) {
-  /* Sidebar default hidden */
-  .main-sidebar {
-    transform: translateX(-250px) !important;
-    width: 250px !important;
-    transition: transform 0.3s ease !important;
-    z-index: 1035;
-    max-width: 85vw; /* Don't take full width on very small screens */
-  }
-
-  /* When sidebar is opened */
-  body.sidebar-open .main-sidebar {
-    transform: translateX(0) !important;
-    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5);
-  }
-
-  /* Content always full width */
-  .content-wrapper,
-  .main-footer {
-    margin-left: 0 !important;
-    padding: 0.75rem !important;
-    transition: none !important;
-  }
-
-  .main-header {
-    margin-left: 0 !important;
-  }
-
-  /* Overlay backdrop */
-  body.sidebar-open::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    z-index: 1034;
-    animation: fadeIn 0.3s ease;
-    backdrop-filter: blur(3px);
-  }
-
-  /* Explicit DOM overlay (fallback) */
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.65);
-    z-index: 1034;
-    opacity: 0;
-    transition: opacity 0.28s ease;
-    backdrop-filter: blur(3px);
-  }
-
-  body.sidebar-open .sidebar-overlay {
-    display: block;
-    opacity: 1;
-  }
-
-  /* Show all text in mobile */
-  .main-sidebar .nav-link p,
-  .main-sidebar .brand-text {
-    opacity: 1 !important;
-    visibility: visible !important;
-    width: auto !important;
-  }
-
-  /* Reset icon centering */
-  .main-sidebar .nav-link {
-    text-align: left;
-    justify-content: flex-start;
-    padding: 0.65rem 1rem !important;
-  }
-
-  .main-sidebar .nav-icon {
-    margin-right: 0.75rem !important;
-    font-size: 1.1rem;
-  }
-
-  /* Brand link adjustments */
-  .main-sidebar .brand-link {
-    padding: 0.85rem 1rem !important;
-  }
-
-  /* Cards - compact spacing */
-  .card {
-    margin-bottom: 1rem;
-  }
-
-  .card-header {
-    padding: 0.75rem;
-    font-size: 0.95rem;
-  }
-
-  .card-body {
-    padding: 0.75rem;
-  }
-
-  /* Info boxes - stack vertically */
-  .info-box {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .info-box-icon {
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    width: 100%;
-    padding: 1.5rem;
-  }
-
-  .info-box-content {
-    padding: 1rem;
-  }
-
-  .info-box-number {
-    font-size: 1.75rem;
-  }
-
-  /* Small boxes - adjust icon size */
-  .small-box .icon {
-    font-size: 3.5rem;
-    right: 0.75rem;
-  }
-
-  .small-box h3 {
-    font-size: 2rem;
-  }
-
-  /* Tables - responsive scroll */
-  .table-responsive {
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .table {
-    font-size: 0.85rem;
-  }
-
-  .table thead th {
-    padding: 0.65rem 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  .table td {
-    padding: 0.65rem 0.5rem;
-  }
-
-  /* Buttons - full width on mobile */
-  .btn-block-mobile {
-    display: block;
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-
-  /* Form controls - larger touch targets */
-  .form-control {
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-  }
-
-  .btn {
-    padding: 0.65rem 1.5rem;
-    font-size: 0.9rem;
-  }
-
-  /* Badges - smaller text */
-  .badge {
-    padding: 0.4rem 0.7rem;
-    font-size: 0.75rem;
-  }
-
-  /* Header toggle button - bigger touch target */
-  .nav-link[data-widget="pushmenu"] {
-    padding: 0.85rem 1.25rem !important;
-    margin: 0.25rem !important;
-  }
-
-  .nav-link[data-widget="pushmenu"] i {
+  body.sidebar-collapse .nav-sidebar .nav-icon {
+    margin: 0 !important;
+    margin-top: 0 !important;
     font-size: 1.25rem;
   }
 
-  /* Content header - compact */
-  .content-header {
-    padding: 0.75rem 0.5rem;
+  /* Prevent sidebar expansion on hover when collapsed */
+  body.sidebar-collapse.sidebar-no-expand .main-sidebar:hover {
+    width: var(--sidebar-collapsed-width);
   }
 
-  .content-header h1 {
+  /* Ensure no wrapping in collapsed mode */
+  body.sidebar-collapse .nav-sidebar .nav-link {
+    white-space: nowrap !important;
+  }
+}
+
+/* ===================================
+   TABLET & MOBILE MODE (< 992px)
+   =================================== */
+@media (max-width: 991.98px) {
+  /* Sidebar hidden by default */
+  .main-sidebar {
+    width: 270px;
+    max-width: 270px;
+    transform: translateX(-100%);
+    z-index: 1040;
+  }
+
+  /* Sidebar container */
+  .sidebar {
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  /* Navigation spacing */
+  .nav-sidebar {
+    padding: 0 0.5rem;
+    width: 100%;
+  }
+
+  .nav-sidebar .nav-item {
+    width: 100%;
+    margin-bottom: 0.3rem;
+  }
+
+  .nav-sidebar .nav-link {
+    padding: 0.75rem 0.65rem;
+    gap: 0.6rem;
+    font-size: 0.875rem;
+    min-height: 44px;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .nav-sidebar .nav-icon {
+    font-size: 0.95rem;
+    width: 20px;
+    min-width: 20px;
+    max-width: 20px;
+    margin-top: 0.15rem;
+  }
+
+  .nav-sidebar .nav-link p {
+    font-size: 0.875rem;
+    line-height: 1.35;
+    flex: 1;
+    max-width: calc(100% - 26px);
+  }
+
+  /* When sidebar is open */
+  body.sidebar-open .main-sidebar {
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Content always full width */
+  .content-wrapper,
+  .main-footer,
+  .main-header {
+    margin-left: 0 !important;
+  }
+
+  /* Backdrop overlay */
+  body.sidebar-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1039;
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* Ensure all text visible on mobile */
+  .main-sidebar .brand-text,
+  .main-sidebar .nav-link p {
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Mobile toggle button */
+  .nav-link[data-widget="pushmenu"] {
+    padding: 0.75rem !important;
+  }
+}
+
+/* ===================================
+   MOBILE SPECIFIC (< 768px)
+   =================================== */
+@media (max-width: 767.98px) {
+  /* Narrower sidebar */
+  .main-sidebar {
+    width: 260px;
+    max-width: 260px;
+  }
+
+  /* Tighter spacing */
+  .nav-sidebar {
+    padding: 0 0.45rem;
+  }
+
+  .nav-sidebar .nav-link {
+    padding: 0.7rem 0.6rem;
+    gap: 0.55rem;
+    font-size: 0.85rem;
+  }
+
+  .nav-sidebar .nav-icon {
+    font-size: 0.9rem;
+    width: 18px;
+    min-width: 18px;
+    max-width: 18px;
+  }
+
+  .nav-sidebar .nav-link p {
+    font-size: 0.85rem;
+    line-height: 1.3;
+    max-width: calc(100% - 24px);
+  }
+
+  /* Compact padding */
+  .content-wrapper,
+  .main-footer {
+    padding: 0.75rem;
+  }
+
+  .nav-link[data-widget="pushmenu"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Brand adjustments */
+  .brand-link {
+    padding: 1rem 0.75rem;
+  }
+
+  .brand-text {
+    font-size: 1.1rem;
+  }
+
+  .brand-image {
+    font-size: 1.6rem;
+  }
+}
+
+/* ===================================
+   EXTRA SMALL (< 576px)
+   =================================== */
+@media (max-width: 575.98px) {
+  .main-sidebar {
+    width: 250px;
+    max-width: 250px;
+  }
+
+  /* Very tight spacing */
+  .nav-sidebar {
+    padding: 0 0.4rem;
+  }
+
+  .nav-sidebar .nav-link {
+    padding: 0.65rem 0.55rem;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .nav-sidebar .nav-icon {
+    font-size: 0.875rem;
+    width: 18px;
+    min-width: 18px;
+    max-width: 18px;
+  }
+
+  .nav-sidebar .nav-link p {
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    max-width: calc(100% - 23px);
+  }
+
+  .brand-link {
+    padding: 0.9rem 0.65rem;
+  }
+
+  .brand-text {
+    font-size: 1.05rem;
+  }
+
+  .brand-image {
     font-size: 1.5rem;
-    margin: 0;
+  }
+}
+
+/* ===================================
+   SPECIFIC FIX: iPhone 14 Pro / Similar (394x844)
+   =================================== */
+@media (max-width: 400px) and (min-height: 800px) {
+  .main-sidebar {
+    width: 255px;
+    max-width: 255px;
   }
 
-  /* Breadcrumb - smaller */
-  .breadcrumb {
-    font-size: 0.8rem;
-    margin: 0.25rem 0 0 0;
+  .sidebar {
+    width: 100%;
+    padding: 0.5rem 0;
+    box-sizing: border-box;
   }
 
-  /* Stats boxes - adjust padding */
-  .stats-box {
-    padding: 1rem;
+  .nav-sidebar {
+    padding: 0 0.45rem;
+    width: 100%;
   }
+
+  .nav-sidebar .nav-item {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+
+  .nav-sidebar .nav-link {
+    padding: 0.7rem 0.55rem;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .nav-sidebar .nav-icon {
+    font-size: 0.875rem;
+    width: 18px;
+    min-width: 18px;
+    max-width: 18px;
+    flex-shrink: 0;
+  }
+
+  .nav-sidebar .nav-link p {
+    flex: 1;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    max-width: calc(100% - 23px);
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+  }
+
+  .brand-link {
+    padding: 0.9rem 0.6rem;
+  }
+
+  .brand-text {
+    font-size: 1.05rem;
+  }
+
+  .brand-image {
+    font-size: 1.5rem;
+  }
+}
+
+/* ===================================
+   FORCE OVERRIDES FOR ADMINLTE CONFLICTS
+   =================================== */
+.nav-sidebar > .nav-item {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+.nav-sidebar .nav-link > .nav-icon {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+.nav-sidebar .nav-link > p {
+  display: inline-block !important;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Prevent AdminLTE from adding margins */
+@media (max-width: 991.98px) {
+  .nav-sidebar .nav-link > .nav-icon,
+  .nav-sidebar .nav-link > p {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+}
+
+/* ===================================
+   SIDEBAR OVERLAY (for mobile close)
+   =================================== */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1039;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  backdrop-filter: blur(2px);
+}
+
+body.sidebar-open .sidebar-overlay {
+  display: block;
+  opacity: 1;
+}
+
+/* ===================================
+   TOGGLE BUTTON
+   =================================== */
+.nav-link[data-widget="pushmenu"] {
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  border-radius: 6px;
+}
+
+.nav-link[data-widget="pushmenu"]:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.nav-link[data-widget="pushmenu"]:active {
+  transform: scale(0.95);
+}
+
+/* Toggle icon rotation */
+.nav-link[data-widget="pushmenu"] i {
+  transition: transform 0.3s ease;
+}
+
+body.sidebar-collapse .nav-link[data-widget="pushmenu"] i {
+  transform: rotate(180deg);
+}
+
+/* ===================================
+   ANIMATIONS
+   =================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ===================================
+   ACCESSIBILITY & TOUCH
+   =================================== */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices - larger hit areas */
+  .nav-sidebar .nav-link {
+    min-height: 44px !important;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .brand-link {
+    min-height: 52px;
+  }
+
+  /* Remove hover effects on touch */
+  .nav-sidebar .nav-link:hover {
+    transform: none;
+  }
+
+  .nav-sidebar .nav-link:hover .nav-icon {
+    transform: none;
+  }
+
+  /* Disable tap highlight */
+  .nav-sidebar .nav-link,
+  .brand-link,
+  [data-widget="pushmenu"] {
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+  }
+
+  /* Better active state for touch */
+  .nav-sidebar .nav-link:active {
+    background: rgba(96, 165, 250, 0.15);
+  }
+}
+
+/* ===================================
+   PRINT STYLES
+   =================================== */
+@media print {
+  .main-sidebar {
+    display: none !important;
+  }
+
+  .content-wrapper,
+  .main-header,
+  .main-footer {
+    margin-left: 0 !important;
+  }
+}
 
   .stats-box h3 {
     font-size: 1.75rem;
@@ -1234,159 +1262,6 @@ body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
   .swal2-html-container {
     font-size: 0.9rem !important;
   }
-}
-
-/* ===================================
-   EXTRA SMALL MOBILE (< 480px)
-   =================================== */
-@media (max-width: 479.98px) {
-  /* Even more compact for very small screens */
-  .main-sidebar {
-    max-width: 90vw;
-  }
-
-  .content-wrapper,
-  .main-footer {
-    padding: 0.5rem !important;
-  }
-
-  .card-header {
-    padding: 0.6rem;
-    font-size: 0.9rem;
-  }
-
-  .card-body {
-    padding: 0.6rem;
-  }
-
-  .small-box h3 {
-    font-size: 1.75rem;
-  }
-
-  .small-box .icon {
-    font-size: 3rem;
-    opacity: 0.1; /* Less prominent on tiny screens */
-  }
-
-  .info-box-number {
-    font-size: 1.5rem;
-  }
-
-  .btn {
-    padding: 0.6rem 1.25rem;
-    font-size: 0.85rem;
-  }
-
-  .stats-box h3 {
-    font-size: 1.5rem;
-  }
-
-  /* Navbar brand - hide long text */
-  .main-header .navbar-brand {
-    font-size: 0.9rem;
-  }
-}
-
-/* ===================================
-   SIDEBAR TOGGLE BUTTON
-   =================================== */
-.nav-link[data-widget="pushmenu"] {
-  transition: all 0.2s ease !important;
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 0.5rem 0.75rem !important;
-}
-
-.nav-link[data-widget="pushmenu"]:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  transform: scale(1.05);
-}
-
-.nav-link[data-widget="pushmenu"] i {
-  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
-}
-
-body.sidebar-collapse .nav-link[data-widget="pushmenu"] i {
-  transform: rotate(180deg);
-}
-
-/* ===================================
-   BRAND LINK (LEGACY - Can be removed if using modern sidebar above)
-   =================================== */
-.brand-link {
-  transition: all 0.3s ease !important;
-  display: flex;
-  align-items: center;
-  padding: 0.8125rem 0.5rem;
-}
-
-.brand-link:hover {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
-}
-
-.brand-link .brand-image {
-  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
-}
-
-.brand-link:hover .brand-image {
-  transform: rotate(360deg) scale(1.1);
-}
-
-/* ===================================
-   SMOOTH SCROLLBAR
-   =================================== */
-.sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* ===================================
-   PERFORMANCE OPTIMIZATION
-   =================================== */
-.main-sidebar,
-.content-wrapper,
-.main-header,
-.main-footer {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-/* Prevent layout shift */
-body.sidebar-animating {
-  overflow-x: hidden;
-}
-
-/* ===================================
-   USER PANEL
-   =================================== */
-.user-panel {
-  transition: all 0.3s ease;
-  border-radius: 6px;
-  margin: 0.5rem;
-  padding: 0.5rem !important;
-}
-
-.user-panel:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  transform: translateX(3px);
 }
 
 /* === CONTENT WRAPPER === */
