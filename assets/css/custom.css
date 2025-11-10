@@ -511,13 +511,33 @@ body {
 .main-sidebar {
   background: linear-gradient(180deg, #1a1f3a 0%, #0f1419 100%) !important;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
-  position: fixed;
-  top: 0;
-  left: 0;
+  transition: width 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important; /* Only width transition */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
   height: 100vh;
   z-index: 1032;
   overflow: hidden;
+  transform: none !important; /* FORCE no transform */
+}
+
+/* CRITICAL: Force main-sidebar to stay in place when collapsed */
+body.sidebar-mini.sidebar-collapse .main-sidebar {
+  position: fixed !important;
+  left: 0 !important;
+  transform: none !important;
+  -webkit-transform: none !important;
+  translate: none !important;
+  margin-left: 0 !important;
+  transition: width 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important; /* Only width, no transform */
+}
+
+/* Also ensure no hover effect on main-sidebar itself */
+body.sidebar-mini.sidebar-collapse .main-sidebar:hover {
+  transform: none !important;
+  -webkit-transform: none !important;
+  left: 0 !important;
+  position: fixed !important;
 }
 
 /* Brand Link - Enhanced with Glow */

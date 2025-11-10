@@ -10,6 +10,17 @@
   function forceNoTransform() {
     // Check if sidebar is collapsed
     if (document.body.classList.contains("sidebar-collapse")) {
+      // CRITICAL: Force main-sidebar itself to stay in place
+      const mainSidebar = document.querySelector(".main-sidebar");
+      if (mainSidebar) {
+        mainSidebar.style.position = "fixed";
+        mainSidebar.style.left = "0";
+        mainSidebar.style.transform = "none";
+        mainSidebar.style.webkitTransform = "none";
+        mainSidebar.style.translate = "none";
+        mainSidebar.style.marginLeft = "0";
+      }
+
       const navLinks = document.querySelectorAll(
         ".sidebar-mini.sidebar-collapse .nav-sidebar .nav-link"
       );
@@ -70,6 +81,16 @@
     "mouseover",
     function (e) {
       if (document.body.classList.contains("sidebar-collapse")) {
+        // Force main-sidebar position
+        const mainSidebar = document.querySelector(".main-sidebar");
+        if (mainSidebar) {
+          mainSidebar.style.transform = "none";
+          mainSidebar.style.webkitTransform = "none";
+          mainSidebar.style.left = "0";
+          mainSidebar.style.position = "fixed";
+        }
+
+        // Force nav-link
         const navLink = e.target.closest(".nav-sidebar .nav-link");
         if (navLink) {
           navLink.style.transform = "none";
@@ -80,5 +101,5 @@
     true
   );
 
-  console.log("✅ Sidebar collapse fix loaded");
+  console.log("✅ Sidebar collapse fix loaded - main-sidebar locked");
 })();
