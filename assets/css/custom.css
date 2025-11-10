@@ -530,6 +530,7 @@ body.sidebar-mini.sidebar-collapse .main-sidebar {
   translate: none !important;
   margin-left: 0 !important;
   transition: width 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important; /* Only width, no transform */
+  will-change: width; /* Optimize for width change only */
 }
 
 /* Also ensure no hover effect on main-sidebar itself */
@@ -538,6 +539,17 @@ body.sidebar-mini.sidebar-collapse .main-sidebar:hover {
   -webkit-transform: none !important;
   left: 0 !important;
   position: fixed !important;
+}
+
+/* NUCLEAR: Disable pointer events on sidebar container when collapsed */
+body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar {
+  pointer-events: none !important; /* Disable ALL pointer events */
+}
+
+/* Re-enable only for nav-links (for clicking) */
+body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
+  pointer-events: auto !important; /* Enable click */
+  cursor: pointer !important;
 }
 
 /* Brand Link - Enhanced with Glow */
@@ -632,7 +644,13 @@ body.sidebar-mini.sidebar-collapse .main-sidebar:hover {
    Maximum specificity to override AdminLTE
    =================================================== */
 
-/* ULTIMATE: Force disable ALL transforms and movements */
+/* STEP 1: Disable AdminLTE hover expand behavior */
+body.sidebar-mini.sidebar-collapse .main-sidebar:not(.sidebar-no-expand):hover {
+  width: 70px !important; /* Force stay narrow, don't expand on hover */
+  overflow: hidden !important;
+}
+
+/* STEP 2: ULTIMATE Force disable ALL transforms and movements */
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link,
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:hover,
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:active,
@@ -656,6 +674,7 @@ html body.sidebar-mini.sidebar-collapse .wrapper .main-sidebar .nav-sidebar .nav
   margin-right: 0 !important;
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
+  will-change: auto !important; /* Disable will-change optimization */
 }
 
 /* Icon - Force no transform */

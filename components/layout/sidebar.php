@@ -40,7 +40,7 @@ function renderSidebar($activePage = '')
     ]
   ];
 ?>
-  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <aside class="main-sidebar sidebar-dark-primary elevation-4 sidebar-no-expand">
     <!-- Brand Logo -->
     <a href="index.php" class="brand-link">
       <i class="fas fa-home brand-image" style="font-size: 2rem; opacity: .8; margin-left: 0.8rem;"></i>
