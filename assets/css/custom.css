@@ -783,6 +783,11 @@ body {
     filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.9));
   }
 
+  /* Prevent text transform when collapsed (text is hidden anyway) */
+  body.sidebar-collapse .main-sidebar .nav-link:hover p {
+    transform: none !important;
+  }
+
   /* Active state pada collapsed mode */
   body.sidebar-collapse .main-sidebar .nav-link.active {
     transform: scale(1.05) !important; /* Only scale for active too */
@@ -872,73 +877,7 @@ body.sidebar-collapse .nav-link[data-widget="pushmenu"] i {
 }
 
 /* ===================================
-   SIDEBAR MENU ITEMS
-   =================================== */
-.nav-sidebar .nav-link {
-  border-radius: 6px;
-  margin: 0.15rem 0.5rem;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Hover Effect */
-.nav-sidebar .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  transform: translateX(5px);
-  padding-left: 1.2rem !important;
-}
-
-body.sidebar-collapse .nav-sidebar .nav-link:hover {
-  transform: scale(1.1);
-  padding-left: 0.5rem !important;
-}
-
-/* Active State */
-.nav-sidebar .nav-link.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transform: translateX(5px);
-}
-
-body.sidebar-collapse .nav-sidebar .nav-link.active {
-  transform: scale(1.1);
-}
-
-/* Left Border Indicator */
-.nav-sidebar .nav-link::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-  transform: scaleY(0);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.nav-sidebar .nav-link:hover::before,
-.nav-sidebar .nav-link.active::before {
-  transform: scaleY(1);
-}
-
-/* Menu Icon Animation */
-.nav-sidebar .nav-icon {
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
-}
-
-.nav-sidebar .nav-link:hover .nav-icon {
-  transform: scale(1.2);
-  filter: brightness(1.2);
-}
-
-body.sidebar-collapse .nav-sidebar .nav-link:hover .nav-icon {
-  transform: scale(1.3) rotate(5deg);
-}
-
-/* ===================================
-   BRAND LINK
+   BRAND LINK (LEGACY - Can be removed if using modern sidebar above)
    =================================== */
 .brand-link {
   transition: all 0.3s ease !important;
