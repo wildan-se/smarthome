@@ -1049,8 +1049,16 @@ code {
 }
 
 .fan-spinning {
-  animation: fan-spin 1s linear infinite;
+  animation: fan-spin 0.8s linear infinite;
   color: #28a745 !important;
+  transform-origin: center center;
+}
+
+/* Fan icon in dashboard - make it larger and more visible */
+#fan_icon_dashboard {
+  font-size: 1.2em;
+  display: inline-block;
+  transition: all 0.3s ease;
 }
 
 /* === TEXT COLOR UTILITIES === */
