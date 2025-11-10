@@ -104,8 +104,13 @@ $(function () {
     client.subscribe(`${topicRoot}/#`);
     client.subscribe(statusTopic);
 
-    // Request status
+    // Request status from ESP32
     client.publish(`${topicRoot}/system/ping`, "request_status");
+
+    // Request relay status specifically
+    setTimeout(() => {
+      client.publish(`${topicRoot}/relay/request_status`, "1");
+    }, 500);
 
     // Set initial checking status
     updateESP32Status("checking");
@@ -200,7 +205,18 @@ $(function () {
 
     // Fan Mode
     if (topic === `${topicRoot}/kipas/mode`) {
-      handleFanMode(msg);
+      const mode = msg.toLowerCase();
+      const isAuto = mode === "auto";
+
+      $("#fan_mode_text").html(
+        '<i class="fas fa-' +
+          (isAuto ? "magic" : "hand-pointer") +
+          '"></i> Mode: ' +
+          (isAuto ? "Auto" : "Manual")
+      );
+
+      console.log("🎛️ Fan Mode Updated:", mode.toUpperCase());
+      markESP32Online();
     }
 
     // RFID Access
@@ -360,11 +376,6 @@ $(function () {
     } else {
       console.warn("⚠️ Invalid humidity value:", msg, "parsed as:", hum);
     }
-  }
-
-  function handleFanMode(msg) {
-    const mode = msg.toUpperCase();
-    $("#fan_mode_text").text("Mode: " + mode);
   }
 
   function handleRFIDAccess(msg) {
