@@ -766,14 +766,26 @@ body {
     margin-right: 0 !important;
   }
 
-  /* Hover effect pada collapsed sidebar - Show tooltip */
+  /* Hover effect pada collapsed sidebar - NO TRANSFORM X */
   body.sidebar-collapse .main-sidebar .nav-link {
     position: relative;
   }
 
   body.sidebar-collapse .main-sidebar .nav-link:hover {
-    transform: scale(1.1);
+    transform: scale(1.08) !important; /* Only scale, no translateX */
     background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(46, 204, 113, 0.3) 100%) !important;
+  }
+
+  /* Icon pada collapsed mode - no rotation, just glow */
+  body.sidebar-collapse .main-sidebar .nav-link:hover .nav-icon {
+    transform: scale(1.15) !important; /* No rotation when collapsed */
+    color: #3498db;
+    filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.9));
+  }
+
+  /* Active state pada collapsed mode */
+  body.sidebar-collapse .main-sidebar .nav-link.active {
+    transform: scale(1.05) !important; /* Only scale for active too */
   }
 
   /* Active indicator saat collapsed */
