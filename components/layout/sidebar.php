@@ -40,7 +40,7 @@ function renderSidebar($activePage = '')
     ]
   ];
 ?>
-  <aside class="main-sidebar sidebar-dark-primary elevation-4 sidebar-no-expand">
+  <aside class="main-sidebar sidebar-dark-primary elevation-4 sidebar-no-expand" role="navigation" aria-label="Main Sidebar">
     <!-- Brand Logo -->
     <a href="index.php" class="brand-link">
       <i class="fas fa-home brand-image" style="font-size: 2rem; opacity: .8; margin-left: 0.8rem;"></i>
@@ -77,6 +77,9 @@ function renderSidebar($activePage = '')
       </nav>
     </div>
   </aside>
+
+  <!-- Mobile overlay (optional - CSS handles pseudo-overlay too) -->
+  <div class="sidebar-overlay" aria-hidden="true"></div>
 <?php
 }
 ?>

@@ -233,6 +233,19 @@ const SidebarManager = (function () {
      */
     onToggleClick() {
       setTimeout(() => {
+        // Mobile: toggle sidebar-open (slide-in) and don't persist
+        if (DeviceDetector.isMobile()) {
+          document.body.classList.toggle(CONFIG.SIDEBAR_OPEN_CLASS);
+          // ensure desktop collapse class is removed on mobile open
+          document.body.classList.remove(CONFIG.SIDEBAR_CLASS);
+          // small delay for transition then cleanup
+          setTimeout(() => {
+            TransformFix.apply();
+          }, 180);
+          return;
+        }
+
+        // Desktop: persist collapsed/expanded state
         StateManager.save();
         TransformFix.apply();
       }, CONFIG.ANIMATION_DELAY);
@@ -405,6 +418,17 @@ const SidebarManager = (function () {
           ) {
             document.body.classList.remove(CONFIG.SIDEBAR_OPEN_CLASS);
             console.log("📱 Sidebar closed - clicked outside");
+          }
+        });
+      }
+
+      // Click on explicit overlay to close sidebar (works regardless of device)
+      const overlayEl = document.querySelector(".sidebar-overlay");
+      if (overlayEl) {
+        overlayEl.addEventListener("click", () => {
+          if (document.body.classList.contains(CONFIG.SIDEBAR_OPEN_CLASS)) {
+            document.body.classList.remove(CONFIG.SIDEBAR_OPEN_CLASS);
+            console.log("📱 Sidebar closed - overlay click");
           }
         });
       }

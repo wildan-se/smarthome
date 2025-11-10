@@ -509,16 +509,17 @@ body {
 
 /* Main Sidebar - Modern Gradient Background */
 .main-sidebar {
-  background: linear-gradient(180deg, #1a1f3a 0%, #0f1419 100%) !important;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-  transition: width 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important; /* Only width transition */
+  background: linear-gradient(180deg, #0f1724 0%, #081224 100%) !important;
+  box-shadow: 6px 0 30px rgba(2, 6, 23, 0.55);
+  transition: width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.36s cubic-bezier(0.22, 1, 0.36, 1) !important;
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   height: 100vh;
-  z-index: 1032;
+  z-index: 1035;
   overflow: hidden;
-  transform: none !important; /* FORCE no transform */
+  will-change: width, transform;
 }
 
 /* CRITICAL: Force main-sidebar to stay in place when collapsed */
@@ -527,13 +528,13 @@ body.sidebar-mini.sidebar-collapse .main-sidebar {
   left: 0 !important;
   transform: none !important;
   -webkit-transform: none !important;
-  translate: none !important;
   margin-left: 0 !important;
-  transition: width 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important; /* Only width, no transform */
-  will-change: width; /* Optimize for width change only */
+  transition: width 0.28s cubic-bezier(0.2, 1, 0.2, 1) !important; /* fast width transition */
+  will-change: width;
 }
 
 /* Also ensure no hover effect on main-sidebar itself */
+/* no hover expansion when collapsed */
 body.sidebar-mini.sidebar-collapse .main-sidebar:hover {
   transform: none !important;
   -webkit-transform: none !important;
@@ -542,42 +543,50 @@ body.sidebar-mini.sidebar-collapse .main-sidebar:hover {
 }
 
 /* NUCLEAR: Disable pointer events on sidebar container when collapsed */
+/* When collapsed, keep clicks working only on interactive items */
 body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar {
-  pointer-events: none !important; /* Disable ALL pointer events */
+  pointer-events: none !important;
 }
 
 /* Re-enable only for nav-links (for clicking) */
 body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
-  pointer-events: auto !important; /* Enable click */
+  pointer-events: auto !important;
   cursor: pointer !important;
 }
 
 /* Brand Link - Enhanced with Glow */
 .brand-link {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  padding: 1rem !important;
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  padding: 1rem 1rem !important;
+  transition: background 0.24s ease, transform 0.24s ease;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .brand-link:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom-color: rgba(52, 152, 219, 0.5) !important;
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateX(2px);
 }
 
 .brand-text {
-  font-size: 1.2rem !important;
+  font-size: 1.05rem !important;
   font-weight: 700 !important;
-  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 0.5px;
+  color: #e6eef7;
+  letter-spacing: 0.4px;
 }
 
 .brand-image {
-  animation: pulse-subtle 3s ease-in-out infinite;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #7fd1ff;
+  transition: transform 0.6s cubic-bezier(0.2,1,0.3,1);
+}
+
+.brand-link:hover .brand-image {
+  transform: rotate(360deg) scale(1.08);
 }
 
 @keyframes pulse-subtle {
@@ -587,18 +596,22 @@ body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
 
 /* Sidebar Menu Items - Modern Design */
 .nav-sidebar .nav-item {
-  margin: 0.3rem 0.5rem;
+  margin: 0.25rem 0.4rem;
 }
 
 .nav-sidebar .nav-link {
   border-radius: 10px !important;
-  padding: 0.75rem 1rem !important;
+  padding: 0.65rem 0.9rem !important;
   margin: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1),
+              box-shadow 0.32s ease, color 0.2s ease;
   position: relative;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 /* Ripple Effect Background */
@@ -610,22 +623,24 @@ body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(52, 152, 219, 0.3);
+  background: rgba(80, 190, 255, 0.12);
   transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+  transition: width 0.48s ease, height 0.48s ease, opacity 0.48s ease;
   z-index: 0;
+  pointer-events: none;
 }
 
 .nav-sidebar .nav-link:hover::before {
-  width: 300px;
-  height: 300px;
+  width: 220px;
+  height: 220px;
+  opacity: 1;
 }
 
 /* Icon Styling */
 .nav-sidebar .nav-icon {
-  margin-right: 0.75rem;
-  font-size: 1.1rem;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  margin-right: 0.6rem;
+  font-size: 1.08rem;
+  transition: transform 0.6s cubic-bezier(0.2,1,0.3,1), color 0.28s ease;
   position: relative;
   z-index: 1;
 }
@@ -636,7 +651,7 @@ body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
   display: inline-block;
   position: relative;
   z-index: 1;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.22s ease;
 }
 
 /* ===================================================
@@ -646,48 +661,37 @@ body.sidebar-mini.sidebar-collapse .main-sidebar .nav-link {
 
 /* STEP 1: Disable AdminLTE hover expand behavior */
 body.sidebar-mini.sidebar-collapse .main-sidebar:not(.sidebar-no-expand):hover {
-  width: 70px !important; /* Force stay narrow, don't expand on hover */
+  width: 70px !important;
   overflow: hidden !important;
 }
 
 /* STEP 2: ULTIMATE Force disable ALL transforms and movements */
+/* Aggressive overrides for collapsed mode */
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link,
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:hover,
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:active,
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:focus,
-html body.sidebar-mini.sidebar-collapse .main-sidebar .sidebar .nav-sidebar .nav-item .nav-link:hover,
-html body.sidebar-mini.sidebar-collapse .wrapper .main-sidebar .nav-sidebar .nav-link:hover {
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item .nav-link:focus {
   transform: none !important;
   -webkit-transform: none !important;
-  -moz-transform: none !important;
-  -ms-transform: none !important;
-  -o-transform: none !important;
-  translate: none !important;
   background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
   box-shadow: none !important;
-  position: relative !important; /* Ensure no position changes */
+  position: relative !important;
   left: 0 !important;
   right: 0 !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
-  will-change: auto !important; /* Disable will-change optimization */
 }
 
 /* Icon - Force no transform */
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover .nav-icon,
-html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover i,
-html body.sidebar-mini.sidebar-collapse .wrapper .main-sidebar .nav-sidebar .nav-link:hover .nav-icon {
+html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hover i {
   transform: none !important;
   -webkit-transform: none !important;
-  -moz-transform: none !important;
   transition: none !important;
   animation: none !important;
   color: inherit !important;
-  filter: none !important;
 }
 
 /* Text - Force no transform */
@@ -695,7 +699,6 @@ html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hov
   transform: none !important;
   -webkit-transform: none !important;
   transition: none !important;
-  animation: none !important;
 }
 
 /* Ripple - Force hide */
@@ -711,13 +714,13 @@ html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link:hov
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link.active {
   transform: none !important;
   -webkit-transform: none !important;
-  background: rgba(52, 152, 219, 0.3) !important;
+  background: rgba(80, 190, 255, 0.12) !important;
   position: relative !important;
   left: 0 !important;
 }
 
 html body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link.active .nav-icon {
-  color: #3498db !important;
+  color: #7fd1ff !important;
   transform: none !important;
   -webkit-transform: none !important;
 }
@@ -1027,6 +1030,26 @@ body.sidebar-mini:not(.sidebar-collapse) .nav-sidebar .nav-link:hover p {
     z-index: 1034;
     animation: fadeIn 0.3s ease;
     backdrop-filter: blur(3px);
+  }
+
+  /* Explicit DOM overlay (fallback) */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.65);
+    z-index: 1034;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    backdrop-filter: blur(3px);
+  }
+
+  body.sidebar-open .sidebar-overlay {
+    display: block;
+    opacity: 1;
   }
 
   /* Show all text in mobile */
