@@ -163,33 +163,93 @@ $(function () {
         function (res) {
           if (res.success) {
             console.log(`✅ Database removal successful for UID: ${data.uid}`);
+            console.log(
+              `📊 Deleted ${res.deleted.cards} card(s) and ${res.deleted.logs} log(s)`
+            );
 
-            // Animate row removal from UI first
-            let rowFound = false;
+            // 1. Remove from card list UI with animation
+            let cardRowRemoved = false;
             $("#tableRFID tbody tr").each(function () {
-              const rowUID = $(this).find("code").text();
+              const rowUID = $(this).find("code.code-badge").text().trim();
               if (rowUID === data.uid) {
-                rowFound = true;
-                $(this).addClass("table-danger");
-                $(this).fadeOut(400, function () {
-                  $(this).remove();
-                  // Refresh to ensure accurate count and numbering
-                  loadRFID();
-                  loadLog();
+                cardRowRemoved = true;
+                const $row = $(this);
+                $row.addClass("table-danger");
+                $row.fadeOut(400, function () {
+                  $row.remove();
+
+                  // Update card count after removal
+                  const remainingCount = $("#tableRFID tbody tr").length;
+                  $("#cardCount").html(
+                    `<i class="fas fa-id-card"></i> ${remainingCount} Kartu`
+                  );
+
+                  // Renumber remaining rows
+                  $("#tableRFID tbody tr").each(function (index) {
+                    $(this)
+                      .find("td:first strong")
+                      .text(index + 1);
+                  });
+
+                  console.log(
+                    `✅ Card row removed from UI, ${remainingCount} cards remaining`
+                  );
                 });
               }
             });
 
-            // If row not found (already removed or not visible), just refresh
-            if (!rowFound) {
-              console.log("⚠️ Row not found in UI, refreshing tables...");
+            // 2. Remove from access log UI (all entries for this UID)
+            let logsRemoved = 0;
+            $("#tableLog tbody tr").each(function () {
+              const logUID = $(this).find("code.code-badge").text().trim();
+              if (logUID === data.uid) {
+                logsRemoved++;
+                const $logRow = $(this);
+                $logRow.addClass("table-warning");
+                $logRow.fadeOut(400, function () {
+                  $logRow.remove();
+
+                  // Renumber remaining log rows
+                  $("#tableLog tbody tr").each(function (index) {
+                    $(this)
+                      .find("td:first strong")
+                      .text(index + 1);
+                  });
+                });
+              }
+            });
+
+            if (logsRemoved > 0) {
+              console.log(`✅ Removed ${logsRemoved} log entries from UI`);
+            }
+
+            // 3. Check if tables are now empty and update UI
+            setTimeout(function () {
+              const cardCount = $("#tableRFID tbody tr").length;
+              const logCount = $("#tableLog tbody tr").length;
+
+              if (cardCount === 0) {
+                $("#tableRFID tbody").html(
+                  '<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada kartu terdaftar</td></tr>'
+                );
+                $("#cardCount").html(`<i class="fas fa-id-card"></i> 0 Kartu`);
+              }
+
+              if (logCount === 0) {
+                $("#tableLog tbody").html(
+                  '<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada riwayat akses</td></tr>'
+                );
+              }
+            }, 450);
+
+            if (!cardRowRemoved) {
+              console.log("⚠️ Card row not found in UI, refreshing table...");
               loadRFID();
-              loadLog();
             }
 
             Alert.success(
               "#addResult",
-              `Kartu <code><strong>${data.uid}</strong></code> berhasil dihapus dari ESP32 dan Database!`
+              `Kartu <code><strong>${data.uid}</strong></code> dan ${res.deleted.logs} riwayat akses berhasil dihapus!`
             );
           } else {
             console.error(
@@ -202,6 +262,7 @@ $(function () {
             );
             // Reload to show current state
             loadRFID();
+            loadLog();
           }
         },
         "json"
@@ -209,6 +270,7 @@ $(function () {
         console.error("❌ AJAX error during database removal:", xhr);
         handleAjaxError(xhr);
         loadRFID();
+        loadLog();
       });
     }
 
@@ -222,12 +284,37 @@ $(function () {
         { uid: data.uid },
         function (res) {
           if (res.success) {
+            console.log(`✅ Database removal successful (ESP32 not found)`);
+
+            // Remove from both tables in UI
+            $("#tableRFID tbody tr").each(function () {
+              if ($(this).find("code.code-badge").text().trim() === data.uid) {
+                $(this)
+                  .addClass("table-danger")
+                  .fadeOut(400, function () {
+                    $(this).remove();
+                    const count = $("#tableRFID tbody tr").length;
+                    $("#cardCount").html(
+                      `<i class="fas fa-id-card"></i> ${count} Kartu`
+                    );
+                  });
+              }
+            });
+
+            $("#tableLog tbody tr").each(function () {
+              if ($(this).find("code.code-badge").text().trim() === data.uid) {
+                $(this)
+                  .addClass("table-warning")
+                  .fadeOut(400, function () {
+                    $(this).remove();
+                  });
+              }
+            });
+
             Alert.success(
               "#addResult",
               `Kartu <code><strong>${data.uid}</strong></code> tidak ada di ESP32, tapi berhasil dihapus dari Database!`
             );
-            loadRFID();
-            loadLog();
           } else {
             Alert.error(
               "#addResult",
@@ -236,6 +323,7 @@ $(function () {
               }`
             );
             loadRFID();
+            loadLog();
           }
         },
         "json"
@@ -247,6 +335,7 @@ $(function () {
         );
         handleAjaxError(xhr);
         loadRFID();
+        loadLog();
       });
     }
   }
