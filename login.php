@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($stmt->num_rows > 0) {
     $stmt->bind_result($id, $db_username, $hash);
     $stmt->fetch();
-    if (password_verify($password, $hash)) {
+    if ($hash && password_verify($password, $hash)) {
       $_SESSION['user_id'] = $id;
       $_SESSION['username'] = $db_username;
       header('Location: index.php');
@@ -332,8 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-logo">
       <a href="#">
         <i class="fas fa-home"></i>
-        <span><b>Smart</b>Home</span>
-        <span><b>I</b>Home</span>
+        <span><b>Smart</b>Home IoT</span>
       </a>
     </div>
     <!-- /.login-logo -->
