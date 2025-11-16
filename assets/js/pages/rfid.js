@@ -437,14 +437,35 @@ $(function () {
   // === REMOVE RFID CARD ===
   window.removeRFID = function (uid) {
     Swal.fire({
-      title: "Hapus Kartu?",
-      text: `Kartu ${uid} akan dihapus permanent`,
+      title: "Hapus Kartu RFID",
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <p style="margin-bottom: 15px; color: #666;">
+            Anda akan menghapus kartu dengan UID:
+          </p>
+          <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 15px;">
+            <code style="font-size: 16px; font-weight: 600; color: #dc3545;">${uid}</code>
+          </div>
+          <p style="margin-bottom: 8px; color: #666; font-size: 14px;">
+            <i class="fas fa-info-circle" style="color: #17a2b8; margin-right: 5px;"></i>
+            Kartu akan dihapus dari sistem secara permanen
+          </p>
+        </div>
+      `,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Hapus",
-      cancelButtonText: "Batal",
+      confirmButtonText: '<i class="fas fa-trash-alt"></i> Hapus',
+      cancelButtonText: '<i class="fas fa-times"></i> Batal',
       confirmButtonColor: "#dc3545",
       cancelButtonColor: "#6c757d",
+      reverseButtons: true,
+      customClass: {
+        popup: "swal2-custom-popup",
+        confirmButton: "btn btn-danger",
+        cancelButton: "btn btn-secondary",
+      },
+      buttonsStyling: false,
+      width: "500px",
     }).then((result) => {
       if (result.isConfirmed) {
         // Show loading state
