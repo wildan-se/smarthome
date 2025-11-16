@@ -150,8 +150,50 @@ $(function () {
       ).fail(handleAjaxError);
     }
 
-    // Handle REMOVE action
+    // Handle REMOVE action - ESP32 confirmed deletion
     if (data.action === "remove" && data.result === "ok" && data.uid) {
+      console.log(`✅ ESP32 confirmed removal of UID: ${data.uid}`);
+
+      // Remove from database
+      $.post(
+        "api/rfid_crud.php?action=remove",
+        { uid: data.uid },
+        function (res) {
+          if (res.success) {
+            console.log(`✅ Database removal successful for UID: ${data.uid}`);
+            Alert.success(
+              "#addResult",
+              `Kartu <code><strong>${data.uid}</strong></code> berhasil dihapus dari ESP32 dan Database!`
+            );
+            // Refresh tables to ensure sync
+            loadRFID();
+            loadLog();
+          } else {
+            console.error(
+              `❌ Database removal failed for UID: ${data.uid}`,
+              res.error
+            );
+            Alert.error(
+              "#addResult",
+              res.error || "Gagal menghapus kartu dari database"
+            );
+            // Reload to show current state
+            loadRFID();
+          }
+        },
+        "json"
+      ).fail(function (xhr) {
+        console.error("❌ AJAX error during database removal:", xhr);
+        handleAjaxError(xhr);
+        loadRFID();
+      });
+    }
+
+    // Handle REMOVE not found - card not in ESP32
+    if (data.action === "remove" && data.result === "not_found" && data.uid) {
+      console.warn(`⚠️ ESP32 reports card not found: ${data.uid}`);
+
+      // Still remove from database since ESP32 doesn't have it
       $.post(
         "api/rfid_crud.php?action=remove",
         { uid: data.uid },
@@ -159,32 +201,29 @@ $(function () {
           if (res.success) {
             Alert.success(
               "#addResult",
-              `Kartu <strong>${data.uid}</strong> berhasil dihapus dari ESP32 dan database!`
+              `Kartu <code><strong>${data.uid}</strong></code> tidak ada di ESP32, tapi berhasil dihapus dari Database!`
             );
             loadRFID();
             loadLog();
           } else {
-            Alert.error("#addResult", res.error || "Gagal menghapus kartu");
+            Alert.error(
+              "#addResult",
+              `Kartu tidak ditemukan di ESP32. Gagal menghapus dari database: ${
+                res.error || "Unknown error"
+              }`
+            );
+            loadRFID();
           }
         },
         "json"
-      ).fail(handleAjaxError);
-    }
-
-    // Handle REMOVE not found
-    if (data.action === "remove" && data.result === "not_found" && data.uid) {
-      Swal.fire({
-        title: "Kartu Tidak Ditemukan di ESP32",
-        html: `Kartu <code><strong>${data.uid}</strong></code> tidak ditemukan di ESP32.<br>Hapus dari database saja?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Ya, hapus dari DB",
-        cancelButtonText: "Batal",
-        confirmButtonColor: "#ffc107",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          removeFromDBOnly(data.uid);
-        }
+      ).fail(function (xhr) {
+        console.error("❌ Failed to remove from database:", xhr);
+        Alert.error(
+          "#addResult",
+          "Kartu tidak ada di ESP32 dan gagal dihapus dari database"
+        );
+        handleAjaxError(xhr);
+        loadRFID();
       });
     }
   }
@@ -319,18 +358,11 @@ $(function () {
                               card.added_by_name || "System"
                             }</td>
                             <td class="text-center">
-                                <div class="btn-group" role="group">
-                                    <button class="btn btn-sm btn-danger" onclick="removeRFID('${
-                                      card.uid
-                                    }')" title="Hapus di ESP32 & DB">
-                                        <i class="fas fa-trash-alt"></i> Hapus
-                                    </button>
-                                    <button class="btn btn-sm btn-warning" onclick="removeFromDBOnly('${
-                                      card.uid
-                                    }')" title="Hapus hanya di Database">
-                                        <i class="fas fa-database"></i> DB
-                                    </button>
-                                </div>
+                                <button class="btn btn-sm btn-danger" onclick="removeRFID('${
+                                  card.uid
+                                }')" title="Hapus kartu dari ESP32 dan Database">
+                                    <i class="fas fa-trash-alt"></i> Hapus
+                                </button>
                             </td>
                         </tr>
                     `;
@@ -405,73 +437,57 @@ $(function () {
   // === REMOVE RFID CARD ===
   window.removeRFID = function (uid) {
     Swal.fire({
-      title: "Hapus Kartu",
-      html: `Hapus kartu dengan UID: <code><strong>${uid}</strong></code>?`,
+      title: "Hapus Kartu RFID?",
+      html: `Kartu dengan UID <code><strong>${uid}</strong></code> akan dihapus dari:<br><br>
+             <i class="fas fa-microchip text-info"></i> <strong>ESP32</strong><br>
+             <i class="fas fa-database text-primary"></i> <strong>Database</strong><br>
+             <i class="fas fa-list text-warning"></i> <strong>Tampilan UI</strong><br><br>
+             <span class="text-danger"><strong>Tindakan ini tidak dapat dibatalkan!</strong></span>`,
       icon: "warning",
-      showDenyButton: true,
       showCancelButton: true,
-      confirmButtonText:
-        '<i class="fas fa-microchip"></i> Hapus di ESP32 & Database',
-      denyButtonText: '<i class="fas fa-database"></i> Hapus hanya di Database',
+      confirmButtonText: '<i class="fas fa-trash-alt"></i> Ya, Hapus Kartu',
       cancelButtonText: '<i class="fas fa-times"></i> Batal',
       confirmButtonColor: "#dc3545",
-      denyButtonColor: "#ffc107",
       cancelButtonColor: "#6c757d",
       focusCancel: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        // Hapus di ESP32 dan Database
-        Alert.loading("#addResult", "Menghapus kartu dari ESP32...");
+        // Show loading state
+        Alert.loading(
+          "#addResult",
+          "Menghapus kartu dari ESP32 dan Database..."
+        );
+
+        // 1. Send remove command to ESP32 via MQTT
+        console.log(`📤 Sending remove command to ESP32 for UID: ${uid}`);
         client.publish(`${topicRoot}/rfid/remove`, uid);
 
+        // 2. Remove from UI immediately with animation
+        $("#tableRFID tbody tr").each(function () {
+          const rowUID = $(this).find("code").text();
+          if (rowUID === uid) {
+            $(this).fadeOut(300, function () {
+              $(this).remove();
+              // Update card count
+              const remainingCards = $("#tableRFID tbody tr:visible").length;
+              $("#cardCount").html(
+                `<i class="fas fa-id-card"></i> ${remainingCards} Kartu`
+              );
+            });
+          }
+        });
+
+        // 3. ESP32 will respond via MQTT /rfid/info with result
+        // The handleRFIDInfo function will handle database removal
+
+        // Show success message
         setTimeout(function () {
           Alert.success(
             "#addResult",
-            `Perintah hapus dikirim ke ESP32 untuk kartu <code><strong>${uid}</strong></code>`
+            `Kartu <code><strong>${uid}</strong></code> berhasil dihapus dari ESP32, Database, dan UI!`
           );
-        }, 1000);
-      } else if (result.isDenied) {
-        // Hapus dari Database saja
-        removeFromDBOnly(uid);
+        }, 500);
       }
-    });
-  };
-
-  // === REMOVE FROM DB ONLY ===
-  window.removeFromDBOnly = function (uid) {
-    Swal.fire({
-      title: "Hapus dari Database saja?",
-      html: `Kartu <code><strong>${uid}</strong></code> akan dihapus dari database tetapi tetap tersimpan di ESP32. Lanjutkan?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Ya, hapus dari DB",
-      cancelButtonText: "Batal",
-      confirmButtonColor: "#ffc107",
-    }).then((result) => {
-      if (!result.isConfirmed) return;
-
-      Alert.loading("#addResult", "Menghapus dari database...");
-
-      $.post(
-        "api/rfid_crud.php?action=remove",
-        { uid: uid },
-        function (res) {
-          if (res.success) {
-            Alert.success(
-              "#addResult",
-              `Kartu <code><strong>${uid}</strong></code> berhasil dihapus dari database! (Masih ada di ESP32)`
-            );
-            loadRFID();
-            loadLog();
-          } else {
-            Alert.error(
-              "#addResult",
-              res.error || "Gagal menghapus dari database"
-            );
-          }
-        },
-        "json"
-      ).fail(handleAjaxError);
     });
   };
 
