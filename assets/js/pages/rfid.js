@@ -35,6 +35,7 @@ $(function () {
   const mqttProtocol = window.mqttConfig.protocol;
 
   let lastScannedUID = "";
+  let pendingRemoveUID = null; // Store UID being removed
 
   // Initialize MQTT Client
   const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
@@ -153,27 +154,50 @@ $(function () {
     }
 
     // Handle REMOVE action - ESP32 confirmed deletion
-    if (data.action === "remove" && data.result === "ok" && data.uid) {
-      console.log(`✅ ESP32 confirmed removal of UID: ${data.uid}`);
+    // ESP32 may not send UID, so use pendingRemoveUID as fallback
+    const uidToRemove = data.uid || pendingRemoveUID;
+
+    if (data.action === "remove" && data.result === "ok" && uidToRemove) {
+      console.log(`✅ ESP32 confirmed removal of UID: ${uidToRemove}`);
+
+      // Clear pending UID
+      pendingRemoveUID = null;
 
       // Remove from database
       $.post(
         "api/rfid_crud.php?action=remove",
-        { uid: data.uid },
+        { uid: uidToRemove },
         function (res) {
           if (res.success) {
-            console.log(`✅ Database removal successful for UID: ${data.uid}`);
+            console.log(
+              `✅ Database removal successful for UID: ${uidToRemove}`
+            );
             console.log(
               `📊 Deleted ${res.deleted.cards} card(s) and ${res.deleted.logs} log(s)`
             );
 
             // 1. Remove from card list UI with animation
+            const targetUID = uidToRemove;
             let cardRowRemoved = false;
-            $("#tableRFID tbody tr").each(function () {
-              const rowUID = $(this).find("code.code-badge").text().trim();
-              if (rowUID === data.uid) {
+
+            console.log(`🔍 Looking for card row with UID: ${targetUID}`);
+            console.log(
+              `📋 Total rows in table: ${$("#tableRFID tbody tr").length}`
+            );
+
+            $("#tableRFID tbody tr").each(function (index) {
+              const $row = $(this);
+              const $codeElement = $row.find("code.code-badge");
+              const rowUID = $codeElement.text().trim();
+
+              console.log(`  Row ${index + 1}: UID = "${rowUID}"`);
+
+              if (rowUID === targetUID) {
+                console.log(
+                  `  ✅ MATCH FOUND at row ${index + 1}! Removing...`
+                );
                 cardRowRemoved = true;
-                const $row = $(this);
+
                 $row.addClass("table-danger");
                 $row.fadeOut(400, function () {
                   $row.remove();
@@ -185,10 +209,10 @@ $(function () {
                   );
 
                   // Renumber remaining rows
-                  $("#tableRFID tbody tr").each(function (index) {
+                  $("#tableRFID tbody tr").each(function (idx) {
                     $(this)
                       .find("td:first strong")
-                      .text(index + 1);
+                      .text(idx + 1);
                   });
 
                   console.log(
@@ -198,11 +222,19 @@ $(function () {
               }
             });
 
+            if (!cardRowRemoved) {
+              console.warn(
+                `⚠️ Card row with UID "${targetUID}" NOT FOUND in UI!`
+              );
+              console.log(`🔄 Forcing table refresh...`);
+              loadRFID();
+            }
+
             // 2. Remove from access log UI (all entries for this UID)
             let logsRemoved = 0;
             $("#tableLog tbody tr").each(function () {
               const logUID = $(this).find("code.code-badge").text().trim();
-              if (logUID === data.uid) {
+              if (logUID === targetUID) {
                 logsRemoved++;
                 const $logRow = $(this);
                 $logRow.addClass("table-warning");
@@ -210,10 +242,10 @@ $(function () {
                   $logRow.remove();
 
                   // Renumber remaining log rows
-                  $("#tableLog tbody tr").each(function (index) {
+                  $("#tableLog tbody tr").each(function (idx) {
                     $(this)
                       .find("td:first strong")
-                      .text(index + 1);
+                      .text(idx + 1);
                   });
                 });
               }
@@ -242,18 +274,13 @@ $(function () {
               }
             }, 450);
 
-            if (!cardRowRemoved) {
-              console.log("⚠️ Card row not found in UI, refreshing table...");
-              loadRFID();
-            }
-
             Alert.success(
               "#addResult",
-              `Kartu <code><strong>${data.uid}</strong></code> dan ${res.deleted.logs} riwayat akses berhasil dihapus!`
+              `Kartu <code><strong>${targetUID}</strong></code> dan ${res.deleted.logs} riwayat akses berhasil dihapus!`
             );
           } else {
             console.error(
-              `❌ Database removal failed for UID: ${data.uid}`,
+              `❌ Database removal failed for UID: ${uidToRemove}`,
               res.error
             );
             Alert.error(
@@ -633,6 +660,9 @@ $(function () {
       if (result.isConfirmed) {
         // Show loading state
         Alert.loading("#addResult", "Mengirim perintah hapus ke ESP32...");
+
+        // Store UID being removed (ESP32 might not send it back)
+        pendingRemoveUID = uid;
 
         // Send remove command to ESP32 via MQTT
         console.log(`📤 Sending remove command to ESP32 for UID: ${uid}`);
