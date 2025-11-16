@@ -437,31 +437,33 @@ $(function () {
   // === REMOVE RFID CARD ===
   window.removeRFID = function (uid) {
     Swal.fire({
-      title: "Hapus Kartu RFID",
+      title: "Hapus Kartu",
       html: `
-        <div style="text-align: center; padding: 20px 10px;">
-          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border: 2px solid #ffc107; margin-bottom: 20px;">
-            <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px; margin-bottom: 15px;"></i>
-            <p style="margin: 0 0 10px 0; color: #666; font-size: 15px; font-weight: 500;">
-              Kartu dengan UID
-            </p>
-            <code style="font-size: 18px; font-weight: 700; color: #dc3545; background: white; padding: 8px 16px; border-radius: 6px; display: inline-block;">${uid}</code>
+        <div style="text-align: center; padding: 15px 5px;">
+          <div style="margin-bottom: 25px;">
+            <i class="fas fa-exclamation-circle" style="color: #dc3545; font-size: 64px;"></i>
           </div>
-          <p style="margin: 0; color: #666; font-size: 14px;">
-            akan dihapus secara permanen
+          <p style="margin: 0 0 12px 0; color: #495057; font-size: 15px;">
+            UID Kartu
+          </p>
+          <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px;">
+            <code style="font-size: 20px; font-weight: 700; color: #dc3545; letter-spacing: 1px;">${uid}</code>
+          </div>
+          <p style="margin: 0; color: #6c757d; font-size: 14px;">
+            akan dihapus permanen
           </p>
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: '<i class="fas fa-trash-alt"></i> Hapus',
-      cancelButtonText: '<i class="fas fa-times"></i> Batal',
+      confirmButtonText: "Hapus",
+      cancelButtonText: "Batal",
       confirmButtonColor: "#dc3545",
       cancelButtonColor: "#6c757d",
       reverseButtons: true,
       customClass: {
         popup: "swal2-square-popup",
-        confirmButton: "btn btn-danger",
-        cancelButton: "btn btn-secondary",
+        confirmButton: "btn btn-danger btn-square",
+        cancelButton: "btn btn-secondary btn-square",
       },
       buttonsStyling: false,
       width: "400px",
