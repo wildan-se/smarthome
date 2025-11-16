@@ -1990,6 +1990,35 @@ code {
   padding: 25px !important;
 }
 
+.swal2-square-popup {
+  border-radius: 16px !important;
+  padding: 30px 25px !important;
+  min-height: 380px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.swal2-square-popup .swal2-title {
+  font-size: 1.6rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 20px !important;
+  color: #343a40 !important;
+}
+
+.swal2-square-popup .swal2-html-container {
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.swal2-square-popup .swal2-actions {
+  margin-top: 25px !important;
+  width: 100% !important;
+}
+
 .swal2-custom-popup .swal2-title {
   font-size: 1.5rem !important;
   font-weight: 700 !important;

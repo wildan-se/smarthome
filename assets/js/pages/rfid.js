@@ -439,20 +439,19 @@ $(function () {
     Swal.fire({
       title: "Hapus Kartu RFID",
       html: `
-        <div style="text-align: left; padding: 10px;">
-          <p style="margin-bottom: 15px; color: #666;">
-            Anda akan menghapus kartu dengan UID:
-          </p>
-          <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #dc3545; margin-bottom: 15px;">
-            <code style="font-size: 16px; font-weight: 600; color: #dc3545;">${uid}</code>
+        <div style="text-align: center; padding: 20px 10px;">
+          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border: 2px solid #ffc107; margin-bottom: 20px;">
+            <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px; margin-bottom: 15px;"></i>
+            <p style="margin: 0 0 10px 0; color: #666; font-size: 15px; font-weight: 500;">
+              Kartu dengan UID
+            </p>
+            <code style="font-size: 18px; font-weight: 700; color: #dc3545; background: white; padding: 8px 16px; border-radius: 6px; display: inline-block;">${uid}</code>
           </div>
-          <p style="margin-bottom: 8px; color: #666; font-size: 14px;">
-            <i class="fas fa-info-circle" style="color: #17a2b8; margin-right: 5px;"></i>
-            Kartu akan dihapus dari sistem secara permanen
+          <p style="margin: 0; color: #666; font-size: 14px;">
+            akan dihapus secara permanen
           </p>
         </div>
       `,
-      icon: "warning",
       showCancelButton: true,
       confirmButtonText: '<i class="fas fa-trash-alt"></i> Hapus',
       cancelButtonText: '<i class="fas fa-times"></i> Batal',
@@ -460,12 +459,12 @@ $(function () {
       cancelButtonColor: "#6c757d",
       reverseButtons: true,
       customClass: {
-        popup: "swal2-custom-popup",
+        popup: "swal2-square-popup",
         confirmButton: "btn btn-danger",
         cancelButton: "btn btn-secondary",
       },
       buttonsStyling: false,
-      width: "500px",
+      width: "420px",
     }).then((result) => {
       if (result.isConfirmed) {
         // Show loading state
