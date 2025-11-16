@@ -84,6 +84,49 @@ function clearBlacklist() {
   localStorage.removeItem("lastAddTime");
 }
 
+// Show confirmation dialog (konsisten dengan desain square popup)
+function showConfirmDialog(options) {
+  const defaults = {
+    title: "Konfirmasi",
+    message: "Apakah Anda yakin?",
+    icon: "warning",
+    iconColor: "#ffc107",
+    confirmText: "Ya",
+    cancelText: "Batal",
+    confirmColor: "#dc3545",
+    cancelColor: "#6c757d",
+  };
+
+  const config = { ...defaults, ...options };
+
+  return Swal.fire({
+    title: config.title,
+    html: `
+      <div style="text-align: center; padding: 15px 5px;">
+        <div style="margin-bottom: 25px;">
+          <i class="fas fa-exclamation-circle" style="color: ${config.iconColor}; font-size: 64px;"></i>
+        </div>
+        <p style="margin: 0; color: #495057; font-size: 15px;">
+          ${config.message}
+        </p>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: config.confirmText,
+    cancelButtonText: config.cancelText,
+    confirmButtonColor: config.confirmColor,
+    cancelButtonColor: config.cancelColor,
+    reverseButtons: true,
+    customClass: {
+      popup: "swal2-square-popup",
+      confirmButton: "btn btn-danger btn-square",
+      cancelButton: "btn btn-secondary btn-square",
+    },
+    buttonsStyling: false,
+    width: "450px",
+  });
+}
+
 // AJAX Error Handler
 function handleAjaxError(xhr, status, error) {
   console.error("AJAX Error:", { xhr, status, error });

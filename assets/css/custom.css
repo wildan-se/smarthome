@@ -2035,6 +2035,19 @@ code {
   border: none !important;
 }
 
+.swal2-square-popup .btn-info {
+  background-color: #17a2b8 !important;
+  border-color: #17a2b8 !important;
+  color: white !important;
+}
+
+.swal2-square-popup .btn-info:hover {
+  background-color: #138496 !important;
+  border-color: #117a8b !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3) !important;
+}
+
 .swal2-custom-popup .swal2-title {
   font-size: 1.5rem !important;
   font-weight: 700 !important;

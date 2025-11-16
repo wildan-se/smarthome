@@ -322,11 +322,34 @@ $(function () {
     client.publish(`${topicRoot}/rfid/register`, uid);
 
     Swal.fire({
-      title: "Menunggu Konfirmasi",
-      html: `Mengirim kartu <code><strong>${uid}</strong></code><br><strong>${name}</strong><br>ke ESP32...`,
-      icon: "info",
+      title: "Menambah Kartu",
+      html: `
+        <div style="text-align: center; padding: 15px 5px;">
+          <div style="margin-bottom: 25px;">
+            <i class="fas fa-paper-plane" style="color: #17a2b8; font-size: 64px;"></i>
+          </div>
+          <p style="margin: 0 0 12px 0; color: #495057; font-size: 15px;">
+            UID Kartu
+          </p>
+          <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px;">
+            <code style="font-size: 20px; font-weight: 700; color: #17a2b8; letter-spacing: 1px;">${uid}</code>
+          </div>
+          <p style="margin: 0 0 8px 0; color: #495057; font-size: 15px; font-weight: 600;">
+            ${name}
+          </p>
+          <p style="margin: 0; color: #6c757d; font-size: 14px;">
+            sedang dikirim ke ESP32...
+          </p>
+        </div>
+      `,
+      confirmButtonText: "OK",
       confirmButtonColor: "#17a2b8",
-      confirmButtonText: '<i class="fas fa-check"></i> OK',
+      customClass: {
+        popup: "swal2-square-popup",
+        confirmButton: "btn btn-info btn-square",
+      },
+      buttonsStyling: false,
+      width: "450px",
       timer: 3000,
     });
 
