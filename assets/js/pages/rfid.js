@@ -464,7 +464,7 @@ $(function () {
         cancelButton: "btn btn-secondary",
       },
       buttonsStyling: false,
-      width: "420px",
+      width: "400px",
     }).then((result) => {
       if (result.isConfirmed) {
         // Show loading state

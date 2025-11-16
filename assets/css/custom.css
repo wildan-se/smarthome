@@ -1993,7 +1993,8 @@ code {
 .swal2-square-popup {
   border-radius: 16px !important;
   padding: 30px 25px !important;
-  min-height: 380px !important;
+  min-height: 400px !important;
+  max-height: 400px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
