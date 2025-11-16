@@ -163,13 +163,34 @@ $(function () {
         function (res) {
           if (res.success) {
             console.log(`✅ Database removal successful for UID: ${data.uid}`);
+
+            // Animate row removal from UI first
+            let rowFound = false;
+            $("#tableRFID tbody tr").each(function () {
+              const rowUID = $(this).find("code").text();
+              if (rowUID === data.uid) {
+                rowFound = true;
+                $(this).addClass("table-danger");
+                $(this).fadeOut(400, function () {
+                  $(this).remove();
+                  // Refresh to ensure accurate count and numbering
+                  loadRFID();
+                  loadLog();
+                });
+              }
+            });
+
+            // If row not found (already removed or not visible), just refresh
+            if (!rowFound) {
+              console.log("⚠️ Row not found in UI, refreshing tables...");
+              loadRFID();
+              loadLog();
+            }
+
             Alert.success(
               "#addResult",
               `Kartu <code><strong>${data.uid}</strong></code> berhasil dihapus dari ESP32 dan Database!`
             );
-            // Refresh tables to ensure sync
-            loadRFID();
-            loadLog();
           } else {
             console.error(
               `❌ Database removal failed for UID: ${data.uid}`,
@@ -375,11 +396,13 @@ $(function () {
 
   // === LOAD RFID CARDS ===
   window.loadRFID = function () {
+    console.log("🔄 Loading RFID cards list...");
     $.get(
       "api/rfid_crud.php?action=list",
       function (res) {
+        console.log("📊 RFID Cards Response:", res);
         let rows = "";
-        if (res.success && res.data) {
+        if (res.success && res.data && res.data.length > 0) {
           res.data.forEach((card, index) => {
             rows += `
                         <tr class="fadeIn">
@@ -410,14 +433,24 @@ $(function () {
           $("#cardCount").html(
             `<i class="fas fa-id-card"></i> ${res.data.length} Kartu`
           );
+          console.log(`✅ Rendered ${res.data.length} cards`);
         } else {
           rows =
             '<tr><td colspan="6" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada kartu terdaftar</td></tr>';
+          $("#cardCount").html(`<i class="fas fa-id-card"></i> 0 Kartu`);
+          console.log("⚠️ No cards found");
         }
         $("#tableRFID tbody").html(rows);
       },
       "json"
-    ).fail(handleAjaxError);
+    ).fail(function (xhr, status, error) {
+      console.error("❌ Failed to load RFID cards:", error);
+      console.error("XHR:", xhr);
+      handleAjaxError(xhr, status, error);
+      $("#tableRFID tbody").html(
+        '<tr><td colspan="6" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i><br>Gagal memuat daftar kartu</td></tr>'
+      );
+    });
   };
 
   // === LOAD ACCESS LOGS ===
@@ -510,40 +543,20 @@ $(function () {
     }).then((result) => {
       if (result.isConfirmed) {
         // Show loading state
-        Alert.loading(
-          "#addResult",
-          "Menghapus kartu dari ESP32 dan Database..."
-        );
+        Alert.loading("#addResult", "Mengirim perintah hapus ke ESP32...");
 
-        // 1. Send remove command to ESP32 via MQTT
+        // Send remove command to ESP32 via MQTT
         console.log(`📤 Sending remove command to ESP32 for UID: ${uid}`);
         client.publish(`${topicRoot}/rfid/remove`, uid);
 
-        // 2. Remove from UI immediately with animation
-        $("#tableRFID tbody tr").each(function () {
-          const rowUID = $(this).find("code").text();
-          if (rowUID === uid) {
-            $(this).fadeOut(300, function () {
-              $(this).remove();
-              // Update card count
-              const remainingCards = $("#tableRFID tbody tr:visible").length;
-              $("#cardCount").html(
-                `<i class="fas fa-id-card"></i> ${remainingCards} Kartu`
-              );
-            });
-          }
-        });
+        // ESP32 will respond via MQTT /rfid/info with result
+        // The handleRFIDInfo function will:
+        // 1. Remove from database
+        // 2. Remove from UI with animation
+        // 3. Refresh loadRFID() to update count and numbering
+        // 4. Refresh loadLog() to update access history
 
-        // 3. ESP32 will respond via MQTT /rfid/info with result
-        // The handleRFIDInfo function will handle database removal
-
-        // Show success message
-        setTimeout(function () {
-          Alert.success(
-            "#addResult",
-            `Kartu <code><strong>${uid}</strong></code> berhasil dihapus dari ESP32, Database, dan UI!`
-          );
-        }, 500);
+        console.log("⏳ Waiting for ESP32 confirmation...");
       }
     });
   };
@@ -553,11 +566,12 @@ $(function () {
   loadRFID();
   loadLog();
 
-  // Auto-refresh every 10 seconds
+  // Auto-refresh every 15 seconds for both tables
   setInterval(function () {
-    console.log("⏰ Auto-refreshing RFID logs...");
+    console.log("⏰ Auto-refreshing RFID data...");
+    loadRFID();
     loadLog();
-  }, 10000);
+  }, 15000);
 
   console.log("✅ RFID page initialization complete");
 });
