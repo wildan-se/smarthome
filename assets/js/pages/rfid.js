@@ -18,6 +18,7 @@ $(function () {
   function clearBlacklist() {
     localStorage.removeItem("lastAddedUID");
     localStorage.removeItem("lastAddTime");
+    localStorage.removeItem("firstTapAfterAdd");
     console.log("🧹 Blacklist data cleared");
   }
 
@@ -109,13 +110,14 @@ $(function () {
       const name = localStorage.getItem("pendingCard_" + data.uid) || "";
       localStorage.removeItem("pendingCard_" + data.uid);
 
-      // Set blacklist
+      // Set blacklist untuk mencegah duplikasi tap pertama setelah add
       localStorage.setItem("lastAddedUID", data.uid);
       localStorage.setItem("lastAddTime", Date.now().toString());
+      localStorage.removeItem("firstTapAfterAdd"); // Reset flag
       console.log(
         "✅ Blacklist set for:",
         data.uid,
-        "- Will skip in access log for 3 seconds"
+        "- Will block first tap only to prevent duplicate"
       );
 
       // Clear blacklist after 3 seconds
@@ -247,20 +249,25 @@ $(function () {
       return;
     }
 
-    // Check blacklist
+    // Check blacklist - hanya untuk mencegah duplikasi saat PERTAMA kali setelah add
     const pendingUID = localStorage.getItem("lastAddedUID");
     const addTime = localStorage.getItem("lastAddTime");
+    const isFirstTapAfterAdd = localStorage.getItem("firstTapAfterAdd");
+
     if (pendingUID && pendingUID === uid && addTime) {
       const timeDiff = Date.now() - parseInt(addTime);
 
-      if (timeDiff > 0 && timeDiff < 3000) {
+      // Hanya block jika ini tap PERTAMA setelah add (dalam 3 detik)
+      if (timeDiff > 0 && timeDiff < 3000 && isFirstTapAfterAdd !== "done") {
         console.log(
-          "⚠️ BLOCKED: Newly added card from access log:",
+          "⚠️ BLOCKED: First tap after adding card (preventing duplicate):",
           uid,
           "Time diff:",
           timeDiff,
           "ms"
         );
+        // Tandai bahwa tap pertama sudah di-block, tap selanjutnya diizinkan
+        localStorage.setItem("firstTapAfterAdd", "done");
         return;
       } else if (timeDiff >= 3000) {
         console.log(
@@ -281,6 +288,8 @@ $(function () {
 
     // Log access
     if (data.status) {
+      console.log(`📝 Logging access for UID: ${uid}, Status: ${data.status}`);
+
       $.post(
         "api/rfid_crud.php?action=log",
         {
@@ -289,12 +298,20 @@ $(function () {
         },
         function (res) {
           if (res.success) {
+            console.log(`✅ Access logged successfully for UID: ${uid}`);
+
+            // Refresh log table setelah sukses
             setTimeout(function () {
               console.log("🔄 Refreshing RFID access log...");
               loadLog();
-            }, 500);
+            }, 300);
 
             if (!data.uid) lastScannedUID = "";
+          } else {
+            console.warn(
+              `⚠️ Access log skipped or failed for UID: ${uid}`,
+              res
+            );
           }
         },
         "json"
