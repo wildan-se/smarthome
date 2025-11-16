@@ -14,6 +14,13 @@ $(function () {
     };
   }
 
+  // Helper function to clear blacklist
+  function clearBlacklist() {
+    localStorage.removeItem("lastAddedUID");
+    localStorage.removeItem("lastAddTime");
+    console.log("🧹 Blacklist data cleared");
+  }
+
   // Clear stale blacklist data on page load
   console.log("🧹 Clearing stale blacklist data on page load...");
   clearBlacklist();
