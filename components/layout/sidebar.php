@@ -28,11 +28,6 @@ function renderSidebar($activePage = '')
       'text' => 'Kontrol Pintu',
       'url' => 'kontrol.php'
     ],
-    'wifi' => [
-      'icon' => 'wifi',
-      'text' => 'Konfigurasi WiFi',
-      'url' => 'wifi.php'
-    ],
     'log' => [
       'icon' => 'clipboard-list',
       'text' => 'Log Aktivitas',
@@ -42,6 +37,11 @@ function renderSidebar($activePage = '')
       'icon' => 'file-export',
       'text' => 'Export Data',
       'url' => 'export.php'
+    ],
+    'wifi' => [
+      'icon' => 'wifi',
+      'text' => 'Konfigurasi WiFi',
+      'url' => 'wifi.php'
     ]
   ];
 ?>
