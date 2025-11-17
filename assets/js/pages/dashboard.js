@@ -25,7 +25,7 @@ $(function () {
   let controlSource = "rfid";
   let isESP32Online = false;
   let esp32HeartbeatTimer = null;
-  const HEARTBEAT_TIMEOUT = 10000;
+  const HEARTBEAT_TIMEOUT = 8000; // 8 detik (ESP32 kirim setiap 5 detik)
 
   // Initialize Chart.js
   const ctx = document.getElementById("dhtChart").getContext("2d");
