@@ -85,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-size: 2.5rem;
       background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
