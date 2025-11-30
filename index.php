@@ -227,7 +227,7 @@ $pageJS = [
                     </span>
                     <div class="info-box-content">
                       <span class="info-box-text">Total Kartu Terdaftar</span>
-                      <span class="info-box-number"><?= number_format($total_cards) ?></span>
+                      <span class="info-box-number" id="total-cards"><?= number_format($total_cards) ?></span>
                       <div class="progress">
                         <div class="progress-bar bg-primary" style="width: 100%"></div>
                       </div>
@@ -241,7 +241,7 @@ $pageJS = [
                     </span>
                     <div class="info-box-content">
                       <span class="info-box-text">Akses Hari Ini</span>
-                      <span class="info-box-number"><?= number_format($today_access) ?></span>
+                      <span class="info-box-number" id="total-logs"><?= number_format($today_access) ?></span>
                       <div class="progress">
                         <div class="progress-bar bg-success" style="width: 70%"></div>
                       </div>
