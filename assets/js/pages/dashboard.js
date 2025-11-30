@@ -1,15 +1,7 @@
-/**
- * Dashboard Page JavaScript
- * Handle MQTT, real-time updates (AJAX Polling), and Charts
- */
-
-console.log("🚀 Dashboard.js loaded - Version:", new Date().toISOString());
-
 $(function () {
   "use strict";
 
   // Clear stale blacklist data on page load
-  console.log("🧹 Clearing stale blacklist data on page load...");
   if (typeof clearBlacklist === "function") {
     clearBlacklist();
   }
@@ -24,10 +16,9 @@ $(function () {
   const mqttProtocol = window.mqttConfig.protocol;
 
   // Variable untuk tracking
-  let controlSource = "rfid";
   let isESP32Online = false;
   let esp32HeartbeatTimer = null;
-  const HEARTBEAT_TIMEOUT = 8000; // 8 detik
+  const HEARTBEAT_TIMEOUT = 10000; // Naikkan ke 10 detik agar tidak flicker
 
   // === 1. INITIALIZE CHART.JS ===
   const ctx = document.getElementById("dhtChart").getContext("2d");
@@ -74,80 +65,54 @@ $(function () {
     },
   });
 
-  // === 2. AJAX POLLING FUNCTIONS (NEW UPDATE) ===
-
-  // Fungsi: Update Statistik Total (Kartu & Log Hari Ini)
+  // === 2. AJAX POLLING FUNCTIONS ===
   function updateDashboardStats() {
     $.ajax({
       url: "api/dashboard_stats.php",
       method: "GET",
       dataType: "json",
       success: function (data) {
-        // Update angka di HTML (Statistik Kanan)
         $("#total-cards").text(data.cards);
         $("#total-logs").text(data.logs_today);
       },
-      error: function (xhr, status, error) {
-        // Silent error agar console tidak penuh spam jika gagal sesekali
-        // console.warn("Gagal load stats:", error);
+      error: function (xhr) {
+        /* Silent error */
       },
     });
   }
 
-  // Fungsi: Update Info Akses RFID Terakhir (Kotak Kiri)
   function loadLastRFIDAccess() {
     $.get(
       "api/rfid_crud.php?action=getlogs&limit=1",
       function (res) {
         if (res.success && res.data && res.data.length > 0) {
-          const lastLog = res.data[0];
-          const uid = lastLog.uid || "-";
-          const name = lastLog.name || "Tidak Dikenal";
-          const status = lastLog.status || "-";
-          const time = lastLog.access_time || "-";
-
-          // Update Teks
+          const log = res.data[0];
           $("#last_rfid").html(
-            '<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">' +
-              uid +
-              "</code>"
+            `<code class="text-dark" style="font-size: 1.3rem; font-weight: bold;">${log.uid}</code>`
           );
-          $("#last_rfid_name").html("<strong>" + name + "</strong>");
-          $("#last_rfid_time").text(time);
+          $("#last_rfid_name").html(
+            `<strong>${log.name || "Tidak Dikenal"}</strong>`
+          );
+          $("#last_rfid_time").text(log.access_time);
 
-          // Update Badge Status
           const statusElem = $("#last_rfid_status");
           statusElem.removeClass("badge-danger badge-secondary badge-success");
 
-          if (status === "granted") {
+          if (log.status === "granted") {
             statusElem
               .addClass("badge-success")
               .html('<i class="fas fa-check-circle"></i> Akses Diterima');
-          } else if (status === "denied") {
+          } else {
             statusElem
               .addClass("badge-danger")
               .html('<i class="fas fa-times-circle"></i> Akses Ditolak');
-          } else {
-            statusElem.addClass("badge-secondary").html("Status Tidak Dikenal");
           }
-        } else {
-          // Jika kosong
-          $("#last_rfid").html('<code class="text-muted">-</code>');
-          $("#last_rfid_name").html(
-            '<em class="text-muted">Belum ada akses</em>'
-          );
-          $("#last_rfid_time").text("-");
-          $("#last_rfid_status")
-            .removeClass("badge-success badge-danger")
-            .addClass("badge-secondary")
-            .html("Belum Ada Data");
         }
       },
       "json"
     );
   }
 
-  // Fungsi: Load DHT Terakhir dari Database (Backup jika MQTT putus)
   function loadLatestDHT() {
     $.get(
       "api/dht_log.php?action=latest",
@@ -155,31 +120,13 @@ $(function () {
         if (res.success && res.data) {
           const temp = parseFloat(res.data.temperature);
           const hum = parseFloat(res.data.humidity);
-
           if (!isNaN(temp)) {
             $("#temperature").text(temp.toFixed(1));
-            // Logika Status Suhu
-            if (temp > 30)
-              $("#temp_status").html('<i class="fas fa-fire"></i> Panas');
-            else if (temp < 20)
-              $("#temp_status").html('<i class="fas fa-snowflake"></i> Dingin');
-            else
-              $("#temp_status").html(
-                '<i class="fas fa-temperature-half"></i> Normal'
-              );
+            updateTempStatus(temp);
           }
-
           if (!isNaN(hum)) {
             $("#humidity").text(hum.toFixed(1));
-            // Logika Status Kelembapan
-            if (hum > 70)
-              $("#humidity_status").html('<i class="fas fa-tint"></i> Lembab');
-            else if (hum < 30)
-              $("#humidity_status").html('<i class="fas fa-burn"></i> Kering');
-            else
-              $("#humidity_status").html(
-                '<i class="fas fa-droplet"></i> Normal'
-              );
+            updateHumStatus(hum);
           }
         }
       },
@@ -187,31 +134,12 @@ $(function () {
     );
   }
 
-  // Fungsi: Load Status Kipas Terakhir
   function loadLatestFanStatus() {
     $.get(
       "api/kipas_crud.php?action=get_latest_status",
       function (res) {
         if (res.success && res.data) {
-          const status = res.data.status === "on";
-          const isAuto = res.data.mode === "auto";
-
-          // Update UI Kipas
-          $("#fan_status_text").text(status ? "ON" : "OFF");
-          $("#fan_card")
-            .removeClass("bg-success bg-danger bg-warning bg-secondary")
-            .addClass(status ? "bg-success" : "bg-danger");
-
-          const fanIcon = $("#fan_icon_dashboard");
-          if (status) fanIcon.addClass("fan-spinning");
-          else fanIcon.removeClass("fan-spinning");
-
-          $("#fan_mode_text").html(
-            '<i class="fas fa-' +
-              (isAuto ? "magic" : "hand-pointer") +
-              '"></i> Mode: ' +
-              (isAuto ? "Auto" : "Manual")
-          );
+          updateFanUI(res.data.status === "on", res.data.mode === "auto");
         }
       },
       "json"
@@ -230,15 +158,18 @@ $(function () {
     $("#esp_connection_time").text(
       "Terhubung pada " + new Date().toLocaleTimeString("id-ID")
     );
+
     client.subscribe(`${topicRoot}/#`);
     client.subscribe(statusTopic);
-    client.publish(`${topicRoot}/system/ping`, "request_status");
+
+    // Status awal: Checking
     updateESP32Status("checking");
     updateFanStatus("checking");
 
+    // Timeout Check awal (jika tidak ada respon sama sekali dalam 5 detik)
     setTimeout(() => {
       const currentStatus = $("#esp_status").text().trim();
-      if (currentStatus.includes("Checking")) {
+      if (currentStatus.toLowerCase().includes("checking")) {
         updateESP32Status("offline");
         updateFanStatus("offline");
       }
@@ -246,144 +177,96 @@ $(function () {
   });
 
   client.on("offline", () => {
-    $("#esp_connection_time").text("Terputus...");
     updateESP32Status("offline");
     updateFanStatus("offline");
   });
 
-  client.on("message", (topic, message) => {
+  // ✅ FIX UTAMA DI SINI: Tambahkan parameter 'packet'
+  client.on("message", (topic, message, packet) => {
     const msg = message.toString();
-    resetHeartbeat();
 
-    // Routing Pesan MQTT ke Fungsi Handler
-    if (topic === statusTopic) handleESP32Status(msg);
+    // 1. Cek Topik Status Khusus (Prioritas Tertinggi)
+    // Ini menangani LWT (Last Will) dari ESP32
+    if (topic === statusTopic) {
+      handleESP32Status(msg);
+      return; // Jangan lanjut ke logika heartbeat biasa
+    }
+
+    // 2. Logika Heartbeat (Hanya untuk pesan BARU/LIVE)
+    // packet.retain = true berarti pesan lama yang disimpan broker.
+    // Kita HANYA reset heartbeat jika packet.retain = false.
+    if (!packet.retain) {
+      resetHeartbeat();
+    } else {
+      console.log(`⚠️ Ignored retained message on ${topic}: ${msg}`);
+    }
+
+    // 3. Routing Pesan ke Handler
     if (topic === `${topicRoot}/pintu/status`) handleDoorStatus(msg);
     if (topic === `${topicRoot}/dht/temperature`) handleTemperature(msg);
     if (topic === `${topicRoot}/dht/humidity`) handleHumidity(msg);
+    if (topic === `${topicRoot}/rfid/access`) handleRFIDAccess(msg);
 
-    // Handler Kipas (Kompleks)
+    // Handler Kipas
     if (topic === `${topicRoot}/kipas/status`) {
       const parts = msg.split(",");
       const fanStatus = parts[0] ? parts[0].toLowerCase().trim() : "";
       const fanMode = parts[1] ? parts[1].toLowerCase().trim() : "";
 
       if (fanStatus) {
-        const isOn = fanStatus === "on";
-        $("#fan_status_text").text(isOn ? "ON" : "OFF");
-        $("#fan_card")
-          .removeClass("bg-success bg-danger")
-          .addClass(isOn ? "bg-success" : "bg-danger");
-
-        if (isOn) $("#fan_icon_dashboard").addClass("fan-spinning");
-        else $("#fan_icon_dashboard").removeClass("fan-spinning");
-
-        if (fanMode) {
-          const isAuto = fanMode === "auto";
-          $("#fan_mode_text").html(
-            '<i class="fas fa-' +
-              (isAuto ? "magic" : "hand-pointer") +
-              '"></i> Mode: ' +
-              (isAuto ? "Auto" : "Manual")
-          );
-        }
-        markESP32Online();
+        updateFanUI(fanStatus === "on", fanMode === "auto");
+        // Jika pesan ini live, tandai online
+        if (!packet.retain) resetHeartbeat();
       }
-    }
-
-    // Handler RFID (Realtime Pop-up)
-    if (topic === `${topicRoot}/rfid/access`) {
-      handleRFIDAccess(msg);
     }
   });
 
-  // === HANDLER FUNCTIONS INTERNAL ===
+  // === HANDLER FUNCTIONS ===
+
   function handleESP32Status(msg) {
+    console.log("Status Topic Received:", msg);
     if (msg === "online") {
       updateESP32Status("online");
       updateFanStatus("online");
+      // Minta update status relay terbaru saat online
+      client.publish(`${topicRoot}/relay/request_status`, "1");
     } else {
       updateESP32Status("offline");
       updateFanStatus("offline");
     }
   }
 
-  function handleDoorStatus(msg) {
-    const isOpen = msg === "terbuka";
-    const updateTime = new Date().toLocaleTimeString("id-ID");
-    $("#door_status").text(isOpen ? "Terbuka" : "Tertutup");
-    $("#door_status")
-      .closest(".small-box")
-      .removeClass("bg-success bg-warning")
-      .addClass(isOpen ? "bg-warning" : "bg-success");
-    $("#door_icon")
-      .removeClass("fa-door-closed fa-door-open")
-      .addClass(isOpen ? "fa-door-open" : "fa-door-closed");
-    $("#door_last_update").html(
-      '<i class="fas fa-door-' +
-        (isOpen ? "open" : "closed") +
-        '"></i> Update: ' +
-        updateTime
-    );
-    markESP32Online();
-  }
-
-  function handleTemperature(msg) {
-    const temp = parseFloat(msg);
-    if (!isNaN(temp)) {
-      $("#temperature").text(temp.toFixed(1));
-      addChartData("temperature", temp);
-      markESP32Online();
-    }
-  }
-
-  function handleHumidity(msg) {
-    const hum = parseFloat(msg);
-    if (!isNaN(hum)) {
-      $("#humidity").text(hum.toFixed(1));
-      addChartData("humidity", hum);
-      markESP32Online();
-    }
-  }
-
-  function handleRFIDAccess(msg) {
-    try {
-      const data = JSON.parse(msg);
-      const uid = data.uid || "";
-      const status = data.status || "";
-
-      // Update tampilan langsung dari MQTT biar cepat
-      $("#last_rfid").text(uid);
-
-      // Delay sedikit lalu reload data lengkap (nama user dll) dari database
-      setTimeout(loadLastRFIDAccess, 500);
-
-      // Reload statistik juga karena ada akses baru
-      setTimeout(updateDashboardStats, 500);
-
-      markESP32Online();
-    } catch (e) {}
-  }
-
   function resetHeartbeat() {
     if (esp32HeartbeatTimer) clearTimeout(esp32HeartbeatTimer);
+
+    // Jika sebelumnya offline/checking, ubah jadi online sekarang
     if (!isESP32Online) {
       isESP32Online = true;
       updateESP32Status("online");
+      updateFanStatus("online");
     }
+
+    // Set timer mati otomatis jika tidak ada pesan baru selama 10 detik
     esp32HeartbeatTimer = setTimeout(() => {
+      console.log("💔 Heartbeat timeout - Device silent for too long");
       updateESP32Status("offline");
+      updateFanStatus("offline");
+      isESP32Online = false;
     }, HEARTBEAT_TIMEOUT);
   }
 
   function updateESP32Status(status) {
     const statusBox = $("#esp_status");
     const statusCard = statusBox.closest(".small-box");
+
     if (status === "online") {
       statusBox.text("Online");
       statusCard.removeClass("bg-danger bg-warning").addClass("bg-info");
+      isESP32Online = true;
     } else if (status === "offline") {
       statusBox.text("Offline");
       statusCard.removeClass("bg-info bg-warning").addClass("bg-danger");
+      $("#esp_connection_time").text("Terputus...");
       isESP32Online = false;
     } else {
       statusBox.html('<i class="fas fa-spinner fa-spin"></i> Checking...');
@@ -392,7 +275,6 @@ $(function () {
   }
 
   function updateFanStatus(status) {
-    // Helper sederhana untuk status icon kipas saat offline
     if (status === "offline") {
       $("#fan_status_text").html(
         '<i class="fas fa-exclamation-triangle"></i> Offline'
@@ -404,8 +286,80 @@ $(function () {
     }
   }
 
-  function markESP32Online() {
-    resetHeartbeat();
+  function updateFanUI(isOn, isAuto) {
+    $("#fan_status_text").text(isOn ? "ON" : "OFF");
+    $("#fan_card")
+      .removeClass("bg-success bg-danger bg-warning bg-secondary")
+      .addClass(isOn ? "bg-success" : "bg-danger");
+
+    if (isOn) $("#fan_icon_dashboard").addClass("fan-spinning");
+    else $("#fan_icon_dashboard").removeClass("fan-spinning");
+
+    $("#fan_mode_text").html(
+      `<i class="fas fa-${isAuto ? "magic" : "hand-pointer"}"></i> Mode: ${
+        isAuto ? "Auto" : "Manual"
+      }`
+    );
+  }
+
+  // --- Handlers UI Lainnya ---
+  function handleDoorStatus(msg) {
+    const isOpen = msg === "terbuka";
+    $("#door_status").text(isOpen ? "Terbuka" : "Tertutup");
+    $("#door_status")
+      .closest(".small-box")
+      .removeClass("bg-success bg-warning")
+      .addClass(isOpen ? "bg-warning" : "bg-success");
+    $("#door_icon")
+      .removeClass("fa-door-closed fa-door-open")
+      .addClass(isOpen ? "fa-door-open" : "fa-door-closed");
+    $("#door_last_update").html(
+      '<i class="fas fa-clock"></i> Update: ' +
+        new Date().toLocaleTimeString("id-ID")
+    );
+  }
+
+  function handleTemperature(msg) {
+    const temp = parseFloat(msg);
+    if (!isNaN(temp)) {
+      $("#temperature").text(temp.toFixed(1));
+      updateTempStatus(temp);
+      addChartData("temperature", temp);
+    }
+  }
+
+  function handleHumidity(msg) {
+    const hum = parseFloat(msg);
+    if (!isNaN(hum)) {
+      $("#humidity").text(hum.toFixed(1));
+      updateHumStatus(hum);
+      addChartData("humidity", hum);
+    }
+  }
+
+  function handleRFIDAccess(msg) {
+    try {
+      const data = JSON.parse(msg);
+      $("#last_rfid").text(data.uid || "");
+      setTimeout(loadLastRFIDAccess, 500); // Reload detail dari DB
+      setTimeout(updateDashboardStats, 500);
+    } catch (e) {}
+  }
+
+  function updateTempStatus(temp) {
+    if (temp > 30) $("#temp_status").html('<i class="fas fa-fire"></i> Panas');
+    else if (temp < 20)
+      $("#temp_status").html('<i class="fas fa-snowflake"></i> Dingin');
+    else
+      $("#temp_status").html('<i class="fas fa-temperature-half"></i> Normal');
+  }
+
+  function updateHumStatus(hum) {
+    if (hum > 70)
+      $("#humidity_status").html('<i class="fas fa-tint"></i> Lembab');
+    else if (hum < 30)
+      $("#humidity_status").html('<i class="fas fa-burn"></i> Kering');
+    else $("#humidity_status").html('<i class="fas fa-droplet"></i> Normal');
   }
 
   function addChartData(type, value) {
@@ -419,28 +373,23 @@ $(function () {
       dhtChart.data.datasets[0].data.shift();
       dhtChart.data.datasets[1].data.shift();
     }
-    // Logic chart update sederhana
-    if (
-      dhtChart.data.labels.length === 0 ||
-      dhtChart.data.labels[dhtChart.data.labels.length - 1] !== now
-    ) {
+    const len = dhtChart.data.labels.length;
+    if (len === 0 || dhtChart.data.labels[len - 1] !== now) {
       dhtChart.data.labels.push(now);
       dhtChart.data.datasets[0].data.push(
         type === "temperature" ? value : null
       );
       dhtChart.data.datasets[1].data.push(type === "humidity" ? value : null);
     } else {
-      const lastIndex = dhtChart.data.labels.length - 1;
+      const lastIdx = len - 1;
       if (type === "temperature")
-        dhtChart.data.datasets[0].data[lastIndex] = value;
-      else dhtChart.data.datasets[1].data[lastIndex] = value;
+        dhtChart.data.datasets[0].data[lastIdx] = value;
+      else dhtChart.data.datasets[1].data[lastIdx] = value;
     }
     dhtChart.update("none");
   }
 
   // === 4. GLOBAL INITIALIZATION ===
-
-  // Expose fungsi refresh untuk tombol manual
   window.loadLastRFID = function () {
     loadLastRFIDAccess();
     updateDashboardStats();
@@ -450,16 +399,15 @@ $(function () {
   loadLastRFIDAccess();
   loadLatestDHT();
   loadLatestFanStatus();
-  updateDashboardStats(); // <--- INI YANG BARU
+  updateDashboardStats();
 
-  // Auto-Refresh Interval (Polling)
-  // Kita set 3 detik agar terasa "realtime" untuk statistik & akses terakhir
+  // Auto-Refresh Interval
   setInterval(function () {
     loadLastRFIDAccess();
-    updateDashboardStats(); // <--- Statistik ikut di-refresh
+    updateDashboardStats();
   }, 3000);
 
-  // Handle Resize Chart AdminLTE
+  // Resize Chart Handler
   $('[data-card-widget="collapse"]').on("click", function () {
     setTimeout(() => {
       if (dhtChart) dhtChart.resize();
