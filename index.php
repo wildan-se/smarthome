@@ -258,8 +258,8 @@ $pageJS = [
             <div class="col-12">
               <div class="card card-primary shadow-md fade-in" id="chartCard">
                 <div class="card-header">
-                  <h3 class="card-title">
-                    <i class="fas fa-chart-line mr-2"></i>Grafik Suhu & Kelembapan Real-time
+                  <h3 class="card-title text-dark">
+                    <i class="fas fa-chart-line mr-2 "></i>Grafik Suhu & Kelembapan Real-time
                   </h3>
                   <div class="card-tools">
                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
