@@ -1,160 +1,99 @@
-# ============================================
-# SENSITIVE FILES - CREDENTIALS & SECRETS
-# ============================================
-# ⚠️ DO NOT COMMIT THESE FILES!
 
-# Database configuration
+# === SENSITIVE FILES ===
 config/config.php
 config/database.php
-
-# Environment files
 *.env
-.env
-.env.local
-.env.production
+.env*
 
-# ESP32 firmware with WiFi/MQTT credentials
-*.ino
-*.cpp
-*.h
-ESP32_*.ino
-
-# Backup files with potential credentials
+# === BACKUP & DATA ===
 *_backup.*
 *_old.*
-
-# ============================================
-# EXPORT & DATA FILES
-# ============================================
-
-# Export folder (may contain sensitive user data)
-export/*
-!export/.gitkeep
-
-# Database dumps & SQL files
 *.sql
 *.dump
 *.sqlite
 *.db
-
-# Log files with sensitive data
 *.log
 
-# ============================================
-# DEPENDENCIES & VENDOR
-# ============================================
+# === EXPORT DATA ===
+export/*
+!export/.gitkeep
 
-# PHP Composer
+# === DEPENDENCIES ===
 vendor/
-composer.lock
-
-# Node modules
 node_modules/
 package-lock.json
 
-# ============================================
-# DEVELOPMENT & BUILD FILES
-# ============================================
-
-# IDE & Editor
+# === IDE & EDITOR ===
 .idea/
-nbproject/
 .vscode/
 .vs/
+nbproject/
 *.sublime-*
 *.swp
 *.swo
 
-# Build output
+# === BUILD & CACHE ===
 dist/
 build/
 .astro/
-
-# TypeScript & JavaScript build files (PHP project only)
-src/
-tsconfig.json
-rollup.config.js
-*.js.map
-
-# GitHub Actions workflows (PHP project - tidak perlu CI/CD Node.js)
-.github/
-
-# Cache & Temp
 .cache/
 *.cache
 *.tmp
 *.temp
 tmp/
 temp/
-
-# Sass Cache
 .sass-cache/
 
-# ============================================
-# SYSTEM FILES
-# ============================================
-
-# macOS
+# === SYSTEM FILES ===
 *.DS_Store
-._*
-
-# Windows
 Thumbs.db
 desktop.ini
 $RECYCLE.BIN/
-
-# Linux
 *~
 .directory
 
-# ============================================
-# ARCHIVES
-# ============================================
-
+# === ARCHIVES ===
 *.zip
 *.rar
 *.7z
 *.tar
 *.gz
 
-# ============================================
-# TEST & DEBUG FILES
-# ============================================
+# === TEST & DEBUG ===
+test_*.php
+test_*.html
+test.html
+test_mqtt.html
+ad.js
+check_*.php
+fix_*.php
+truncate_*.php
+clear_*.php
+setup_*.php
+migrate_*.php
+update_*.php
+reset_*.php
 
-# Personal notes
-TODO
+# === SESSION ===
+sessions/
+*.session
+
+# === DOCS & NOTES ===
 NOTES.md
+TODO
 CLAUDE.md
-
-# Development documentation (keep README.md only)
 DOKUMENTASI_*.md
-FIX_*.md
 PERBAIKAN_*.md
 UPDATE_*.md
 IMPROVEMENT_*.md
 UI_*.md
 RFID_*.md
 
-# Test files
-test.html
-test_*.php
-test_*.html
-test_mqtt.html
-ad.js
+# === GITHUB WORKFLOWS ===
+.github/
 
-# Debug & fix scripts
-check_*.php
-fix_*.php
-truncate_*.php
-clear_*.php
+# === KEEP MAIN DOCS ===
+!README.md
 
-# Setup & migration scripts (one-time use)
-setup_config.php
-setup_manual_control.php
-migrate_*.php
-update_rfid_table.php
-reset_password.php
-
-# Session files
-sessions/
-*.session
+# === EXCLUDE SENSITIVE HASH ===
+hash.php
