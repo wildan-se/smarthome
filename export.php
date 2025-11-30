@@ -129,7 +129,7 @@ $pageJS = [
                       <label class="font-weight-bold">
                         <i class="fas fa-filter"></i> Filter Status:
                       </label>
-                      <select class="form-control" name="status">
+                      <select class="form-control p-1" name="status">
                         <option value="">Semua Status</option>
                         <option value="granted">✅ Akses Diterima</option>
                         <option value="denied">❌ Akses Ditolak</option>
@@ -254,7 +254,7 @@ $pageJS = [
                       <label class="font-weight-bold">
                         <i class="fas fa-filter"></i> Filter Status:
                       </label>
-                      <select class="form-control" name="status">
+                      <select class="form-control p-1" name="status">
                         <option value="">Semua Status</option>
                         <option value="terbuka">🔓 Terbuka</option>
                         <option value="tertutup">🔒 Tertutup</option>
