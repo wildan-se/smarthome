@@ -1,82 +1,251 @@
--- Struktur Database Smarthome IoT
+-- phpMyAdmin SQL Dump
+-- version 4.9.0.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: sql104.byetcluster.com
+-- Generation Time: Nov 29, 2025 at 10:38 PM
+-- Server version: 11.4.7-MariaDB
+-- PHP Version: 7.2.22
 
--- Tabel User Admin
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(50) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
-  email VARCHAR(100),
-  role VARCHAR(20) DEFAULT 'admin',
-  reset_token VARCHAR(255),
-  last_login DATETIME
-);
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
 
--- Tabel Kartu RFID
-CREATE TABLE rfid_cards (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  uid VARCHAR(32) NOT NULL UNIQUE,
-  added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  added_by INT,
-  FOREIGN KEY (added_by) REFERENCES users(id)
-);
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
--- Tabel Log Akses RFID
-CREATE TABLE rfid_logs (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  uid VARCHAR(32) NOT NULL,
-  access_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-  status ENUM('granted','denied') NOT NULL,
-  FOREIGN KEY (uid) REFERENCES rfid_cards(uid)
-);
+--
+-- Database: `if0_40544222_smarthome`
+--
 
--- Tabel Log Suhu & Kelembapan
-CREATE TABLE dht_logs (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  temperature FLOAT,
-  humidity FLOAT,
-  log_time DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- --------------------------------------------------------
 
--- Tabel Status Pintu
-CREATE TABLE door_status (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  status ENUM('terbuka','tertutup') NOT NULL,
-  source ENUM('manual', 'rfid', 'auto') DEFAULT 'manual',
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+--
+-- Table structure for table `config`
+--
 
--- Tabel Konfigurasi MQTT & Device
-CREATE TABLE config (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  broker VARCHAR(100),
-  mqtt_username VARCHAR(50),
-  mqtt_password VARCHAR(100),
-  topic_root VARCHAR(100),
-  device_serial VARCHAR(20),
-  sensor_interval INT DEFAULT 10
-);
+CREATE TABLE `config` (
+  `id` int(11) NOT NULL,
+  `config_key` varchar(100) NOT NULL,
+  `config_value` text DEFAULT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
--- Tabel Konfigurasi Kipas Otomatis
-CREATE TABLE fan_config (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  mode ENUM('auto', 'manual') DEFAULT 'auto',
-  threshold_temp_on FLOAT DEFAULT 34.0,
-  threshold_temp_off FLOAT DEFAULT 28.0,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  updated_by INT,
-  FOREIGN KEY (updated_by) REFERENCES users(id)
-);
+-- --------------------------------------------------------
 
--- Tabel Log Kipas (mode auto)
-CREATE TABLE fan_logs (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  status ENUM('on', 'off') NOT NULL,
-  temperature FLOAT,
-  humidity FLOAT,
-  triggered_by ENUM('auto', 'manual') DEFAULT 'auto',
-  logged_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+--
+-- Table structure for table `dht_logs`
+--
 
--- Insert default fan config
-INSERT INTO fan_config (mode, threshold_temp_on, threshold_temp_off) 
-VALUES ('auto', 34.0, 28.0);
+CREATE TABLE `dht_logs` (
+  `id` int(11) NOT NULL,
+  `temperature` float DEFAULT NULL,
+  `humidity` float DEFAULT NULL,
+  `log_time` datetime DEFAULT current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `door_status`
+--
+
+CREATE TABLE `door_status` (
+  `id` int(11) NOT NULL,
+  `status` enum('terbuka','tertutup') NOT NULL,
+  `source` enum('manual','rfid','auto') DEFAULT 'manual',
+  `updated_at` datetime DEFAULT current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `fan_config`
+--
+
+CREATE TABLE `fan_config` (
+  `id` int(11) NOT NULL,
+  `mode` enum('auto','manual') DEFAULT 'auto',
+  `threshold_temp_on` float DEFAULT 34,
+  `threshold_temp_off` float DEFAULT 28,
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `updated_by` int(11) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `fan_logs`
+--
+
+CREATE TABLE `fan_logs` (
+  `id` int(11) NOT NULL,
+  `status` enum('on','off') NOT NULL,
+  `temperature` float DEFAULT NULL,
+  `humidity` float DEFAULT NULL,
+  `triggered_by` enum('auto','manual') DEFAULT 'auto',
+  `logged_at` datetime DEFAULT current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `rfid_cards`
+--
+
+CREATE TABLE `rfid_cards` (
+  `id` int(11) NOT NULL,
+  `uid` varchar(32) NOT NULL,
+  `name` varchar(100) DEFAULT 'Unnamed',
+  `added_at` datetime DEFAULT current_timestamp(),
+  `added_by` int(11) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `rfid_logs`
+--
+
+CREATE TABLE `rfid_logs` (
+  `id` int(11) NOT NULL,
+  `uid` varchar(32) NOT NULL,
+  `access_time` datetime DEFAULT current_timestamp(),
+  `status` enum('granted','denied') NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `role` varchar(20) DEFAULT 'admin',
+  `reset_token` varchar(255) DEFAULT NULL,
+  `last_login` datetime DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `config`
+--
+ALTER TABLE `config`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `config_key` (`config_key`);
+
+--
+-- Indexes for table `dht_logs`
+--
+ALTER TABLE `dht_logs`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `door_status`
+--
+ALTER TABLE `door_status`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `fan_config`
+--
+ALTER TABLE `fan_config`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `updated_by` (`updated_by`);
+
+--
+-- Indexes for table `fan_logs`
+--
+ALTER TABLE `fan_logs`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `rfid_cards`
+--
+ALTER TABLE `rfid_cards`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uid` (`uid`),
+  ADD KEY `added_by` (`added_by`);
+
+--
+-- Indexes for table `rfid_logs`
+--
+ALTER TABLE `rfid_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `uid` (`uid`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `config`
+--
+ALTER TABLE `config`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `dht_logs`
+--
+ALTER TABLE `dht_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `door_status`
+--
+ALTER TABLE `door_status`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `fan_config`
+--
+ALTER TABLE `fan_config`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `fan_logs`
+--
+ALTER TABLE `fan_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `rfid_cards`
+--
+ALTER TABLE `rfid_cards`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `rfid_logs`
+--
+ALTER TABLE `rfid_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
