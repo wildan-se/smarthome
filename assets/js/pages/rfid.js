@@ -118,17 +118,17 @@ $(function () {
       console.log(
         "✅ Blacklist set for:",
         data.uid,
-        "- Will block first tap only to prevent duplicate"
+        "- Will block first tap (1 second window)"
       );
 
-      // Clear blacklist after 3 seconds
+      // Clear blacklist after 1 second (dipercepat dari 3 detik)
       setTimeout(function () {
         const currentUID = localStorage.getItem("lastAddedUID");
         if (currentUID === data.uid) {
           clearBlacklist();
           console.log("🧹 Blacklist cleared for:", data.uid);
         }
-      }, 3000);
+      }, 1000);
 
       // Add card to database
       $.post(
@@ -386,7 +386,7 @@ $(function () {
       return;
     }
 
-    // Check blacklist - hanya untuk mencegah duplikasi saat PERTAMA kali setelah add
+    // Check blacklist - mencegah duplikasi tap pertama setelah add
     const pendingUID = localStorage.getItem("lastAddedUID");
     const addTime = localStorage.getItem("lastAddTime");
     const isFirstTapAfterAdd = localStorage.getItem("firstTapAfterAdd");
@@ -394,8 +394,8 @@ $(function () {
     if (pendingUID && pendingUID === uid && addTime) {
       const timeDiff = Date.now() - parseInt(addTime);
 
-      // Hanya block jika ini tap PERTAMA setelah add (dalam 3 detik)
-      if (timeDiff > 0 && timeDiff < 3000 && isFirstTapAfterAdd !== "done") {
+      // Block jika ini tap PERTAMA setelah add (dalam 1 detik)
+      if (timeDiff >= 0 && timeDiff < 1000 && isFirstTapAfterAdd !== "done") {
         console.log(
           "⚠️ BLOCKED: First tap after adding card (preventing duplicate):",
           uid,
@@ -403,21 +403,16 @@ $(function () {
           timeDiff,
           "ms"
         );
-        // Tandai bahwa tap pertama sudah di-block, tap selanjutnya diizinkan
+        // Tandai bahwa tap pertama sudah di-block
         localStorage.setItem("firstTapAfterAdd", "done");
         return;
-      } else if (timeDiff >= 3000) {
+      } else if (timeDiff >= 1000) {
         console.log(
-          "⏰ Time expired for blacklist:",
+          "⏰ Blacklist expired:",
           uid,
           "Time diff:",
           timeDiff,
-          "ms - Clearing stale data"
-        );
-        clearBlacklist();
-      } else {
-        console.warn(
-          "⚠️ Invalid timestamp detected - Clearing corrupted blacklist data"
+          "ms - Clearing"
         );
         clearBlacklist();
       }
@@ -437,11 +432,35 @@ $(function () {
           if (res.success) {
             console.log(`✅ Access logged successfully for UID: ${uid}`);
 
-            // Refresh log table setelah sukses
+            // 🔔 Toast Notification
+            const statusText =
+              data.status === "granted" ? "Akses Diterima" : "Akses Ditolak";
+            const statusIcon =
+              data.status === "granted" ? "check-circle" : "times-circle";
+            const statusColor =
+              data.status === "granted" ? "#28a745" : "#dc3545";
+
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: data.status === "granted" ? "success" : "error",
+              title: "Kartu Baru Terdeteksi!",
+              html: `<div style="text-align:left;"><strong>UID:</strong> <code>${uid}</code><br><strong>Status:</strong> ${statusText}</div>`,
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true,
+              customClass: {
+                popup: "swal2-toast-custom",
+              },
+            });
+
+            // 🚀 HARD REFRESH PAGE AFTER TOAST
             setTimeout(function () {
-              console.log("🔄 Refreshing RFID access log...");
-              loadLog();
-            }, 300);
+              console.log(
+                "🔄 [HARD REFRESH] Reloading page after card detected..."
+              );
+              location.reload(true);
+            }, 2200);
 
             if (!data.uid) lastScannedUID = "";
           } else {
