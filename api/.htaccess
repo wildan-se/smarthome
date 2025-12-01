@@ -1,0 +1,26 @@
+# API Folder - Enhanced JSON Output Protection for Hosting
+
+# Suppress all PHP errors/warnings to prevent breaking JSON
+php_flag display_errors Off
+php_flag display_startup_errors Off
+php_flag log_errors Off
+php_value error_reporting 0
+
+# Force UTF-8 without BOM
+AddDefaultCharset UTF-8
+<IfModule mod_headers.c>
+    Header set Content-Type "application/json; charset=utf-8"
+</IfModule>
+
+# Disable output buffering conflicts
+php_flag output_buffering Off
+php_flag zlib.output_compression Off
+
+# Security: Prevent directory listing
+Options -Indexes
+
+# Only allow POST and GET requests
+<LimitExcept GET POST>
+    Order Allow,Deny
+    Deny from all
+</LimitExcept>

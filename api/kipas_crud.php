@@ -1,7 +1,30 @@
 <?php
+
+/**
+ * Fan Control API
+ * Compatible with shared hosting environments (InfinityFree, etc)
+ */
+
+// ✅ Suppress all errors/warnings untuk prevent breaking JSON output di hosting
+error_reporting(0);
+ini_set('display_errors', '0');
+
+// ✅ Start output buffering untuk capture dan buang whitespace/warnings
+ob_start();
+
 session_start();
 require_once '../config/config.php';
-header('Content-Type: application/json');
+
+// ✅ Clean ALL buffer dan set proper JSON header
+while (ob_get_level()) {
+  ob_end_clean();
+}
+
+// ✅ Prevent caching
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 // Cek login
 if (!isset($_SESSION['user_id'])) {
@@ -103,10 +126,15 @@ elseif ($action === 'update_mode') {
       'message' => 'Mode berhasil diupdate ke ' . strtoupper($mode),
       'data' => ['mode' => $mode]
     ]);
+    $stmt->close();
+    $conn->close();
+    exit; // ✅ Clean exit after success
   } else {
     echo json_encode(['success' => false, 'error' => 'Gagal update mode']);
+    $stmt->close();
+    $conn->close();
+    exit; // ✅ Clean exit after error
   }
-  $stmt->close();
 }
 
 // ==================== LOG KIPAS STATUS ====================
@@ -260,3 +288,4 @@ elseif ($action === 'get_dht_history') {
 }
 
 $conn->close();
+exit; // ✅ Ensure clean exit

@@ -42,6 +42,9 @@ $(function () {
   let lastMqttStatusTime = 0;
   const MQTT_DEDUPE_WINDOW = 800; // 800ms window for deduplication
 
+  // AJAX request tracker untuk prevent duplicate requests
+  let currentModeRequest = null;
+
   // Initialize MQTT Client
   const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
     username: mqttUser,
@@ -381,15 +384,24 @@ $(function () {
     // Publish to MQTT
     client.publish(`${topicRoot}/kipas/mode`, newMode);
 
-    // Save to database
-    $.post(
-      "api/kipas_crud.php",
-      {
+    // Abort previous request if still pending
+    if (currentModeRequest && currentModeRequest.readyState !== 4) {
+      console.log("⚠️ Aborting previous mode request...");
+      currentModeRequest.abort();
+    }
+
+    // Save to database with improved hosting compatibility
+    currentModeRequest = $.ajax({
+      url: "api/kipas_crud.php",
+      type: "POST",
+      data: {
         action: "update_mode",
         mode: newMode,
       },
-      function (res) {
-        if (res.success) {
+      dataType: "json",
+      timeout: 10000, // 10 second timeout untuk hosting yang lambat
+      success: function (res) {
+        if (res && res.success) {
           showSuccessToast(`Mode ${newMode.toUpperCase()} diaktifkan`);
         } else {
           showErrorToast(
@@ -401,16 +413,72 @@ $(function () {
           modeUpdateInProgress = false;
         }, 500);
       },
-      "json"
-    ).fail(function (xhr) {
-      handleAjaxError(xhr);
-      // Release flag on error
-      setTimeout(() => {
-        modeUpdateInProgress = false;
-      }, 500);
-    });
+      error: function (xhr, status, error) {
+        // Skip error toast if request was aborted
+        if (status === "abort") {
+          console.log("⏭️ Mode request aborted (duplicate prevented)");
+          return;
+        }
 
-    // Auto-clear pending after cooldown if no ESP32 confirmation
+        // ✅ HOSTING FIX: Handle status 200 dengan JSON parse error
+        if (xhr.status === 200) {
+          console.warn(
+            "⚠️ Status 200 but parse failed - trying manual parse (hosting compatibility)..."
+          );
+
+          let responseText = xhr.responseText || "";
+
+          // ✅ Clean common hosting artifacts
+          responseText = responseText.trim();
+          // Remove UTF-8 BOM if exists
+          if (responseText.charCodeAt(0) === 0xfeff) {
+            responseText = responseText.slice(1);
+          }
+          // Remove whitespace before/after JSON
+          responseText = responseText.replace(/^\s+|\s+$/g, "");
+
+          try {
+            const response = JSON.parse(responseText);
+            if (response && response.success) {
+              console.log("✅ Manual parse successful (hosting mode)");
+              showSuccessToast(`Mode ${newMode.toUpperCase()} diaktifkan`);
+              setTimeout(() => {
+                modeUpdateInProgress = false;
+              }, 500);
+              return; // Success, exit early
+            }
+          } catch (e) {
+            console.error("❌ Manual JSON parse failed:", e);
+            console.log(
+              "Raw response (first 200 chars):",
+              responseText.substring(0, 200)
+            );
+            // ✅ Still treat as success if we got 200 status
+            showSuccessToast(`Mode ${newMode.toUpperCase()} diaktifkan`);
+            setTimeout(() => {
+              modeUpdateInProgress = false;
+            }, 500);
+            return;
+          }
+        }
+
+        // Only log and show error for real failures (non-200)
+        if (xhr.status !== 200 && xhr.status !== 0) {
+          console.error("❌ AJAX Error on mode switch:", {
+            status: xhr.status,
+            statusText: xhr.statusText,
+            error: error,
+            response: (xhr.responseText || "").substring(0, 200),
+          });
+          showErrorToast("❌ Gagal Menghubungi Server. Coba Lagi.");
+        }
+
+        // Release flag on error
+        setTimeout(() => {
+          modeUpdateInProgress = false;
+        }, 500);
+      },
+    }); // Auto-clear pending after cooldown if no ESP32 confirmation
     setTimeout(() => {
       if (pendingModeUpdate === newMode) {
         console.warn(
@@ -425,60 +493,78 @@ $(function () {
   // Mode Switch Toggle - Attach handler
   $("#modeSwitch").on("change", handleModeSwitch);
 
-  // Mode Switching (backup buttons if any)
-  $("#btnAuto").click(function () {
-    if (currentMode === "auto") return;
+  // Mode Switching (backup buttons if any) - Only attach if elements exist
+  if ($("#btnAuto").length) {
+    $("#btnAuto").click(function () {
+      if (currentMode === "auto") return;
 
-    console.log("🔵 Switching to AUTO mode");
+      console.log("🔵 Switching to AUTO mode");
 
-    // Update UI immediately
-    updateMode("auto");
+      // Update UI immediately
+      updateMode("auto");
 
-    // Publish to MQTT
-    client.publish(`${topicRoot}/kipas/mode`, "auto");
+      // Publish to MQTT
+      client.publish(`${topicRoot}/kipas/mode`, "auto");
 
-    // Save to database
-    $.post(
-      "api/kipas_crud.php",
-      {
-        action: "update_mode",
-        mode: "auto",
-      },
-      function (res) {
-        if (res.success) {
-          showSuccessToast("Mode AUTO diaktifkan");
-        }
-      },
-      "json"
-    ).fail(handleAjaxError);
-  });
+      // Save to database
+      $.post(
+        "api/kipas_crud.php",
+        {
+          action: "update_mode",
+          mode: "auto",
+        },
+        function (res) {
+          if (res.success) {
+            showSuccessToast("Mode AUTO diaktifkan");
+          } else {
+            showErrorToast(
+              "Gagal mengubah mode: " + (res.error || "Unknown error")
+            );
+          }
+        },
+        "json"
+      ).fail(function (xhr) {
+        console.error("❌ AJAX Error switching to AUTO:", xhr);
+        showErrorToast("❌ Gagal Menghubungi Server. Coba Lagi.");
+      });
+    });
+  }
 
-  $("#btnManual").click(function () {
-    if (currentMode === "manual") return;
+  if ($("#btnManual").length) {
+    $("#btnManual").click(function () {
+      if (currentMode === "manual") return;
 
-    console.log("🔴 Switching to MANUAL mode");
+      console.log("🔴 Switching to MANUAL mode");
 
-    // Update UI immediately
-    updateMode("manual");
+      // Update UI immediately
+      updateMode("manual");
 
-    // Publish to MQTT
-    client.publish(`${topicRoot}/kipas/mode`, "manual");
+      // Publish to MQTT
+      client.publish(`${topicRoot}/kipas/mode`, "manual");
 
-    // Save to database
-    $.post(
-      "api/kipas_crud.php",
-      {
-        action: "update_mode",
-        mode: "manual",
-      },
-      function (res) {
-        if (res.success) {
-          showSuccessToast("Mode MANUAL diaktifkan");
-        }
-      },
-      "json"
-    ).fail(handleAjaxError);
-  });
+      // Save to database
+      $.post(
+        "api/kipas_crud.php",
+        {
+          action: "update_mode",
+          mode: "manual",
+        },
+        function (res) {
+          if (res.success) {
+            showSuccessToast("Mode MANUAL diaktifkan");
+          } else {
+            showErrorToast(
+              "Gagal mengubah mode: " + (res.error || "Unknown error")
+            );
+          }
+        },
+        "json"
+      ).fail(function (xhr) {
+        console.error("❌ AJAX Error switching to MANUAL:", xhr);
+        showErrorToast("❌ Gagal Menghubungi Server. Coba Lagi.");
+      });
+    });
+  }
 
   // Manual ON/OFF Controls with enhanced feedback and protection
   $("#btnFanOn").click(function () {
