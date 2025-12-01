@@ -29,18 +29,49 @@ if ($type === 'rfid') {
   }
 } elseif ($type === 'dht') {
   // Log DHT
-  $temperature = isset($payload['temperature']) ? floatval($payload['temperature']) : 0;
-  $humidity = isset($payload['humidity']) ? floatval($payload['humidity']) : 0;
+  $temperature = isset($payload['temperature']) ? floatval($payload['temperature']) : null;
+  $humidity = isset($payload['humidity']) ? floatval($payload['humidity']) : null;
 
-  // ✅ Validasi: Hanya simpan jika nilai valid (> 0 dan bukan NaN)
-  if ($temperature > 0 && $temperature < 100 && $humidity > 0 && $humidity <= 100 && !is_nan($temperature) && !is_nan($humidity)) {
+  // ✅ FIX: Validasi lebih realistis - allow 0°C, allow up to 80°C for sensors
+  // Valid range: -50°C to 80°C for temperature, 0% to 100% for humidity
+  if (
+    $temperature !== null && $humidity !== null &&
+    !is_nan($temperature) && !is_nan($humidity) &&
+    $temperature >= -50 && $temperature <= 80 &&
+    $humidity >= 0 && $humidity <= 100
+  ) {
     $stmt = $conn->prepare('INSERT INTO dht_logs (temperature, humidity) VALUES (?, ?)');
     $stmt->bind_param('dd', $temperature, $humidity);
-    $stmt->execute();
-    $stmt->close();
-    echo json_encode(['success' => true, 'message' => 'DHT data saved']);
+
+    if ($stmt->execute()) {
+      $stmt->close();
+      echo json_encode([
+        'success' => true,
+        'message' => 'DHT data saved',
+        'data' => [
+          'temperature' => $temperature,
+          'humidity' => $humidity
+        ]
+      ]);
+    } else {
+      echo json_encode([
+        'success' => false,
+        'error' => 'Failed to insert DHT data: ' . $stmt->error
+      ]);
+    }
   } else {
-    echo json_encode(['success' => false, 'error' => 'Invalid DHT values', 'temp' => $temperature, 'hum' => $humidity]);
+    echo json_encode([
+      'success' => false,
+      'error' => 'Invalid DHT values - out of range',
+      'received' => [
+        'temp' => $temperature,
+        'hum' => $humidity
+      ],
+      'valid_range' => [
+        'temp' => '-50 to 80°C',
+        'hum' => '0 to 100%'
+      ]
+    ]);
   }
   exit;
 } elseif ($type === 'door') {

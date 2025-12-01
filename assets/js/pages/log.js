@@ -197,31 +197,39 @@ $(function () {
     const tempMax = $("#filterTempMax").val();
     const humMin = $("#filterHumMin").val();
 
-    // Build query parameters
+    // Build query parameters - use wide range to get all data
     const params = new URLSearchParams({
       time: timeFilter,
-      temp_min: tempMin || "0",
-      temp_max: tempMax || "100",
-      hum_min: humMin || "0",
-      hum_max: "100",
+      temp_min: tempMin || "-100",
+      temp_max: tempMax || "200",
+      hum_min: humMin || "-100",
+      hum_max: "200",
     });
+
+    console.log("📊 DHT Filter params:", params.toString());
 
     $.get(
       "api/dht_log.php?" + params.toString(),
       function (res) {
+        console.log("✅ DHT Response received:", res);
+
         let rows = "";
         if (res.success && res.data && res.data.length > 0) {
+          console.log("📈 DHT Data count:", res.data.length);
           dhtData = res.data;
 
+          let validCount = 0;
           dhtData.forEach((l, index) => {
             const temp = parseFloat(l.temperature);
             const hum = parseFloat(l.humidity);
 
-            // Skip if NaN or invalid
-            if (isNaN(temp) || isNaN(hum) || temp <= 0 || hum <= 0) {
+            // ✅ FIX: Only skip if truly invalid (NaN or null), not if zero or negative
+            if (isNaN(temp) || isNaN(hum) || temp === null || hum === null) {
+              console.warn("⚠️ Skipping invalid DHT data:", l);
               return; // Skip this row
             }
 
+            validCount++;
             const tempClass =
               temp > 30
                 ? "text-danger"
@@ -232,7 +240,7 @@ $(function () {
 
             rows += `
             <tr class="fadeIn">
-              <td class="text-center"><strong>${index + 1}</strong></td>
+              <td class="text-center"><strong>${validCount}</strong></td>
               <td><i class="far fa-clock text-muted"></i> ${l.log_time}</td>
               <td class="${tempClass}">
                 <i class="fas fa-thermometer-half"></i> <strong>${temp.toFixed(
@@ -246,24 +254,87 @@ $(function () {
           `;
           });
 
+          console.log(
+            `✅ DHT table updated: ${validCount} valid rows out of ${dhtData.length} total`
+          );
+
           // Update count and info
           $("#dhtCount").text(res.count + " records");
-          $("#dhtInfo").text(res.info || dhtData.length + " data tersedia");
+          $("#dhtInfo").text(res.count + " data");
+
+          // ✅ Update time info based on filter
+          const timeLabels = {
+            30: "30 menit terakhir",
+            60: "1 jam terakhir",
+            180: "3 jam terakhir",
+            360: "6 jam terakhir",
+            720: "12 jam terakhir",
+            1440: "24 jam terakhir",
+            2880: "2 hari terakhir",
+            4320: "3 hari terakhir",
+            10080: "7 hari terakhir",
+            20160: "14 hari terakhir",
+            43200: "30 hari terakhir",
+            all: "semua waktu",
+          };
+          $("#dhtTimeInfo").text(
+            timeLabels[timeFilter] || res.info || "rentang waktu dipilih"
+          );
+
+          // ✅ Show debug info if available
+          if (res.debug) {
+            console.log("🔍 Debug info:", res.debug);
+          }
         } else {
+          console.warn("⚠️ No DHT data found or empty response");
+          console.log("Response:", res);
           dhtData = [];
           rows =
             '<tr><td colspan="4" class="text-center text-muted"><i class="fas fa-info-circle"></i> Belum ada log suhu & kelembapan</td></tr>';
           $("#dhtCount").text("0 records");
           $("#dhtInfo").text("Tidak ada data");
+          $("#dhtTimeInfo").text("-");
         }
         $("#tableDHTLog tbody").html(rows);
         updateStatistics();
       },
       "json"
-    ).fail(function () {
+    ).fail(function (xhr, status, error) {
+      console.error("❌ DHT Load failed:", {
+        status: xhr.status,
+        statusText: xhr.statusText,
+        error: error,
+        response: xhr.responseText,
+      });
+
       $("#tableDHTLog tbody").html(
-        '<tr><td colspan="4" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Gagal memuat data</td></tr>'
+        '<tr><td colspan="4" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Gagal memuat data - ' +
+          xhr.status +
+          " " +
+          xhr.statusText +
+          "</td></tr>"
       );
+      $("#dhtCount").text("Error");
+      $("#dhtInfo").text("Gagal memuat");
+      $("#dhtTimeInfo").text("-");
+
+      // Try to parse error response
+      try {
+        const errRes = JSON.parse(xhr.responseText);
+        console.error("Error details:", errRes);
+        if (errRes.error) {
+          $("#tableDHTLog tbody").html(
+            '<tr><td colspan="4" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> ' +
+              errRes.error +
+              "</td></tr>"
+          );
+        }
+      } catch (e) {
+        console.error(
+          "Raw error response:",
+          xhr.responseText.substring(0, 200)
+        );
+      }
     });
   }
 

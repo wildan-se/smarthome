@@ -311,28 +311,33 @@ $pageJS = ['assets/js/pages/log.js'];
                               <option value="60" selected>🕑 1 Jam Terakhir</option>
                               <option value="180">🕒 3 Jam Terakhir</option>
                               <option value="360">🕕 6 Jam Terakhir</option>
+                              <option value="720">🕛 12 Jam Terakhir</option>
                               <option value="1440">📅 24 Jam Terakhir</option>
+                              <option value="2880">📅 2 Hari Terakhir</option>
+                              <option value="4320">📅 3 Hari Terakhir</option>
                               <option value="10080">📆 7 Hari Terakhir</option>
+                              <option value="20160">📆 14 Hari Terakhir</option>
+                              <option value="43200">📆 30 Hari Terakhir</option>
                               <option value="all">📊 Semua Data</option>
                             </select>
                           </div>
                         </div>
                         <div class="col-md-2">
                           <div class="form-group mb-0">
-                            <label class="d-block"><i class="fas fa-temperature-low"></i> Suhu Min:</label>
-                            <input type="number" class="form-control" id="filterTempMin" placeholder="0">
+                            <label class="d-block"><i class="fas fa-temperature-low"></i> Suhu Min (°C):</label>
+                            <input type="number" class="form-control" id="filterTempMin" placeholder="Kosongkan = Semua" step="0.1">
                           </div>
                         </div>
                         <div class="col-md-2">
                           <div class="form-group mb-0">
-                            <label class="d-block"><i class="fas fa-temperature-high"></i> Suhu Max:</label>
-                            <input type="number" class="form-control" id="filterTempMax" placeholder="50">
+                            <label class="d-block"><i class="fas fa-temperature-high"></i> Suhu Max (°C):</label>
+                            <input type="number" class="form-control" id="filterTempMax" placeholder="Kosongkan = Semua" step="0.1">
                           </div>
                         </div>
                         <div class="col-md-2">
                           <div class="form-group mb-0">
-                            <label class="d-block"><i class="fas fa-tint"></i> Lembap Min:</label>
-                            <input type="number" class="form-control" id="filterHumMin" placeholder="0">
+                            <label class="d-block"><i class="fas fa-tint"></i> Lembap Min (%):</label>
+                            <input type="number" class="form-control" id="filterHumMin" placeholder="Kosongkan = Semua" step="0.1">
                           </div>
                         </div>
                         <div class="col-md-3">
@@ -368,7 +373,9 @@ $pageJS = ['assets/js/pages/log.js'];
                   <div class="card-footer bg-light">
                     <small class="text-muted">
                       <i class="fas fa-info-circle"></i>
-                      Menampilkan: <span id="dhtInfo" class="font-weight-bold">-</span>
+                      <strong>Menampilkan:</strong> <span id="dhtInfo" class="font-weight-bold text-primary">-</span>
+                      <span class="ml-3">|</span>
+                      <span class="ml-2"><i class="fas fa-clock"></i> <span id="dhtTimeInfo" class="font-weight-bold">1 jam terakhir</span></span>
                     </small>
                   </div>
                 </div>
