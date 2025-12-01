@@ -31,7 +31,7 @@ function renderSidebar($activePage = '')
         <img src="assets/img/avatar.png" class="img-circle elevation-2" alt="User Image" style="width:38px;height:38px;border:2px solid rgba(56,189,248,0.5);" onerror="this.src='/assets/img/lil.jpg';">
         <div class="info text-white" style="padding-left:12px;">
           <a href="#" class="d-block" style="color:#e2e8f0;font-weight:600;font-size:0.9rem;">Administrator</a>
-          <small><span class="status-dot" style="display:inline-block;width:8px;height:8px;background-color:#22c55e;border-radius:50%;margin-right:6px;"></span>Online</small>
+
         </div>
       </div>
 

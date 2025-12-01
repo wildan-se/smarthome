@@ -58,11 +58,13 @@ $(function () {
   client.on("offline", function () {
     console.log("⚠️ MQTT Offline - Clearing blacklist data");
     clearBlacklist();
+    isAutoRefreshing = false; // Reset flag
   });
 
   client.on("close", function () {
     console.log("🔌 MQTT Connection Closed - Clearing blacklist data");
     clearBlacklist();
+    isAutoRefreshing = false; // Reset flag
   });
 
   client.on("reconnect", function () {
@@ -367,6 +369,10 @@ $(function () {
     }
   }
 
+  // ✅ Track last log untuk deteksi kartu baru
+  let lastLogCount = 0;
+  let isAutoRefreshing = false;
+
   // === RFID ACCESS HANDLER ===
   function handleRFIDAccess(messageStr) {
     let data = {};
@@ -432,35 +438,38 @@ $(function () {
           if (res.success) {
             console.log(`✅ Access logged successfully for UID: ${uid}`);
 
-            // 🔔 Toast Notification
-            const statusText =
-              data.status === "granted" ? "Akses Diterima" : "Akses Ditolak";
-            const statusIcon =
-              data.status === "granted" ? "check-circle" : "times-circle";
-            const statusColor =
-              data.status === "granted" ? "#28a745" : "#dc3545";
+            // ✅ SMART AUTO-REFRESH: Refresh hanya jika ada kartu baru
+            if (!isAutoRefreshing) {
+              isAutoRefreshing = true;
 
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: data.status === "granted" ? "success" : "error",
-              title: "Kartu Baru Terdeteksi!",
-              html: `<div style="text-align:left;"><strong>UID:</strong> <code>${uid}</code><br><strong>Status:</strong> ${statusText}</div>`,
-              showConfirmButton: false,
-              timer: 2000,
-              timerProgressBar: true,
-              customClass: {
-                popup: "swal2-toast-custom",
-              },
-            });
+              // 🔔 Toast Notification
+              const statusText =
+                data.status === "granted" ? "Akses Diterima" : "Akses Ditolak";
 
-            // 🚀 HARD REFRESH PAGE AFTER TOAST
-            setTimeout(function () {
-              console.log(
-                "🔄 [HARD REFRESH] Reloading page after card detected..."
-              );
-              location.reload(true);
-            }, 2200);
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: data.status === "granted" ? "success" : "error",
+                title: "Kartu Baru Terdeteksi!",
+                html: `<div style="text-align:left;"><strong>UID:</strong> <code>${uid}</code><br><strong>Status:</strong> ${statusText}</div>`,
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true,
+                customClass: {
+                  popup: "swal2-toast-custom",
+                },
+              });
+
+              // 🚀 HARD REFRESH setelah toast
+              setTimeout(function () {
+                console.log(
+                  "🔄 [AUTO-REFRESH] Kartu baru terdeteksi - Reloading page..."
+                );
+                location.reload(true);
+              }, 1700);
+            } else {
+              console.log("⚠️ Auto-refresh already in progress, skipping...");
+            }
 
             if (!data.uid) lastScannedUID = "";
           } else {
