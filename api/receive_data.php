@@ -1,10 +1,25 @@
 <?php
 // Endpoint untuk menerima log data dari frontend (AJAX)
+
+// ✅ InfinityFree compatibility
+error_reporting(0);
+ini_set('display_errors', '0');
+ob_start();
+
 require_once '../config/config.php';
-header('Content-Type: application/json');
+
+// Clean buffer
+while (ob_get_level() > 1) {
+  ob_end_clean();
+}
+
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+
 $data = json_decode(file_get_contents('php://input'), true);
 if (!$data || !isset($data['type'])) {
   http_response_code(400);
+  ob_end_clean();
   echo json_encode(['error' => 'Invalid data']);
   exit;
 }
@@ -17,6 +32,7 @@ if ($type === 'rfid') {
 
   // ❌ SKIP jika dari kontrol manual - tidak boleh masuk ke rfid_logs
   if ($uid === 'MANUAL_CONTROL') {
+    ob_end_clean();
     echo json_encode(['success' => false, 'message' => 'Manual control tidak dicatat di RFID logs']);
     exit;
   }
@@ -45,6 +61,7 @@ if ($type === 'rfid') {
 
     if ($stmt->execute()) {
       $stmt->close();
+      ob_end_clean();
       echo json_encode([
         'success' => true,
         'message' => 'DHT data saved',
@@ -54,12 +71,14 @@ if ($type === 'rfid') {
         ]
       ]);
     } else {
+      ob_end_clean();
       echo json_encode([
         'success' => false,
         'error' => 'Failed to insert DHT data: ' . $stmt->error
       ]);
     }
   } else {
+    ob_end_clean();
     echo json_encode([
       'success' => false,
       'error' => 'Invalid DHT values - out of range',
@@ -90,13 +109,20 @@ if ($type === 'rfid') {
       $stmt->bind_param('s', $status);
       $stmt->execute();
       $stmt->close();
+      ob_end_clean();
       echo json_encode(['success' => true, 'message' => 'Door status logged', 'status' => $status]);
     } else {
+      ob_end_clean();
       echo json_encode(['success' => true, 'message' => 'Status unchanged', 'status' => $status]);
     }
   } else {
+    ob_end_clean();
     echo json_encode(['success' => false, 'error' => 'Invalid door status', 'status' => $status]);
   }
   exit;
 }
+
+// ✅ Clean exit with buffer flush
+ob_end_clean();
 echo json_encode(['success' => true]);
+exit;

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>DHT Debug - InfinityFree</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #4ec9b0;
+    }
+
+    h2 {
+      color: #dcdcaa;
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 12px 24px;
+      margin: 10px 5px;
+      font-size: 14px;
+      cursor: pointer;
+      background: #0e639c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #1177bb;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      background: #252526;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-size: 13px;
+      overflow-x: auto;
+    }
+
+    .success {
+      border-left: 4px solid #4ec9b0;
+    }
+
+    .error {
+      border-left: 4px solid #f48771;
+    }
+
+    .warning {
+      border-left: 4px solid #dcdcaa;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+
+    .status.ok {
+      background: #4ec9b0;
+      color: #1e1e1e;
+    }
+
+    .status.fail {
+      background: #f48771;
+      color: #1e1e1e;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🔍 DHT Debug Tool - InfinityFree Hosting</h1>
+    <p>Tool untuk diagnosa masalah DHT log di hosting</p>
+
+    <div>
+      <h2>1️⃣ Database Debug</h2>
+      <button onclick="runDebug()">🔍 Run Full Diagnostic</button>
+      <div id="debugResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div>
+      <h2>2️⃣ API Test</h2>
+      <button onclick="testDHTLog()">📊 Test dht_log.php</button>
+      <button onclick="testDHTLog('30')">⏰ Test 30min</button>
+      <button onclick="testDHTLog('60')">⏰ Test 1 hour</button>
+      <button onclick="testDHTLog('all')">⏰ Test All Time</button>
+      <div id="apiResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div>
+      <h2>3️⃣ Send Test Data</h2>
+      <button onclick="sendTestData()">📤 Send DHT Data</button>
+      <div id="sendResult" class="result" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    function runDebug() {
+      const resultDiv = document.getElementById('debugResult');
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result warning';
+      resultDiv.innerHTML = '⏳ Running diagnostic...';
+
+      fetch('api/debug_dht.php')
+        .then(res => res.json())
+        .then(data => {
+          resultDiv.className = 'result ' + (data.connection === 'OK' ? 'success' : 'error');
+
+          let html = '<strong>🔍 DIAGNOSTIC RESULTS</strong>\n\n';
+          html += '📊 Total Records: ' + data.total_records + '\n';
+          html += '🔗 Connection: ' + data.connection + '\n';
+          html += '⏰ MySQL NOW(): ' + data.mysql_now + '\n';
+          html += '📈 Last Hour Count: ' + data.last_hour_count + '\n';
+          html += '✅ Prepared Stmt: ' + data.prepared_stmt_test + '\n\n';
+
+          html += '🖥️ Server Info:\n';
+          html += '  PHP: ' + data.server_info.php_version + '\n';
+          html += '  MySQL: ' + data.server_info.mysql_version + '\n';
+          html += '  Timezone: ' + data.server_info.timezone + '\n';
+          html += '  Current Time: ' + data.server_info.current_time + '\n\n';
+
+          html += '📋 Latest Records:\n';
+          if (data.latest_records.length > 0) {
+            data.latest_records.forEach(r => {
+              html += `  ID:${r.id} | ${r.temperature}°C | ${r.humidity}% | ${r.log_time}\n`;
+            });
+          } else {
+            html += '  ❌ No records found!\n';
+          }
+
+          html += '\n🔧 Full Debug Data:\n' + JSON.stringify(data, null, 2);
+
+          resultDiv.innerHTML = html;
+          console.log('Debug:', data);
+        })
+        .catch(err => {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = '<strong>❌ ERROR</strong>\n' + err.message;
+          console.error('Error:', err);
+        });
+    }
+
+    function testDHTLog(timeFilter = '60') {
+      const resultDiv = document.getElementById('apiResult');
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result warning';
+      resultDiv.innerHTML = '⏳ Testing dht_log.php with time=' + timeFilter + '...';
+
+      const url = 'api/dht_log.php?action=filter&time=' + timeFilter;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          resultDiv.className = 'result ' + (data.success ? 'success' : 'error');
+
+          let html = '<strong>📊 API TEST RESULTS</strong>\n\n';
+          html += 'URL: ' + url + '\n';
+          html += 'Success: ' + data.success + '\n';
+          html += 'Count: ' + (data.count || 0) + '\n';
+          html += 'Info: ' + (data.info || 'N/A') + '\n\n';
+
+          if (data.debug) {
+            html += '🔍 Debug Info:\n';
+            html += '  Total Rows: ' + data.debug.total_rows + '\n';
+            html += '  Time Filter: ' + data.debug.time_filter + '\n';
+            html += '  Time Condition: ' + data.debug.time_condition + '\n';
+            html += '  Limit: ' + data.debug.limit + '\n';
+            html += '  Temp Range: ' + data.debug.temp_range + '\n';
+            html += '  Hum Range: ' + data.debug.hum_range + '\n\n';
+          }
+
+          if (data.data && data.data.length > 0) {
+            html += '📋 Sample Data (first 5):\n';
+            data.data.slice(0, 5).forEach(r => {
+              html += `  ID:${r.id} | ${r.temperature}°C | ${r.humidity}% | ${r.log_time}\n`;
+            });
+          } else {
+            html += '❌ No data returned!\n';
+          }
+
+          html += '\n🔧 Full Response:\n' + JSON.stringify(data, null, 2);
+
+          resultDiv.innerHTML = html;
+          console.log('API Response:', data);
+        })
+        .catch(err => {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = '<strong>❌ ERROR</strong>\n' + err.message;
+          console.error('Error:', err);
+        });
+    }
+
+    function sendTestData() {
+      const resultDiv = document.getElementById('sendResult');
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result warning';
+      resultDiv.innerHTML = '⏳ Sending test DHT data...';
+
+      const data = {
+        type: 'dht',
+        data: {
+          temperature: 28.5,
+          humidity: 65.3
+        }
+      };
+
+      fetch('api/receive_data.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+        .then(res => res.json())
+        .then(result => {
+          resultDiv.className = 'result ' + (result.success ? 'success' : 'error');
+          resultDiv.innerHTML = '<strong>📤 SEND RESULT</strong>\n\n' + JSON.stringify(result, null, 2);
+          console.log('Send Result:', result);
+        })
+        .catch(err => {
+          resultDiv.className = 'result error';
+          resultDiv.innerHTML = '<strong>❌ ERROR</strong>\n' + err.message;
+          console.error('Error:', err);
+        });
+    }
+
+    // Auto-run on load
+    window.addEventListener('load', function () {
+      console.log('🔍 DHT Debug Tool Ready');
+      console.log('Run runDebug() to start diagnostics');
+    });
+  </script>
+</body>
+
+</html>

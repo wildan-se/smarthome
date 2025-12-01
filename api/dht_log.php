@@ -8,9 +8,10 @@
 // ✅ Start session and suppress errors untuk hosting compatibility
 error_reporting(0);
 ini_set('display_errors', '0');
+@ini_set('date.timezone', 'Asia/Jakarta'); // Set timezone explicitly
 
 ob_start();
-session_start();
+@session_start();
 require_once '../config/config.php';
 
 // Clean buffer
@@ -73,11 +74,18 @@ if ($timeFilter === 'all') {
 
 // Build WHERE clause for time filter
 $timeCondition = "";
+$useTimestamp = false;
+$timestampLimit = null;
+
 if ($timeFilter !== 'all') {
   $minutes = intval($timeFilter);
   // ✅ Extended max to 30 days (43200 minutes)
   if ($minutes > 0 && $minutes <= 43200) {
+    // ✅ Use both NOW() and timestamp fallback for hosting compatibility
     $timeCondition = "AND log_time >= NOW() - INTERVAL $minutes MINUTE";
+
+    // Fallback: calculate timestamp
+    $timestampLimit = date('Y-m-d H:i:s', strtotime("-$minutes minutes"));
   } elseif ($minutes > 43200) {
     // If exceeds 30 days, treat as "all"
     $timeCondition = "";
@@ -123,14 +131,45 @@ if (!$stmt) {
 $stmt->bind_param("dddd", $tempMin, $tempMax, $humMin, $humMax);
 
 if (!$stmt->execute()) {
-  echo json_encode([
-    'success' => false,
-    'error' => 'Query execution failed: ' . $stmt->error,
-    'data' => []
-  ]);
-  $stmt->close();
-  $conn->close();
-  exit;
+  // ✅ Fallback: Try with timestamp instead of NOW() if query fails
+  if ($timestampLimit !== null) {
+    $stmt->close();
+
+    $sqlFallback = "SELECT id, temperature, humidity, DATE_FORMAT(log_time, '%d/%m/%Y %H:%i:%s') as log_time 
+            FROM dht_logs 
+            WHERE temperature IS NOT NULL 
+              AND humidity IS NOT NULL
+              AND temperature >= ? 
+              AND temperature <= ? 
+              AND humidity >= ? 
+              AND humidity <= ?
+              AND log_time >= ?
+            ORDER BY log_time DESC 
+            LIMIT $limit";
+
+    $stmt = $conn->prepare($sqlFallback);
+    $stmt->bind_param("dddds", $tempMin, $tempMax, $humMin, $humMax, $timestampLimit);
+
+    if (!$stmt->execute()) {
+      echo json_encode([
+        'success' => false,
+        'error' => 'Query execution failed (fallback): ' . $stmt->error,
+        'data' => []
+      ]);
+      $stmt->close();
+      $conn->close();
+      exit;
+    }
+  } else {
+    echo json_encode([
+      'success' => false,
+      'error' => 'Query execution failed: ' . $stmt->error,
+      'data' => []
+    ]);
+    $stmt->close();
+    $conn->close();
+    exit;
+  }
 }
 
 $result = $stmt->get_result();
