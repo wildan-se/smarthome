@@ -19,37 +19,30 @@ function renderSidebar($activePage = '')
   <aside class="main-sidebar elevation-4">
     <!-- Brand Logo -->
     <a href="index.php" class="brand-link">
-      <img src="" alt="Logo" class="brand-image" style="width:35px;height:35px;box-shadow:0 0 15px rgba(56,189,248,0.4);border-radius:50%;margin-right:12px;vertical-align:middle;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
+      <img src="" alt="Logo" class="brand-image" style="width:32px;height:32px;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
       <!-- Fallback Icon -->
-      <i class="fas fa-solid fa-house brand-image" style="display:none;font-size:1.5rem;line-height:35px;text-align:center;width:35px;height:35px;margin-right:12px;vertical-align:middle;"></i>
-      <span class="brand-text font-weight-bold" style="color:#fff;font-weight:700;font-size:1.1rem;">SMART HOME</span>
+      <i class="fas fa-solid fa-house brand-image" style="display:none;font-size:1.3rem;"></i>
+      <span class="brand-text font-weight-bold">SMART HOME</span>
     </a>
 
     <div class="sidebar">
-      <!-- User Panel -->
-      <div class="user-panel" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin:15px 5px 25px 5px;display:flex;align-items:center;">
-        <img src="assets/img/avatar.png" class="img-circle elevation-2" alt="User Image" style="width:38px;height:38px;border:2px solid rgba(56,189,248,0.5);" onerror="this.src='/assets/img/lil.jpg';">
-        <div class="info text-white" style="padding-left:12px;">
-          <a href="#" class="d-block" style="color:#e2e8f0;font-weight:600;font-size:0.9rem;">Administrator</a>
 
-        </div>
-      </div>
 
       <!-- Navigation Menu -->
-      <nav class="mt-2">
+      <nav style="margin-top: 0 !important;">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-          <li class="nav-header" style="padding:1.5rem 1rem 0.5rem 0.5rem;font-size:0.7rem;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:1px;">MENU UTAMA</li>
+          <li class="nav-header">MENU UTAMA</li>
           <?php foreach ($menuItems as $key => $item): ?>
             <li class="nav-item">
               <a href="<?= htmlspecialchars($item['url']) ?>" class="nav-link <?= $activePage === $key ? 'active' : '' ?>">
-                <i class="nav-icon fas fa-<?= htmlspecialchars($item['icon']) ?>" style="width:24px;font-size:1.1rem;text-align:center;margin-right:12px;"></i>
+                <i class="nav-icon fas fa-<?= htmlspecialchars($item['icon']) ?>"></i>
                 <p><?= htmlspecialchars($item['text']) ?></p>
               </a>
             </li>
           <?php endforeach; ?>
-          <li class="nav-header" style="padding:1.5rem 1rem 0.5rem 0.5rem;font-size:0.7rem;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:1px;">PENGATURAN</li>
+          <li class="nav-header">PENGATURAN</li>
           <li class="nav-item">
-            <a href="logout.php" class="nav-link bg-danger-soft" style="margin-top:25px;background:rgba(239,68,68,0.1);color:#fca5a5;border:1px solid rgba(239,68,68,0.2);justify-content:center;">
+            <a href="logout.php" class="nav-link bg-danger-soft">
               <i class="nav-icon fas fa-sign-out-alt"></i>
               <p>Keluar Sistem</p>
             </a>
