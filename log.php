@@ -439,12 +439,17 @@ $pageJS = ['assets/js/pages/log.js'];
 
           </div><!-- End accordionLogs -->
 
-          <?php
-          require_once 'components/layout/footer.php';
-          renderFooter($pageJS);
-          ?>
+        </div><!-- /.container-fluid -->
+      </section><!-- /.content -->
 
-        </div>
+    </div><!-- /.content-wrapper -->
+
+    <?php
+    require_once 'components/layout/footer.php';
+    renderFooter($pageJS);
+    ?>
+
+  </div><!-- /.wrapper -->
 </body>
 
 </html>
