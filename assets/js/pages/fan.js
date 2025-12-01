@@ -45,7 +45,7 @@ $(function () {
   // AJAX request tracker untuk prevent duplicate requests
   let currentModeRequest = null;
 
-  // Initialize MQTT Client
+  // === MQTT CLIENT ===
   const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
     username: mqttUser,
     password: mqttPass,
@@ -79,7 +79,7 @@ $(function () {
       handleFanStatus(msg);
     }
 
-    // Fan Mode - FIX: Call handleModeChange instead of handleFanMode
+    // Fan Mode
     if (topic.endsWith("/kipas/mode")) {
       handleModeChange(msg);
     }
@@ -165,7 +165,7 @@ $(function () {
       `📨 MQTT Mode Message Received: "${mode}" | Current: "${currentMode}" | Pending: "${pendingModeUpdate}"`
     );
 
-    // LAYER 1: MQTT Deduplication - Ignore duplicate MQTT messages within 800ms window
+    // LAYER 1: MQTT Deduplication
     if (lastMqttMode === mode && now - lastMqttModeTime < MQTT_DEDUPE_WINDOW) {
       console.log(
         `⏭️ MQTT mode message ignored (duplicate within ${MQTT_DEDUPE_WINDOW}ms): ${mode}`
@@ -175,7 +175,7 @@ $(function () {
     lastMqttMode = mode;
     lastMqttModeTime = now;
 
-    // LAYER 2: Pending State Check - If this is response to our own action
+    // LAYER 2: Pending State Check
     if (pendingModeUpdate === mode) {
       console.log(
         `✅ Mode confirmed by ESP32: ${mode} (expected, skipping UI update)`
@@ -190,10 +190,10 @@ $(function () {
           modeUpdateInProgress = false;
         }
       }, 500);
-      return; // Don't update UI again, we already did optimistic update
+      return;
     }
 
-    // LAYER 3: Cooldown Check - Prevent rapid mode changes
+    // LAYER 3: Cooldown Check
     if (modeUpdateInProgress) {
       console.log(`⏳ Mode update blocked (update in progress)`);
       return;
@@ -207,13 +207,13 @@ $(function () {
       return;
     }
 
-    // LAYER 4: Value Check - Skip if mode unchanged
+    // LAYER 4: Value Check
     if (currentMode === mode) {
       console.log(`⏭️ Mode unchanged: ${mode}`);
       return;
     }
 
-    // LAYER 5: External source update (from ESP32 auto-mode, physical button, etc)
+    // LAYER 5: External source update
     console.log(`📥 Mode changed by external source: ${currentMode} → ${mode}`);
     currentMode = mode;
     lastModeUpdate = now;
@@ -317,7 +317,7 @@ $(function () {
 
     // Re-attach handler after a short delay
     setTimeout(() => {
-      $("#modeSwitch").on("change", handleModeSwitch);
+      $("#modeSwitch").on("change", handleModeSwitchEvent);
     }, 100);
 
     // Update buttons if they exist
@@ -336,10 +336,10 @@ $(function () {
     console.log("🎛️ Mode updated:", mode);
   }
 
-  // === BUTTON HANDLERS ===
+  // === MODE SWITCH (GABUNGAN LOGIKA LAMA + AJAX BARU JSON) ===
 
-  // Mode Switch Handler Function (separated for better control)
-  function handleModeSwitch() {
+  // Handler untuk event change dari checkbox
+  function handleModeSwitchEvent() {
     const isChecked = $(this).is(":checked");
     const newMode = isChecked ? "auto" : "manual";
 
@@ -349,7 +349,7 @@ $(function () {
       return;
     }
 
-    // Prevent spam clicks with cooldown
+    // Prevent spam clicks dengan cooldown & flag
     const now = Date.now();
     if (modeUpdateInProgress) {
       console.log("⏳ Mode switch blocked (update in progress)");
@@ -374,111 +374,84 @@ $(function () {
     // Set flags
     modeUpdateInProgress = true;
     lastModeUpdate = now;
-    pendingModeUpdate = newMode; // ← SET PENDING MODE (KEY!)
+    pendingModeUpdate = newMode;
     modeUpdateSource = "user";
 
-    // Update mode immediately
+    // Optimistic UI update
     currentMode = newMode;
     updateMode(newMode);
 
-    // Publish to MQTT
-    client.publish(`${topicRoot}/kipas/mode`, newMode);
+    // Publish ke MQTT dengan retain
+    if (client && client.connected) {
+      client.publish(`${topicRoot}/kipas/mode`, newMode, { retain: true });
+      console.log(`mqtt > mode set to ${newMode}`);
+    }
 
-    // Abort previous request if still pending
+    // Abort previous request jika masih jalan
     if (currentModeRequest && currentModeRequest.readyState !== 4) {
       console.log("⚠️ Aborting previous mode request...");
       currentModeRequest.abort();
     }
 
-    // Save to database with improved hosting compatibility
+    // === AJAX BARU: POST JSON ke PHP ===
     currentModeRequest = $.ajax({
-      url: "api/kipas_crud.php",
+      url: "api/kipas_crud.php?action=update_mode",
       type: "POST",
-      data: {
-        action: "update_mode",
-        mode: newMode,
-      },
+      contentType: "application/json",
+      data: JSON.stringify({ mode: newMode }),
       dataType: "json",
-      timeout: 10000, // 10 second timeout untuk hosting yang lambat
+      timeout: 10000,
       success: function (res) {
         if (res && res.success) {
-          showSuccessToast(`Mode ${newMode.toUpperCase()} diaktifkan`);
+          showSuccessToast(
+            res.message || `Mode ${newMode.toUpperCase()} diaktifkan`
+          );
         } else {
           showErrorToast(
-            "Gagal mengubah mode: " + (res.error || "Unknown error")
+            "Gagal mengubah mode: " +
+              (res.error || res.message || "Unknown error")
           );
+          // Revert UI kalau gagal
+          currentMode = currentMode === "auto" ? "manual" : "auto";
+          updateMode(currentMode);
         }
-        // Release flag after success/fail
         setTimeout(() => {
           modeUpdateInProgress = false;
         }, 500);
       },
       error: function (xhr, status, error) {
-        // Skip error toast if request was aborted
+        // Coba baca pesan JSON dari server (format sendJson di PHP)
+        let msg = "Terjadi kesalahan server";
+        try {
+          const res = JSON.parse(xhr.responseText || "{}");
+          if (res.message) msg = res.message;
+          if (res.error) msg = res.error;
+        } catch (e) {}
+
+        // Skip error kalau aborted
         if (status === "abort") {
           console.log("⏭️ Mode request aborted (duplicate prevented)");
-          return;
-        }
-
-        // ✅ HOSTING FIX: Handle status 200 dengan JSON parse error
-        if (xhr.status === 200) {
-          console.warn(
-            "⚠️ Status 200 but parse failed - trying manual parse (hosting compatibility)..."
-          );
-
-          let responseText = xhr.responseText || "";
-
-          // ✅ Clean common hosting artifacts
-          responseText = responseText.trim();
-          // Remove UTF-8 BOM if exists
-          if (responseText.charCodeAt(0) === 0xfeff) {
-            responseText = responseText.slice(1);
-          }
-          // Remove whitespace before/after JSON
-          responseText = responseText.replace(/^\s+|\s+$/g, "");
-
-          try {
-            const response = JSON.parse(responseText);
-            if (response && response.success) {
-              console.log("✅ Manual parse successful (hosting mode)");
-              showSuccessToast(`Mode ${newMode.toUpperCase()} diaktifkan`);
-              setTimeout(() => {
-                modeUpdateInProgress = false;
-              }, 500);
-              return; // Success, exit early
-            }
-          } catch (e) {
-            console.error("❌ Manual JSON parse failed:", e);
-            console.log(
-              "Raw response (first 200 chars):",
-              responseText.substring(0, 200)
-            );
-            // ✅ Still treat as success if we got 200 status
-            showSuccessToast(`Mode ${newMode.toUpperCase()} diaktifkan`);
-            setTimeout(() => {
-              modeUpdateInProgress = false;
-            }, 500);
-            return;
-          }
-        }
-
-        // Only log and show error for real failures (non-200)
-        if (xhr.status !== 200 && xhr.status !== 0) {
+        } else {
           console.error("❌ AJAX Error on mode switch:", {
             status: xhr.status,
             statusText: xhr.statusText,
             error: error,
             response: (xhr.responseText || "").substring(0, 200),
           });
-          showErrorToast("❌ Gagal Menghubungi Server. Coba Lagi.");
+          showErrorToast(`Gagal koneksi: ${msg}`);
         }
 
-        // Release flag on error
+        // Revert UI
+        currentMode = currentMode === "auto" ? "manual" : "auto";
+        updateMode(currentMode);
+
         setTimeout(() => {
           modeUpdateInProgress = false;
         }, 500);
       },
-    }); // Auto-clear pending after cooldown if no ESP32 confirmation
+    });
+
+    // Safety: kalau ESP32 tidak balas, bersihkan pending
     setTimeout(() => {
       if (pendingModeUpdate === newMode) {
         console.warn(
@@ -490,97 +463,37 @@ $(function () {
     }, MODE_UPDATE_COOLDOWN);
   }
 
-  // Mode Switch Toggle - Attach handler
-  $("#modeSwitch").on("change", handleModeSwitch);
+  // Pasang handler
+  $("#modeSwitch").on("change", handleModeSwitchEvent);
 
-  // Mode Switching (backup buttons if any) - Only attach if elements exist
+  // Mode Switching (backup buttons jika ada)
   if ($("#btnAuto").length) {
     $("#btnAuto").click(function () {
       if (currentMode === "auto") return;
-
-      console.log("🔵 Switching to AUTO mode");
-
-      // Update UI immediately
-      updateMode("auto");
-
-      // Publish to MQTT
-      client.publish(`${topicRoot}/kipas/mode`, "auto");
-
-      // Save to database
-      $.post(
-        "api/kipas_crud.php",
-        {
-          action: "update_mode",
-          mode: "auto",
-        },
-        function (res) {
-          if (res.success) {
-            showSuccessToast("Mode AUTO diaktifkan");
-          } else {
-            showErrorToast(
-              "Gagal mengubah mode: " + (res.error || "Unknown error")
-            );
-          }
-        },
-        "json"
-      ).fail(function (xhr) {
-        console.error("❌ AJAX Error switching to AUTO:", xhr);
-        showErrorToast("❌ Gagal Menghubungi Server. Coba Lagi.");
-      });
+      $("#modeSwitch").prop("checked", true).trigger("change");
     });
   }
 
   if ($("#btnManual").length) {
     $("#btnManual").click(function () {
       if (currentMode === "manual") return;
-
-      console.log("🔴 Switching to MANUAL mode");
-
-      // Update UI immediately
-      updateMode("manual");
-
-      // Publish to MQTT
-      client.publish(`${topicRoot}/kipas/mode`, "manual");
-
-      // Save to database
-      $.post(
-        "api/kipas_crud.php",
-        {
-          action: "update_mode",
-          mode: "manual",
-        },
-        function (res) {
-          if (res.success) {
-            showSuccessToast("Mode MANUAL diaktifkan");
-          } else {
-            showErrorToast(
-              "Gagal mengubah mode: " + (res.error || "Unknown error")
-            );
-          }
-        },
-        "json"
-      ).fail(function (xhr) {
-        console.error("❌ AJAX Error switching to MANUAL:", xhr);
-        showErrorToast("❌ Gagal Menghubungi Server. Coba Lagi.");
-      });
+      $("#modeSwitch").prop("checked", false).trigger("change");
     });
   }
 
-  // Manual ON/OFF Controls with enhanced feedback and protection
+  // === MANUAL ON/OFF CONTROLS ===
+
   $("#btnFanOn").click(function () {
-    // Check if in manual mode
     if (currentMode !== "manual") {
       showErrorToast("⚠️ Mode Harus MANUAL Untuk Kontrol Manual!");
       return;
     }
 
-    // Check if already ON
     if (currentStatus === "on") {
       showWarningToast("⚡ Kipas Sudah Dalam Keadaan Menyala");
       return;
     }
 
-    // Cooldown protection
     const now = Date.now();
     if (statusUpdateInProgress) {
       showWarningToast("⏳ Tunggu, Perintah Sedang Diproses...");
@@ -595,24 +508,20 @@ $(function () {
       return;
     }
 
-    console.log("� Turning fan ON (manual)");
+    console.log("💨 Turning fan ON (manual)");
 
-    // Set flags
     statusUpdateInProgress = true;
     lastStatusUpdate = now;
-    pendingStatusUpdate = "on"; // Expect "on" response from ESP32
+    pendingStatusUpdate = "on";
 
-    // Disable both buttons temporarily
     const btnOn = $(this);
     const btnOff = $("#btnFanOff");
     btnOn.prop("disabled", true);
     btnOff.prop("disabled", true);
 
-    // Update status variable and UI immediately
     currentStatus = "on";
     updateFanUI("on");
 
-    // Publish to MQTT
     try {
       client.publish(
         `${topicRoot}/kipas/control`,
@@ -622,7 +531,6 @@ $(function () {
           if (err) {
             console.error("❌ MQTT publish failed:", err);
             showErrorToast("❌ Gagal Mengirim Perintah ke ESP32");
-            // Revert on error
             currentStatus = "off";
             updateFanUI("off");
             pendingStatusUpdate = null;
@@ -632,12 +540,10 @@ $(function () {
             showSuccessToast("💨 Kipas Berhasil Dinyalakan");
           }
 
-          // Re-enable buttons
           setTimeout(() => {
             btnOn.prop("disabled", false);
             btnOff.prop("disabled", false);
 
-            // Clear pending if no response
             if (pendingStatusUpdate === "on") {
               console.warn("⚠️ No confirmation from ESP32 after 1.5s");
               pendingStatusUpdate = null;
@@ -654,7 +560,6 @@ $(function () {
       pendingStatusUpdate = null;
       statusUpdateInProgress = false;
 
-      // Re-enable buttons
       setTimeout(() => {
         btnOn.prop("disabled", false);
         btnOff.prop("disabled", false);
@@ -663,19 +568,16 @@ $(function () {
   });
 
   $("#btnFanOff").click(function () {
-    // Check if in manual mode
     if (currentMode !== "manual") {
       showErrorToast("⚠️ Mode Harus MANUAL Untuk Kontrol Manual!");
       return;
     }
 
-    // Check if already OFF
     if (currentStatus === "off") {
       showWarningToast("💤 Kipas Sudah Dalam Keadaan Mati");
       return;
     }
 
-    // Cooldown protection
     const now = Date.now();
     if (statusUpdateInProgress) {
       showWarningToast("⏳ Tunggu, Perintah Sedang Diproses...");
@@ -692,22 +594,18 @@ $(function () {
 
     console.log("🔴 Turning fan OFF (manual)");
 
-    // Set flags
     statusUpdateInProgress = true;
     lastStatusUpdate = now;
-    pendingStatusUpdate = "off"; // Expect "off" response from ESP32
+    pendingStatusUpdate = "off";
 
-    // Disable both buttons temporarily
     const btnOff = $(this);
     const btnOn = $("#btnFanOn");
     btnOff.prop("disabled", true);
     btnOn.prop("disabled", true);
 
-    // Update status variable and UI immediately
     currentStatus = "off";
     updateFanUI("off");
 
-    // Publish to MQTT
     try {
       client.publish(
         `${topicRoot}/kipas/control`,
@@ -717,7 +615,6 @@ $(function () {
           if (err) {
             console.error("❌ MQTT publish failed:", err);
             showErrorToast("❌ Gagal Mengirim Perintah ke ESP32");
-            // Revert on error
             currentStatus = "on";
             updateFanUI("on");
             pendingStatusUpdate = null;
@@ -727,12 +624,10 @@ $(function () {
             showSuccessToast("💤 Kipas Berhasil Dimatikan");
           }
 
-          // Re-enable buttons
           setTimeout(() => {
             btnOff.prop("disabled", false);
             btnOn.prop("disabled", false);
 
-            // Clear pending if no response
             if (pendingStatusUpdate === "off") {
               console.warn("⚠️ No confirmation from ESP32 after 1.5s");
               pendingStatusUpdate = null;
@@ -749,7 +644,6 @@ $(function () {
       pendingStatusUpdate = null;
       statusUpdateInProgress = false;
 
-      // Re-enable buttons
       setTimeout(() => {
         btnOff.prop("disabled", false);
         btnOn.prop("disabled", false);
@@ -757,12 +651,13 @@ $(function () {
     }
   });
 
-  // Save Threshold Settings
+  // === SAVE THRESHOLD (GABUNGAN: VALIDASI LAMA + API JSON BARU) ===
+
   $("#btnSaveThreshold").click(function () {
     const newThresholdOn = parseFloat($("#tempOn").val());
     const newThresholdOff = parseFloat($("#tempOff").val());
 
-    // Comprehensive validation
+    // Validasi (pakai yang lama, lebih lengkap)
     if (isNaN(newThresholdOn) || isNaN(newThresholdOff)) {
       Alert.error(
         "#thresholdResult",
@@ -796,56 +691,62 @@ $(function () {
       newThresholdOff
     );
 
-    // Disable button
     const btn = $(this);
     btn.prop("disabled", true);
     Alert.loading("#thresholdResult", "Menyimpan pengaturan...");
 
-    // Save to database
-    $.post(
-      "api/kipas_crud.php",
-      {
-        action: "update_settings",
-        threshold_on: newThresholdOn,
-        threshold_off: newThresholdOff,
-        mode: currentMode,
-      },
-      function (res) {
-        if (res.success) {
+    // === AJAX BARU: POST JSON ke update_threshold ===
+    $.ajax({
+      url: "api/kipas_crud.php?action=update_threshold",
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        temp_on: newThresholdOn,
+        temp_off: newThresholdOff,
+      }),
+      dataType: "json",
+      success: function (response) {
+        if (response.success) {
           thresholdOn = newThresholdOn;
           thresholdOff = newThresholdOff;
 
-          // Publish to ESP32
-          const thresholdData = JSON.stringify({
-            on: newThresholdOn,
-            off: newThresholdOff,
-          });
-          console.log("📤 Publishing threshold to ESP32:", thresholdData);
-          client.publish(`${topicRoot}/kipas/threshold`, thresholdData);
+          // Publish ke ESP32 via MQTT (retained)
+          if (client && client.connected) {
+            const payload = JSON.stringify({
+              on: newThresholdOn,
+              off: newThresholdOff,
+            });
+            console.log("📤 Publishing threshold to ESP32:", payload);
+            client.publish(`${topicRoot}/kipas/threshold`, payload, {
+              retain: true,
+            });
+          }
 
           Alert.success(
             "#thresholdResult",
             `✅ Pengaturan threshold berhasil disimpan! ON: ${newThresholdOn}°C, OFF: ${newThresholdOff}°C`
           );
-
-          // Re-enable button after 2 seconds
-          setTimeout(() => btn.prop("disabled", false), 2000);
         } else {
           Alert.error(
             "#thresholdResult",
-            "❌ Gagal menyimpan: " + (res.error || "Unknown error")
+            "❌ Gagal menyimpan: " +
+              (response.message || response.error || "Unknown error")
           );
-          btn.prop("disabled", false);
         }
+        setTimeout(() => btn.prop("disabled", false), 1500);
       },
-      "json"
-    ).fail(function (xhr) {
-      console.error("❌ Threshold save failed:", xhr.responseText);
-      Alert.error(
-        "#thresholdResult",
-        "❌ Gagal menghubungi server. Silakan coba lagi."
-      );
-      btn.prop("disabled", false);
+      error: function (xhr) {
+        let msg = "Gagal menyimpan";
+        try {
+          const res = JSON.parse(xhr.responseText || "{}");
+          if (res.message) msg = res.message;
+          if (res.error) msg = res.error;
+        } catch (e) {}
+
+        console.error("❌ Threshold save failed:", xhr.responseText);
+        Alert.error("#thresholdResult", "❌ " + msg + ". Silakan coba lagi.");
+        btn.prop("disabled", false);
+      },
     });
   });
 
@@ -881,9 +782,8 @@ $(function () {
     });
   }
 
-  // === HELPER FUNCTIONS ===
+  // === HELPER TOASTS ===
 
-  // Simple and clean toast notifications
   function showSuccessToast(message) {
     if (typeof Swal !== "undefined") {
       Swal.fire({
@@ -985,6 +885,5 @@ $(function () {
     showErrorToast("❌ Gagal Menghubungi Server. Coba Lagi.");
   }
 
-  // Initial load
   console.log("🎯 Fan Control Page Initialized");
 });
