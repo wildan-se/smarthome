@@ -85,11 +85,19 @@ $(function () {
 
     // DHT Stats
     if (dhtData.length > 0) {
-      // Filter out NaN/invalid values
+      // Filter out NaN/invalid values ONLY, not zero or negative
       const validData = dhtData.filter((d) => {
         const temp = parseFloat(d.temperature);
         const hum = parseFloat(d.humidity);
-        return !isNaN(temp) && !isNaN(hum) && temp > 0 && hum > 0;
+        // ✅ Only skip if truly invalid (NaN, null, undefined)
+        return (
+          !isNaN(temp) &&
+          !isNaN(hum) &&
+          temp !== null &&
+          temp !== undefined &&
+          hum !== null &&
+          hum !== undefined
+        );
       });
 
       if (validData.length > 0) {
@@ -196,14 +204,16 @@ $(function () {
     const tempMin = $("#filterTempMin").val();
     const tempMax = $("#filterTempMax").val();
     const humMin = $("#filterHumMin").val();
+    const humMax = $("#filterHumMax").val();
 
     // Build query parameters - use wide range to get all data
     const params = new URLSearchParams({
+      action: "filter", // ✅ FIX: Add action parameter
       time: timeFilter,
       temp_min: tempMin || "-100",
       temp_max: tempMax || "200",
       hum_min: humMin || "-100",
-      hum_max: "200",
+      hum_max: humMax || "200",
     });
 
     console.log("📊 DHT Filter params:", params.toString());
@@ -407,4 +417,172 @@ $(function () {
     loadDHTLog();
     loadDoorLog();
   }
+
+  /**
+   * ========================================
+   * MQTT REALTIME CONNECTION
+   * ========================================
+   */
+  const broker = "wildan-se.cloud.shiftr.io";
+  const mqttProtocol = "wss";
+  const mqttUser = "wildan-se";
+  const mqttPass = "12wildan34";
+  const topicRoot = "smarthome";
+
+  let latestTemp = null;
+  let latestHum = null;
+
+  const client = mqtt.connect(`${mqttProtocol}://${broker}`, {
+    username: mqttUser,
+    password: mqttPass,
+    clientId: "log-page-" + Math.random().toString(16).substr(2, 8),
+  });
+
+  client.on("connect", () => {
+    console.log("✅ MQTT Log Page Connected!");
+
+    // Subscribe to all topics
+    client.subscribe(`${topicRoot}/dht/temperature`);
+    client.subscribe(`${topicRoot}/dht/humidity`);
+    client.subscribe(`${topicRoot}/rfid/access`);
+    client.subscribe(`${topicRoot}/pintu/status`);
+  });
+
+  client.on("message", (topic, message) => {
+    const msg = message.toString();
+    console.log(`📨 MQTT: ${topic} => ${msg}`);
+
+    // Handle DHT Temperature & Humidity
+    if (topic === `${topicRoot}/dht/temperature`) {
+      const temp = parseFloat(msg);
+      if (!isNaN(temp)) {
+        latestTemp = temp;
+        checkAndReloadDHT();
+      }
+    }
+
+    if (topic === `${topicRoot}/dht/humidity`) {
+      const hum = parseFloat(msg);
+      if (!isNaN(hum)) {
+        latestHum = hum;
+        checkAndReloadDHT();
+      }
+    }
+
+    // Handle RFID Access
+    if (topic === `${topicRoot}/rfid/access`) {
+      try {
+        const data = JSON.parse(msg);
+        console.log("🔑 RFID Access detected, reloading...");
+        // Reload RFID log with a slight delay for DB insert
+        setTimeout(() => {
+          loadRFIDLog();
+        }, 500);
+      } catch (e) {
+        console.error("Failed to parse RFID data:", e);
+      }
+    }
+
+    // Handle Door Status
+    if (topic === `${topicRoot}/pintu/status`) {
+      console.log("🚪 Door status changed, reloading...");
+      setTimeout(() => {
+        loadDoorLog();
+      }, 500);
+    }
+  });
+
+  /**
+   * Reload DHT data when both temp and humidity received
+   * Note: Dashboard already saves to DB, we just reload from DB
+   */
+  function checkAndReloadDHT() {
+    if (latestTemp !== null && latestHum !== null) {
+      console.log(`🌡️ DHT Data received: ${latestTemp}°C, ${latestHum}%`);
+      console.log("♻️ Reloading DHT log from database...");
+
+      // Reload DHT log with a delay to ensure DB insert completed
+      setTimeout(() => {
+        loadDHTLog();
+      }, 800);
+
+      // Reset for next reading
+      latestTemp = null;
+      latestHum = null;
+    }
+  }
+
+  /**
+   * Add DHT row to table without full reload (DEPRECATED - using reload instead)
+   * Kept for backward compatibility
+   */
+  function addDHTRowToTable(temp, hum) {
+    const now = new Date();
+    const timeStr =
+      now.toLocaleDateString("id-ID") + " " + now.toLocaleTimeString("id-ID");
+
+    const tempClass =
+      temp > 30 ? "text-danger" : temp < 20 ? "text-primary" : "text-success";
+    const humClass = hum > 70 ? "text-info" : "text-muted";
+
+    // Add to dhtData array at the beginning
+    dhtData.unshift({
+      id: "new-" + Date.now(),
+      temperature: temp.toFixed(1),
+      humidity: hum.toFixed(1),
+      log_time: timeStr,
+    });
+
+    // Rebuild table with updated data
+    const tbody = $("#tableDHTLog tbody");
+    let rows = "";
+    let validCount = 0;
+
+    dhtData.forEach((l, index) => {
+      const t = parseFloat(l.temperature);
+      const h = parseFloat(l.humidity);
+
+      if (isNaN(t) || isNaN(h) || t === null || h === null) return;
+
+      validCount++;
+      const tClass =
+        t > 30 ? "text-danger" : t < 20 ? "text-primary" : "text-success";
+      const hClass = h > 70 ? "text-info" : "text-muted";
+
+      // Highlight new row
+      const isNew = typeof l.id === "string" && l.id.startsWith("new-");
+      const rowClass = isNew ? "fadeIn table-success" : "fadeIn";
+
+      rows += `
+        <tr class="${rowClass}">
+          <td class="text-center"><strong>${validCount}</strong></td>
+          <td><i class="far fa-clock text-muted"></i> ${l.log_time}</td>
+          <td class="${tClass}">
+            <i class="fas fa-thermometer-half"></i> <strong>${t.toFixed(
+              1
+            )}°C</strong>
+          </td>
+          <td class="${hClass}">
+            <i class="fas fa-tint"></i> <strong>${h.toFixed(1)}%</strong>
+          </td>
+        </tr>
+      `;
+    });
+
+    tbody.html(rows);
+
+    // Update count
+    $("#dhtCount").text(validCount + " records");
+    $("#dhtInfo").text(validCount + " data");
+
+    console.log("✅ DHT table updated with new row");
+  }
+
+  client.on("error", (err) => {
+    console.error("❌ MQTT Error:", err);
+  });
+
+  client.on("offline", () => {
+    console.warn("⚠️ MQTT Offline");
+  });
 });

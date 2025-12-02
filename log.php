@@ -18,7 +18,10 @@ Auth::check();
 $pageTitle = 'Log Aktivitas';
 $activePage = 'log';
 $pageCSS = [];
-$pageJS = ['assets/js/pages/log.js'];
+$pageJS = [
+  'https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js', // MQTT for realtime
+  'assets/js/pages/log.js'
+];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -303,12 +306,12 @@ $pageJS = ['assets/js/pages/log.js'];
                   <div class="card card-secondary card-outline mb-3">
                     <div class="card-body">
                       <div class="row align-items-end">
-                        <div class="col-md-3">
+                        <div class="col-md-12 mb-2">
                           <div class="form-group mb-0">
                             <label class="d-block"><i class="fas fa-clock"></i> Rentang Waktu:</label>
-                            <select class="form-control p-1" id="filterDHTTime">
+                            <select class="form-control" id="filterDHTTime">
                               <option value="30">🕐 30 Menit Terakhir</option>
-                              <option value="60" selected>🕑 1 Jam Terakhir</option>
+                              <option value="60">🕑 1 Jam Terakhir</option>
                               <option value="180">🕒 3 Jam Terakhir</option>
                               <option value="360">🕕 6 Jam Terakhir</option>
                               <option value="720">🕛 12 Jam Terakhir</option>
@@ -318,23 +321,25 @@ $pageJS = ['assets/js/pages/log.js'];
                               <option value="10080">📆 7 Hari Terakhir</option>
                               <option value="20160">📆 14 Hari Terakhir</option>
                               <option value="43200">📆 30 Hari Terakhir</option>
-                              <option value="all">📊 Semua Data</option>
+                              <option value="all" selected>📊 Semua Data</option>
                             </select>
                           </div>
                         </div>
-                        <div class="col-md-2">
+                      </div>
+                      <div class="row align-items-end">
+                        <div class="col-md-3">
                           <div class="form-group mb-0">
                             <label class="d-block"><i class="fas fa-temperature-low"></i> Suhu Min (°C):</label>
                             <input type="number" class="form-control" id="filterTempMin" placeholder="Kosongkan = Semua" step="0.1">
                           </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                           <div class="form-group mb-0">
                             <label class="d-block"><i class="fas fa-temperature-high"></i> Suhu Max (°C):</label>
                             <input type="number" class="form-control" id="filterTempMax" placeholder="Kosongkan = Semua" step="0.1">
                           </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                           <div class="form-group mb-0">
                             <label class="d-block"><i class="fas fa-tint"></i> Lembap Min (%):</label>
                             <input type="number" class="form-control" id="filterHumMin" placeholder="Kosongkan = Semua" step="0.1">
@@ -342,10 +347,16 @@ $pageJS = ['assets/js/pages/log.js'];
                         </div>
                         <div class="col-md-3">
                           <div class="form-group mb-0">
-                            <button class="btn btn-primary btn-block shadow-sm" onclick="loadDHTLog()">
-                              <i class="fas fa-sync-alt"></i> Terapkan Filter
-                            </button>
+                            <label class="d-block"><i class="fas fa-tint"></i> Lembap Max (%):</label>
+                            <input type="number" class="form-control" id="filterHumMax" placeholder="Kosongkan = Semua" step="0.1">
                           </div>
+                        </div>
+                      </div>
+                      <div class="row mt-2">
+                        <div class="col-md-12">
+                          <button class="btn btn-primary btn-block shadow-sm" onclick="loadDHTLog()">
+                            <i class="fas fa-sync-alt"></i> Terapkan Filter
+                          </button>
                         </div>
                       </div>
                     </div>

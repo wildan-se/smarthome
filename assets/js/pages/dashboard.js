@@ -319,12 +319,20 @@ $(function () {
     );
   }
 
+  // ✅ DHT Data Handler with Database Save
+  let latestTemp = null;
+  let latestHum = null;
+
   function handleTemperature(msg) {
     const temp = parseFloat(msg);
     if (!isNaN(temp)) {
       $("#temperature").text(temp.toFixed(1));
       updateTempStatus(temp);
       addChartData("temperature", temp);
+
+      // Store for database save
+      latestTemp = temp;
+      saveDHTToDatabase();
     }
   }
 
@@ -334,6 +342,42 @@ $(function () {
       $("#humidity").text(hum.toFixed(1));
       updateHumStatus(hum);
       addChartData("humidity", hum);
+
+      // Store for database save
+      latestHum = hum;
+      saveDHTToDatabase();
+    }
+  }
+
+  /**
+   * Save DHT data to database when both temp and humidity received
+   */
+  function saveDHTToDatabase() {
+    if (latestTemp !== null && latestHum !== null) {
+      console.log(`💾 Saving DHT to DB: ${latestTemp}°C, ${latestHum}%`);
+
+      $.ajax({
+        url: "api/receive_data.php",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          type: "dht",
+          data: {
+            temperature: latestTemp,
+            humidity: latestHum,
+          },
+        }),
+        success: function (res) {
+          console.log("✅ DHT saved to database:", res);
+        },
+        error: function (xhr) {
+          console.error("❌ Failed to save DHT:", xhr.responseText);
+        },
+      });
+
+      // Reset for next reading
+      latestTemp = null;
+      latestHum = null;
     }
   }
 
