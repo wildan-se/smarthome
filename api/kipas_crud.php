@@ -58,6 +58,23 @@ if (!isset($conn) || $conn->connect_error) {
   exit;
 }
 
+// ✅ Auto-create kipas_logs table jika tidak ada (InfinityFree compatibility)
+$checkTable = $conn->query("SHOW TABLES LIKE 'kipas_logs'");
+if ($checkTable && $checkTable->num_rows == 0) {
+  $createTable = "CREATE TABLE IF NOT EXISTS kipas_logs (
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    status VARCHAR(10) NOT NULL,
+    mode VARCHAR(10) NOT NULL,
+    temperature FLOAT DEFAULT NULL,
+    humidity FLOAT DEFAULT NULL,
+    trigger_source VARCHAR(50) DEFAULT NULL,
+    logged_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_logged_at (logged_at)
+  ) ENGINE=MyISAM DEFAULT CHARSET=latin1";
+
+  $conn->query($createTable);
+}
+
 /**
  * RULE AUTH:
  * - Endpoint dashboard: butuh login (lihat daftar $protectedActions)
@@ -298,7 +315,7 @@ if ($action === 'log_status') {
         }
       }
 
-      $stmt = $conn->prepare("INSERT INTO kipas_logs (status, mode, temperature, humidity, `trigger`, logged_at) VALUES (?, ?, NULL, NULL, ?, NOW())");
+      $stmt = $conn->prepare("INSERT INTO kipas_logs (status, mode, temperature, humidity, trigger_source, logged_at) VALUES (?, ?, NULL, NULL, ?, NOW())");
       // Mode bisa diambil dari setting
       $modeRow = $conn->query("SELECT mode FROM kipas_settings WHERE id = 1");
       $mode    = ($modeRow && $modeRow->num_rows > 0) ? $modeRow->fetch_assoc()['mode'] : 'manual';
@@ -331,7 +348,7 @@ if ($action === 'log_status') {
       exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO kipas_logs (status, mode, temperature, humidity, `trigger`, logged_at) VALUES (?, ?, ?, ?, ?, NOW())");
+    $stmt = $conn->prepare("INSERT INTO kipas_logs (status, mode, temperature, humidity, trigger_source, logged_at) VALUES (?, ?, ?, ?, ?, NOW())");
     $stmt->bind_param("ssdds", $status, $mode, $temperature, $humidity, $trigger);
 
     if ($stmt->execute()) {
@@ -353,7 +370,7 @@ if ($action === 'get_logs') {
   $limit = intval($_GET['limit'] ?? 50);
   $limit = min($limit, 200); // Max 200
 
-  $sql  = "SELECT id, status, mode, temperature, humidity, `trigger`, logged_at FROM kipas_logs ORDER BY logged_at DESC LIMIT ?";
+  $sql  = "SELECT id, status, mode, temperature, humidity, trigger_source, logged_at FROM kipas_logs ORDER BY logged_at DESC LIMIT ?";
   $stmt = $conn->prepare($sql);
   $stmt->bind_param("i", $limit);
   $stmt->execute();
@@ -380,9 +397,16 @@ if ($action === 'get_logs') {
 // ==================== 7. GET LATEST STATUS (Versi gabungan baru) ====================
 if ($action === 'get_latest_status') {
   try {
-    // Ambil log terakhir
-    $sqlLog  = "SELECT status, mode, temperature, humidity, `trigger`, logged_at FROM kipas_logs ORDER BY logged_at DESC LIMIT 1";
+    // Ambil log terakhir (hapus backtick dari trigger)
+    $sqlLog  = "SELECT status, mode, temperature, humidity, trigger_source, logged_at FROM kipas_logs ORDER BY logged_at DESC LIMIT 1";
     $resLog  = $conn->query($sqlLog);
+
+    if (!$resLog) {
+      // Jika query gagal, coba tanpa kolom trigger_source
+      $sqlLog  = "SELECT status, mode, temperature, humidity, logged_at FROM kipas_logs ORDER BY logged_at DESC LIMIT 1";
+      $resLog  = $conn->query($sqlLog);
+    }
+
     $logData = [
       'status'      => 'off',
       'mode'        => 'manual',
@@ -396,9 +420,9 @@ if ($action === 'get_latest_status') {
       $rowLog              = $resLog->fetch_assoc();
       $logData['status']   = $rowLog['status'];
       $logData['mode']     = $rowLog['mode'];
-      $logData['temperature'] = $rowLog['temperature'] ? floatval($rowLog['temperature']) : null;
-      $logData['humidity']    = $rowLog['humidity'] ? floatval($rowLog['humidity']) : null;
-      $logData['trigger']     = $rowLog['trigger'];
+      $logData['temperature'] = isset($rowLog['temperature']) && $rowLog['temperature'] ? floatval($rowLog['temperature']) : null;
+      $logData['humidity']    = isset($rowLog['humidity']) && $rowLog['humidity'] ? floatval($rowLog['humidity']) : null;
+      $logData['trigger']     = isset($rowLog['trigger_source']) ? $rowLog['trigger_source'] : (isset($rowLog['trigger']) ? $rowLog['trigger'] : null);
       $logData['logged_at']   = $rowLog['logged_at'];
     }
 
