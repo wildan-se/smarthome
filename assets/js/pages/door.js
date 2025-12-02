@@ -91,7 +91,7 @@ $(function () {
     console.log("🔄 Door status changed, reloading logs...");
     setTimeout(() => {
       loadDoorLogs();
-    }, 800); // Delay untuk memastikan data sudah masuk database
+    }, 500); // Delay 500ms - cukup karena HTTP POST sudah blocking sebelum MQTT publish
 
     // Update slider position based on status HANYA jika bukan dari kontrol manual slider
     if (!manualServoControl) {
@@ -332,59 +332,121 @@ $(function () {
 
   // === LOAD DOOR LOGS ===
   function loadDoorLogs() {
+    console.log("📊 Loading door logs...");
     $.get(
-      "api/door_log.php?action=get_logs&limit=20",
+      "api/door_log.php?action=get_logs&per_page=20",
       function (res) {
+        console.log("✅ Door logs received:", res);
         let rows = "";
         if (res.success && res.data && res.data.length > 0) {
-          res.data.forEach((log, index) => {
-            const statusClass =
-              log.status === "terbuka" ? "warning" : "success";
-            const statusIcon =
-              log.status === "terbuka" ? "door-open" : "door-closed";
-            const statusText =
-              log.status === "terbuka" ? "Terbuka" : "Tertutup";
+          console.log("📝 Processing", res.data.length, "records");
 
-            // Handle different source types
-            let sourceIcon = "hand-pointer";
-            let sourceText = "Manual";
-            let sourceBadge = "info";
+          try {
+            res.data.forEach((log, index) => {
+              const statusClass =
+                log.status === "terbuka" ? "warning" : "success";
+              const statusIcon =
+                log.status === "terbuka" ? "door-open" : "door-closed";
+              const statusText =
+                log.status === "terbuka" ? "Terbuka" : "Tertutup";
 
-            if (log.source === "rfid") {
-              sourceIcon = "id-card";
-              sourceText = "RFID";
-              sourceBadge = "primary";
-            } else if (log.source === "auto") {
-              sourceIcon = "robot";
-              sourceText = "Auto";
-              sourceBadge = "secondary";
-            }
+              // Handle different source types
+              let sourceIcon = "hand-pointer";
+              let sourceText = "Manual";
+              let sourceBadge = "info";
 
-            rows += `
-              <tr class="fadeIn">
-                <td class="text-center"><strong>${index + 1}</strong></td>
-                <td>
-                  <span class="badge badge-${statusClass}">
-                    <i class="fas fa-${statusIcon}"></i> ${statusText}
-                  </span>
-                </td>
-                <td>
-                  <span class="badge badge-${sourceBadge}">
-                    <i class="fas fa-${sourceIcon}"></i> ${sourceText}
-                  </span>
-                </td>
-                <td><i class="far fa-clock"></i> ${log.timestamp}</td>
-              </tr>
-            `;
-          });
+              if (log.source === "rfid") {
+                sourceIcon = "id-card";
+                sourceText = "RFID";
+                sourceBadge = "primary";
+              } else if (log.source === "auto") {
+                sourceIcon = "robot";
+                sourceText = "Auto";
+                sourceBadge = "secondary";
+              }
+
+              // Build row HTML - simplified to avoid template string issues
+              const row =
+                '<tr class="fadeIn">' +
+                '<td class="text-center"><strong>' +
+                (index + 1) +
+                "</strong></td>" +
+                "<td>" +
+                '<span class="badge badge-' +
+                statusClass +
+                '">' +
+                '<i class="fas fa-' +
+                statusIcon +
+                '"></i> ' +
+                statusText +
+                "</span>" +
+                "</td>" +
+                "<td>" +
+                '<span class="badge badge-' +
+                sourceBadge +
+                '">' +
+                '<i class="fas fa-' +
+                sourceIcon +
+                '"></i> ' +
+                sourceText +
+                "</span>" +
+                "</td>" +
+                '<td><i class="far fa-clock"></i> ' +
+                log.timestamp +
+                "</td>" +
+                "</tr>";
+
+              rows += row;
+            });
+            console.log("✅ All rows generated successfully");
+          } catch (err) {
+            console.error("❌ Error generating rows:", err);
+            rows =
+              '<tr><td colspan="4" class="text-center text-danger">Error: ' +
+              err.message +
+              "</td></tr>";
+          }
         } else {
+          console.log("⚠️ No door log data available");
           rows =
             '<tr><td colspan="4" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada riwayat</td></tr>';
         }
-        $("#tableDoorLogs tbody").html(rows);
+        console.log(
+          "🔄 Updating table with",
+          rows.length > 200 ? "data" : "empty message"
+        );
+
+        // Debug: Log sample HTML
+        console.log(
+          "📄 Generated HTML (first 500 chars):",
+          rows.substring(0, 500)
+        );
+
+        // Debug: Check if table exists
+        const tableBody = $("#tableDoorLogs tbody");
+        console.log("🎯 Table selector found:", tableBody.length, "elements");
+
+        if (tableBody.length === 0) {
+          console.error("❌ Table #tableDoorLogs tbody NOT FOUND!");
+          return;
+        }
+
+        tableBody.html(rows);
+        console.log("✅ Table updated successfully!");
+
+        // Verify what's actually in the DOM after 100ms
+        setTimeout(() => {
+          const actualRows = $("#tableDoorLogs tbody tr").length;
+          console.log("🔍 Verification: Table now has", actualRows, "rows");
+          if (actualRows === 0) {
+            console.error("⚠️ WARNING: Rows disappeared!");
+          }
+        }, 100);
       },
       "json"
-    ).fail(function () {
+    ).fail(function (xhr, status, error) {
+      console.error("❌ Failed to load door logs:", status, error);
+      console.error("Response:", xhr.responseText);
       $("#tableDoorLogs tbody").html(
         '<tr><td colspan="4" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i><br>Gagal memuat riwayat</td></tr>'
       );

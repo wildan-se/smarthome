@@ -209,12 +209,12 @@ if ($type === 'rfid') {
   }
   exit;
 } elseif ($type === 'door') {
-  // Log Door Status
-  $status = isset($payload['status']) ? $payload['status'] : null;
-  $source = isset($payload['source']) ? $payload['source'] : 'unknown'; // rfid, manual, auto
+  // ✅ InfinityFree FIX: Door data dari form-encoded langsung di $_POST
+  $status = isset($_POST['status']) ? $_POST['status'] : (isset($payload['status']) ? $payload['status'] : null);
+  $source = isset($_POST['source']) ? $_POST['source'] : (isset($payload['source']) ? $payload['source'] : 'unknown');
 
   // ✅ Debug logging
-  error_log("Door status received: status=$status, source=$source");
+  error_log("Door status received: status=$status, source=$source (method: " . $_SERVER['REQUEST_METHOD'] . ")");
 
   // ✅ Validasi: Status harus 'terbuka' atau 'tertutup'
   if ($status && in_array($status, ['terbuka', 'tertutup'])) {
