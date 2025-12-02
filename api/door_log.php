@@ -6,6 +6,13 @@ header('Content-Type: application/json');
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'get_logs';
 
+// ✅ AUTO-CREATE column 'source' if not exists (for old database)
+$checkColumn = $conn->query("SHOW COLUMNS FROM door_status LIKE 'source'");
+if ($checkColumn && $checkColumn->num_rows == 0) {
+  $conn->query("ALTER TABLE door_status ADD COLUMN source VARCHAR(20) DEFAULT 'manual' AFTER status");
+  error_log("Door log: Added 'source' column to door_status table");
+}
+
 // ✅ AUTO-CLEANUP: Delete old records (keep last 7 days only)
 // Run cleanup every time to prevent database bloat
 $cleanupResult = $conn->query("DELETE FROM door_status WHERE updated_at < DATE_SUB(NOW(), INTERVAL 7 DAY)");

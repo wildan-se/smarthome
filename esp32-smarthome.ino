@@ -586,8 +586,9 @@ void openDoor() {
   
   client.publish(("smarthome/" + serial_number + "/pintu/status").c_str(), "terbuka", false, 0);
   
+  // ✅ Kirim ke database dengan source 'rfid'
   if (WiFi.status() == WL_CONNECTED) {
-    kirimKeDatabaseAsync("door", "{\"status\":\"terbuka\"}");
+    kirimKeDatabaseAsync("door", "{\"status\":\"terbuka\",\"source\":\"rfid\"}");
   }
   
   lcdShowNonBlocking("Pintu Terbuka", "Silahkan Masuk");
@@ -599,8 +600,9 @@ void closeDoor() {
   
   client.publish(("smarthome/" + serial_number + "/pintu/status").c_str(), "tertutup", false, 0);
   
+  // ✅ Kirim ke database dengan source 'auto'
   if (WiFi.status() == WL_CONNECTED) {
-    kirimKeDatabaseAsync("door", "{\"status\":\"tertutup\"}");
+    kirimKeDatabaseAsync("door", "{\"status\":\"tertutup\",\"source\":\"auto\"}");
   }
   
   lcdShowNonBlocking("Pintu Tertutup", "Tempelkan Kartu");

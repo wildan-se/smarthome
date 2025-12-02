@@ -211,6 +211,10 @@ if ($type === 'rfid') {
 } elseif ($type === 'door') {
   // Log Door Status
   $status = isset($payload['status']) ? $payload['status'] : null;
+  $source = isset($payload['source']) ? $payload['source'] : 'unknown'; // rfid, manual, auto
+
+  // ✅ Debug logging
+  error_log("Door status received: status=$status, source=$source");
 
   // ✅ Validasi: Status harus 'terbuka' atau 'tertutup'
   if ($status && in_array($status, ['terbuka', 'tertutup'])) {
@@ -220,12 +224,36 @@ if ($type === 'rfid') {
 
     // Hanya simpan jika status berubah
     if ($last_status !== $status) {
-      $stmt = $conn->prepare('INSERT INTO door_status (status) VALUES (?)');
-      $stmt->bind_param('s', $status);
-      $stmt->execute();
-      $stmt->close();
-      ob_end_clean();
-      echo json_encode(['success' => true, 'message' => 'Door status logged', 'status' => $status]);
+      // ✅ Cek apakah kolom source ada
+      $columnCheck = $conn->query("SHOW COLUMNS FROM door_status LIKE 'source'");
+
+      if ($columnCheck && $columnCheck->num_rows > 0) {
+        // Kolom source ADA
+        $stmt = $conn->prepare('INSERT INTO door_status (status, source) VALUES (?, ?)');
+        $stmt->bind_param('ss', $status, $source);
+      } else {
+        // Kolom source TIDAK ADA (fallback)
+        $stmt = $conn->prepare('INSERT INTO door_status (status) VALUES (?)');
+        $stmt->bind_param('s', $status);
+      }
+
+      if ($stmt->execute()) {
+        error_log("Door status inserted: id=" . $stmt->insert_id);
+        $stmt->close();
+        ob_end_clean();
+        echo json_encode([
+          'success' => true,
+          'message' => 'Door status logged',
+          'status' => $status,
+          'source' => $source,
+          'id' => $conn->insert_id
+        ]);
+      } else {
+        error_log("Door status insert failed: " . $stmt->error);
+        $stmt->close();
+        ob_end_clean();
+        echo json_encode(['success' => false, 'error' => 'Insert failed: ' . $stmt->error]);
+      }
     } else {
       ob_end_clean();
       echo json_encode(['success' => true, 'message' => 'Status unchanged', 'status' => $status]);

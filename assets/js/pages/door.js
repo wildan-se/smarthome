@@ -87,6 +87,12 @@ $(function () {
 
     updateDoorUI(status);
 
+    // ✅ Reload door logs ketika ada perubahan status (termasuk dari RFID)
+    console.log("🔄 Door status changed, reloading logs...");
+    setTimeout(() => {
+      loadDoorLogs();
+    }, 800); // Delay untuk memastikan data sudah masuk database
+
     // Update slider position based on status HANYA jika bukan dari kontrol manual slider
     if (!manualServoControl) {
       if (status === "terbuka") {
