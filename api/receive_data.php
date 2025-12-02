@@ -16,15 +16,55 @@ while (ob_get_level() > 1) {
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-cache, no-store, must-revalidate');
 
-$data = json_decode(file_get_contents('php://input'), true);
+// ✅ InfinityFree compatible: Try php://input first, fallback to $_POST
+$rawInput = @file_get_contents('php://input');
+$data = null;
+
+if ($rawInput !== false && !empty($rawInput)) {
+  // Coba decode JSON dari body request
+  $jsonData = json_decode($rawInput, true);
+  if ($jsonData && is_array($jsonData)) {
+    $data = $jsonData;
+  }
+}
+
+// Jika JSON decode gagal atau empty, gunakan $_POST
+if (!$data && !empty($_POST)) {
+  $data = $_POST;
+}
+
 if (!$data || !isset($data['type'])) {
   http_response_code(400);
   ob_end_clean();
-  echo json_encode(['error' => 'Invalid data']);
+  echo json_encode([
+    'error' => 'Invalid data',
+    'debug' => [
+      'raw_input' => $rawInput ? substr($rawInput, 0, 200) : 'blocked',
+      'raw_input_length' => $rawInput ? strlen($rawInput) : 0,
+      'json_decode_result' => isset($jsonData) ? 'success' : 'failed',
+      'post' => !empty($_POST) ? 'available' : 'empty',
+      'post_keys' => !empty($_POST) ? array_keys($_POST) : [],
+      'method' => $_SERVER['REQUEST_METHOD'],
+      'content_type' => $_SERVER['CONTENT_TYPE'] ?? 'not set'
+    ]
+  ]);
   exit;
 }
 $type = $data['type'];
-$payload = $data['data'];
+
+// ✅ Parse payload - support both JSON string and array
+$payload = [];
+if (isset($data['data'])) {
+  if (is_string($data['data'])) {
+    // Data is JSON string - decode it
+    $payload = json_decode($data['data'], true);
+    if (!$payload) $payload = [];
+  } elseif (is_array($data['data'])) {
+    // Data is already array
+    $payload = $data['data'];
+  }
+}
+
 if ($type === 'rfid') {
   // Log RFID
   $uid = isset($payload['uid']) ? $payload['uid'] : null;
@@ -108,25 +148,48 @@ if ($type === 'rfid') {
     $temperature >= -50 && $temperature <= 80 &&
     $humidity >= 0 && $humidity <= 100
   ) {
-    $stmt = $conn->prepare('INSERT INTO dht_logs (temperature, humidity) VALUES (?, ?)');
+    // ✅ InfinityFree fix: Explicitly set log_time instead of relying on DEFAULT
+    $stmt = $conn->prepare('INSERT INTO dht_logs (temperature, humidity, log_time) VALUES (?, ?, NOW())');
+
+    if (!$stmt) {
+      ob_end_clean();
+      echo json_encode([
+        'success' => false,
+        'error' => 'Prepare failed: ' . $conn->error,
+        'received' => [
+          'temp' => $temperature,
+          'hum' => $humidity
+        ]
+      ]);
+      exit;
+    }
+
     $stmt->bind_param('dd', $temperature, $humidity);
 
     if ($stmt->execute()) {
+      $insertId = $stmt->insert_id;
       $stmt->close();
       ob_end_clean();
       echo json_encode([
         'success' => true,
         'message' => 'DHT data saved',
+        'id' => $insertId,
         'data' => [
           'temperature' => $temperature,
           'humidity' => $humidity
         ]
       ]);
     } else {
+      $error = $stmt->error;
+      $stmt->close();
       ob_end_clean();
       echo json_encode([
         'success' => false,
-        'error' => 'Failed to insert DHT data: ' . $stmt->error
+        'error' => 'Execute failed: ' . $error,
+        'received' => [
+          'temp' => $temperature,
+          'hum' => $humidity
+        ]
       ]);
     }
   } else {

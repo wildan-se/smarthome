@@ -326,6 +326,7 @@ $(function () {
   function handleTemperature(msg) {
     const temp = parseFloat(msg);
     if (!isNaN(temp)) {
+      console.log(`🌡️ Temperature received: ${temp}°C`);
       $("#temperature").text(temp.toFixed(1));
       updateTempStatus(temp);
       addChartData("temperature", temp);
@@ -333,12 +334,15 @@ $(function () {
       // Store for database save
       latestTemp = temp;
       saveDHTToDatabase();
+    } else {
+      console.error("❌ Invalid temperature value:", msg);
     }
   }
 
   function handleHumidity(msg) {
     const hum = parseFloat(msg);
     if (!isNaN(hum)) {
+      console.log(`💧 Humidity received: ${hum}%`);
       $("#humidity").text(hum.toFixed(1));
       updateHumStatus(hum);
       addChartData("humidity", hum);
@@ -346,32 +350,62 @@ $(function () {
       // Store for database save
       latestHum = hum;
       saveDHTToDatabase();
+    } else {
+      console.error("❌ Invalid humidity value:", msg);
     }
   }
 
   /**
    * Save DHT data to database when both temp and humidity received
+   * ✅ InfinityFree compatible: Use form-encoded instead of JSON
    */
   function saveDHTToDatabase() {
     if (latestTemp !== null && latestHum !== null) {
       console.log(`💾 Saving DHT to DB: ${latestTemp}°C, ${latestHum}%`);
 
+      // Validate before sending
+      if (
+        latestTemp < -50 ||
+        latestTemp > 80 ||
+        latestHum < 0 ||
+        latestHum > 100
+      ) {
+        console.error("❌ DHT values out of range, skipping save:", {
+          temp: latestTemp,
+          hum: latestHum,
+        });
+        latestTemp = null;
+        latestHum = null;
+        return;
+      }
+
       $.ajax({
         url: "api/receive_data.php",
         method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({
+        data: {
           type: "dht",
-          data: {
+          data: JSON.stringify({
             temperature: latestTemp,
             humidity: latestHum,
-          },
-        }),
+          }),
+        },
         success: function (res) {
           console.log("✅ DHT saved to database:", res);
+          if (!res.success) {
+            console.error("⚠️ Server returned error:", res);
+          }
         },
         error: function (xhr) {
-          console.error("❌ Failed to save DHT:", xhr.responseText);
+          console.error("❌ Failed to save DHT - Status:", xhr.status);
+          console.error("❌ Response:", xhr.responseText);
+
+          // Try to parse error
+          try {
+            const err = JSON.parse(xhr.responseText);
+            console.error("❌ Error detail:", err);
+          } catch (e) {
+            console.error("❌ Raw error:", xhr.responseText);
+          }
         },
       });
 
