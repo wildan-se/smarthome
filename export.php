@@ -321,63 +321,14 @@ $pageJS = [
             </div>
           </div>
 
-          <!-- Informasi Format -->
-          <div class="card card-secondary card-outline shadow-sm mt-4">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-question-circle"></i> Informasi Format Export
-              </h3>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6">
-                  <h5 class="text-success">
-                    <i class="fas fa-file-excel"></i> Format Excel (.xlsx)
-                  </h5>
-                  <ul>
-                    <li>Dapat dibuka dan diedit dengan Microsoft Excel, Google Sheets, atau LibreOffice Calc</li>
-                    <li>Mendukung formula dan formatting lanjutan</li>
-                    <li>Ideal untuk analisis data lebih lanjut</li>
-                    <li>File size lebih besar daripada CSV</li>
-                  </ul>
-                </div>
-                <div class="col-md-6">
-                  <h5 class="text-danger">
-                    <i class="fas fa-file-pdf"></i> Format PDF
-                  </h5>
-                  <ul>
-                    <li>Format dokumen universal yang dapat dibuka di semua perangkat</li>
-                    <li>Tidak dapat diedit, cocok untuk arsip atau laporan</li>
-                    <li>Tampilan profesional dengan header dan footer</li>
-                    <li>Ideal untuk printing atau sharing</li>
-                  </ul>
-                </div>
-              </div>
 
-              <hr>
 
-              <h5><i class="fas fa-calendar-alt"></i> Filter Tanggal</h5>
-              <p class="text-muted">
-                Gunakan date range picker untuk memfilter data berdasarkan tanggal. Format yang didukung:
-              </p>
-              <ul>
-                <li><strong>Range:</strong> 01/01/2024 - 31/01/2024</li>
-                <li><strong>Single Date:</strong> Pilih tanggal yang sama untuk start dan end</li>
-                <li><strong>All Data:</strong> Kosongkan field untuk export semua data</li>
-              </ul>
-            </div>
-          </div>
+          <?php
+          require_once 'components/layout/footer.php';
+          renderFooter($pageJS);
+          ?>
 
         </div>
-      </section>
-    </div>
-
-    <?php
-    require_once 'components/layout/footer.php';
-    renderFooter($pageJS);
-    ?>
-
-  </div>
 </body>
 
 </html>
