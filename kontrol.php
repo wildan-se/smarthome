@@ -213,9 +213,10 @@ $pageJS = ['assets/js/pages/door.js'];
               </div>
             </div>
             <div class="card-body">
-              <div class="table-responsive">
+              <!-- ✅ Tambah max-height dan scroll -->
+              <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-hover table-striped modern-table" id="tableDoorLogs">
-                  <thead>
+                  <thead class="thead-light" style="position: sticky; top: 0; z-index: 10; background: #f8f9fa;">
                     <tr>
                       <th width="50" class="text-center">#</th>
                       <th><i class="fas fa-door-open"></i> Status</th>

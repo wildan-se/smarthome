@@ -433,9 +433,10 @@ $pageJS = [
                     </div>
                   </div>
 
-                  <div class="table-responsive scrollable-table">
+                  <!-- ✅ Tambah max-height dan scroll untuk tabel -->
+                  <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                     <table class="table table-hover table-striped modern-table mb-0" id="tableDoorLog">
-                      <thead class="thead-sticky">
+                      <thead class="thead-light" style="position: sticky; top: 0; z-index: 10; background: #f8f9fa;">
                         <tr>
                           <th width="50" class="text-center">#</th>
                           <th><i class="far fa-clock"></i> Waktu</th>

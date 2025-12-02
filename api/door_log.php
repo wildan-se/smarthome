@@ -6,18 +6,74 @@ header('Content-Type: application/json');
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'get_logs';
 
+// ✅ AUTO-CLEANUP: Delete old records (keep last 7 days only)
+// Run cleanup every time to prevent database bloat
+$cleanupResult = $conn->query("DELETE FROM door_status WHERE updated_at < DATE_SUB(NOW(), INTERVAL 7 DAY)");
+if ($cleanupResult) {
+  $deletedRows = $conn->affected_rows;
+  if ($deletedRows > 0) {
+    error_log("Door log cleanup: Deleted $deletedRows old records");
+  }
+}
+
 // ==================== GET LOGS ====================
 if ($action === 'get_logs') {
-  $limit = intval($_GET['limit'] ?? 20);
-  $limit = min($limit, 100); // Max 100
+  // ✅ Support pagination
+  $page = intval($_GET['page'] ?? 1);
+  $perPage = intval($_GET['per_page'] ?? 100);
+  $perPage = min($perPage, 500); // Max 500 per page
+  $offset = ($page - 1) * $perPage;
 
-  $sql = "SELECT id, status, source, DATE_FORMAT(updated_at, '%d/%m/%Y %H:%i:%s') as timestamp 
+  // ✅ Support date filter
+  $dateFrom = $_GET['date_from'] ?? null;
+  $dateTo = $_GET['date_to'] ?? null;
+
+  // Build WHERE clause
+  $whereConditions = [];
+  $params = [];
+  $types = '';
+
+  if ($dateFrom) {
+    $whereConditions[] = "updated_at >= ?";
+    $params[] = $dateFrom . ' 00:00:00';
+    $types .= 's';
+  }
+
+  if ($dateTo) {
+    $whereConditions[] = "updated_at <= ?";
+    $params[] = $dateTo . ' 23:59:59';
+    $types .= 's';
+  }
+
+  $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+  // Get total count
+  $countSql = "SELECT COUNT(*) as total FROM door_status $whereClause";
+  if (!empty($params)) {
+    $countStmt = $conn->prepare($countSql);
+    $countStmt->bind_param($types, ...$params);
+    $countStmt->execute();
+    $totalRecords = $countStmt->get_result()->fetch_assoc()['total'];
+    $countStmt->close();
+  } else {
+    $totalRecords = $conn->query($countSql)->fetch_assoc()['total'];
+  }
+
+  // Get paginated data
+  $sql = "SELECT id, status, source, DATE_FORMAT(updated_at, '%d/%m/%Y %H:%i:%s') as timestamp, updated_at as raw_time
           FROM door_status 
+          $whereClause
           ORDER BY updated_at DESC 
-          LIMIT ?";
+          LIMIT ? OFFSET ?";
 
   $stmt = $conn->prepare($sql);
-  $stmt->bind_param("i", $limit);
+
+  // Bind parameters
+  $params[] = $perPage;
+  $params[] = $offset;
+  $types .= 'ii';
+
+  $stmt->bind_param($types, ...$params);
   $stmt->execute();
   $result = $stmt->get_result();
 
@@ -26,7 +82,7 @@ if ($action === 'get_logs') {
     $data[] = [
       'id' => $row['id'],
       'status' => $row['status'],
-      'source' => $row['source'],
+      'source' => $row['source'] ?? 'unknown',
       'timestamp' => $row['timestamp']
     ];
   }
@@ -34,7 +90,11 @@ if ($action === 'get_logs') {
   echo json_encode([
     'success' => true,
     'data' => $data,
-    'count' => count($data)
+    'count' => count($data),
+    'total' => intval($totalRecords),
+    'page' => $page,
+    'per_page' => $perPage,
+    'total_pages' => ceil($totalRecords / $perPage)
   ]);
   $stmt->close();
 }

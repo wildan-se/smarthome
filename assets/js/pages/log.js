@@ -352,8 +352,9 @@ $(function () {
    * Load Door Status Logs with filters
    */
   function loadDoorLog() {
+    // ✅ Load semua data tanpa pagination - auto limited by backend (7 days)
     $.get(
-      "api/door_log.php?action=get_logs&limit=100",
+      "api/door_log.php?action=get_logs&per_page=1000",
       function (res) {
         let rows = "";
         if (res.success && res.data && res.data.length > 0) {
@@ -388,8 +389,11 @@ $(function () {
             </tr>
           `;
           });
+
+          // Update count - simple display
+          const totalRecords = res.total || doorData.length;
           $("#doorCount").text(
-            filteredData.length + " / " + doorData.length + " records"
+            `${filteredData.length} / ${totalRecords} records`
           );
         } else {
           doorData = [];
@@ -401,7 +405,8 @@ $(function () {
         updateStatistics();
       },
       "json"
-    ).fail(function () {
+    ).fail(function (xhr) {
+      console.error("Failed to load door log:", xhr.responseText);
       $("#tableDoorLog tbody").html(
         '<tr><td colspan="3" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Gagal memuat data</td></tr>'
       );
