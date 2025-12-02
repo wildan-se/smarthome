@@ -70,6 +70,9 @@ if ($type === 'rfid') {
   $uid = isset($payload['uid']) ? $payload['uid'] : null;
   $status = isset($payload['status']) ? $payload['status'] : null;
 
+  // ✅ Debug logging
+  error_log("RFID received: uid=$uid, status=$status");
+
   // ❌ SKIP jika dari kontrol manual - tidak boleh masuk ke rfid_logs
   if ($uid === 'MANUAL_CONTROL') {
     ob_end_clean();
@@ -94,6 +97,8 @@ if ($type === 'rfid') {
       $stmt->bind_param('ss', $uid, $status);
 
       if ($stmt->execute()) {
+        $insertId = $stmt->insert_id;
+        error_log("RFID log inserted: id=$insertId, uid=$uid, status=$status");
         $stmt->close();
         ob_end_clean();
         echo json_encode([
@@ -106,6 +111,7 @@ if ($type === 'rfid') {
           ]
         ]);
       } else {
+        error_log("RFID log insert FAILED: " . $stmt->error);
         $stmt->close();
         ob_end_clean();
         echo json_encode([
@@ -116,6 +122,7 @@ if ($type === 'rfid') {
     } else {
       // Kartu TIDAK TERDAFTAR - skip logging
       $check->close();
+      error_log("RFID log skipped: Card not registered (uid=$uid)");
       ob_end_clean();
       echo json_encode([
         'success' => false,
