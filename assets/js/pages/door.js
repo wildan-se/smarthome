@@ -34,6 +34,7 @@ $(function () {
     // Subscribe to topics
     client.subscribe(statusTopic, { qos: 1 });
     client.subscribe(`${topicRoot}/pintu/status`, { qos: 1 });
+    client.subscribe(`${topicRoot}/rfid/access`, { qos: 1 }); // ✅ Subscribe RFID access
 
     // Request current status
     setTimeout(() => {
@@ -59,6 +60,24 @@ $(function () {
     // Door Status
     if (topic.endsWith("/pintu/status")) {
       handleDoorStatus(msg);
+    }
+
+    // ✅ RFID Access - Reload logs jika kartu granted
+    if (topic.endsWith("/rfid/access")) {
+      try {
+        const data = JSON.parse(msg);
+        console.log("🪪 RFID Access:", data);
+
+        if (data.status === "granted") {
+          console.log("✅ RFID Granted - Reloading door logs in 1 second...");
+          // Delay lebih lama untuk memastikan HTTP POST selesai
+          setTimeout(() => {
+            loadDoorLogs();
+          }, 1000);
+        }
+      } catch (e) {
+        console.error("❌ Failed to parse RFID access:", e);
+      }
     }
   });
 

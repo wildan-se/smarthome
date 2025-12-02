@@ -613,25 +613,32 @@ void checkRFID() {
   }
 
   String status = "denied";
-  if (isCardRegistered(String(cardUID))) {
+  bool accessGranted = isCardRegistered(String(cardUID));
+  
+  if (accessGranted) {
     Serial.println("✅ Card GRANTED: " + String(cardUID));
     status = "granted";
-    openDoor();
   } else {
     Serial.println("❌ Card DENIED: " + String(cardUID));
     lcdShowNonBlocking("Akses Ditolak", String(cardUID));
   }
   Serial.println("================================");
 
-  // ✅ MQTT QoS 0 (non-blocking) - HARUS KIRIM UID JUGA!
+  // ✅ STEP 1: HTTP POST RFID log dulu (blocking)
+  bool rfidLogSuccess = false;
+  if (WiFi.status() == WL_CONNECTED) {
+    String jsonData = "{\"uid\":\"" + String(cardUID) + "\",\"status\":\"" + status + "\"}";
+    rfidLogSuccess = kirimKeDatabaseSync("rfid", jsonData);
+  }
+  
+  // ✅ STEP 2: MQTT publish RFID access
   String mqttPayload = "{\"uid\":\"" + String(cardUID) + "\",\"status\":\"" + status + "\"}";
   client.publish(("smarthome/" + serial_number + "/rfid/access").c_str(),
                  mqttPayload.c_str(), false, 0);
   
-  // ✅ HTTP POST async
-  if (WiFi.status() == WL_CONNECTED) {
-    String jsonData = "{\"uid\":\"" + String(cardUID) + "\",\"status\":\"" + status + "\"}";
-    kirimKeDatabaseAsync("rfid", jsonData);
+  // ✅ STEP 3: Jika granted, buka pintu (yang akan log door status)
+  if (accessGranted) {
+    openDoor(); // Ini akan memanggil kirimKeDatabaseSync untuk door status
   }
 
   // ✅ WAJIB: Halt & Stop
