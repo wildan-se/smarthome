@@ -14,18 +14,6 @@ $(function () {
     };
   }
 
-  // Helper function to clear blacklist
-  function clearBlacklist() {
-    localStorage.removeItem("lastAddedUID");
-    localStorage.removeItem("lastAddTime");
-    localStorage.removeItem("firstTapAfterAdd");
-    console.log("🧹 Blacklist data cleared");
-  }
-
-  // Clear stale blacklist data on page load
-  console.log("🧹 Clearing stale blacklist data on page load...");
-  clearBlacklist();
-
   // MQTT Configuration
   const broker = window.mqttConfig.broker;
   const mqttUser = window.mqttConfig.username;
@@ -34,7 +22,6 @@ $(function () {
   const topicRoot = `smarthome/${serial}`;
   const mqttProtocol = window.mqttConfig.protocol;
 
-  let lastScannedUID = "";
   let pendingRemoveUID = null; // Store UID being removed
 
   // Initialize MQTT Client
@@ -56,15 +43,11 @@ $(function () {
   });
 
   client.on("offline", function () {
-    console.log("⚠️ MQTT Offline - Clearing blacklist data");
-    clearBlacklist();
-    isAutoRefreshing = false; // Reset flag
+    console.log("⚠️ MQTT Offline");
   });
 
   client.on("close", function () {
-    console.log("🔌 MQTT Connection Closed - Clearing blacklist data");
-    clearBlacklist();
-    isAutoRefreshing = false; // Reset flag
+    console.log("🔌 MQTT Connection Closed");
   });
 
   client.on("reconnect", function () {
@@ -104,33 +87,12 @@ $(function () {
       return;
     }
 
-    if (data.uid) {
-      lastScannedUID = data.uid;
-    }
-
     // Handle ADD action
     if (data.action === "add" && data.result === "ok" && data.uid) {
       const name = localStorage.getItem("pendingCard_" + data.uid) || "";
       localStorage.removeItem("pendingCard_" + data.uid);
 
-      // Set blacklist untuk mencegah duplikasi tap pertama setelah add
-      localStorage.setItem("lastAddedUID", data.uid);
-      localStorage.setItem("lastAddTime", Date.now().toString());
-      localStorage.removeItem("firstTapAfterAdd"); // Reset flag
-      console.log(
-        "✅ Blacklist set for:",
-        data.uid,
-        "- Will block first tap (1 second window)"
-      );
-
-      // Clear blacklist after 1 second (dipercepat dari 3 detik)
-      setTimeout(function () {
-        const currentUID = localStorage.getItem("lastAddedUID");
-        if (currentUID === data.uid) {
-          clearBlacklist();
-          console.log("🧹 Blacklist cleared for:", data.uid);
-        }
-      }, 1000);
+      console.log(`✅ Card added by ESP32: ${data.uid} (${name})`);
 
       // Add card to database
       $.post(
@@ -371,7 +333,6 @@ $(function () {
 
   // ✅ Track last log untuk deteksi kartu baru
   let lastLogCount = 0;
-  let isAutoRefreshing = false;
 
   // === RFID ACCESS HANDLER ===
   function handleRFIDAccess(messageStr) {
@@ -384,7 +345,15 @@ $(function () {
       return;
     }
 
-    const uid = data.uid || lastScannedUID || "unknown";
+    // ✅ FIX BUG #1: HANYA gunakan UID dari data, JANGAN gunakan lastScannedUID
+    // lastScannedUID menyebabkan UID kartu sebelumnya ditampilkan untuk kartu baru
+    const uid = data.uid;
+
+    // Validasi UID harus ada
+    if (!uid) {
+      console.error("❌ No UID in /rfid/access message, skipping");
+      return;
+    }
 
     // Skip manual control
     if (uid === "MANUAL_CONTROL") {
@@ -392,37 +361,7 @@ $(function () {
       return;
     }
 
-    // Check blacklist - mencegah duplikasi tap pertama setelah add
-    const pendingUID = localStorage.getItem("lastAddedUID");
-    const addTime = localStorage.getItem("lastAddTime");
-    const isFirstTapAfterAdd = localStorage.getItem("firstTapAfterAdd");
-
-    if (pendingUID && pendingUID === uid && addTime) {
-      const timeDiff = Date.now() - parseInt(addTime);
-
-      // Block jika ini tap PERTAMA setelah add (dalam 1 detik)
-      if (timeDiff >= 0 && timeDiff < 1000 && isFirstTapAfterAdd !== "done") {
-        console.log(
-          "⚠️ BLOCKED: First tap after adding card (preventing duplicate):",
-          uid,
-          "Time diff:",
-          timeDiff,
-          "ms"
-        );
-        // Tandai bahwa tap pertama sudah di-block
-        localStorage.setItem("firstTapAfterAdd", "done");
-        return;
-      } else if (timeDiff >= 1000) {
-        console.log(
-          "⏰ Blacklist expired:",
-          uid,
-          "Time diff:",
-          timeDiff,
-          "ms - Clearing"
-        );
-        clearBlacklist();
-      }
-    }
+    // ✅ TIDAK ada blacklist - biarkan backend handle duplikasi
 
     // Log access
     if (data.status) {
@@ -435,48 +374,94 @@ $(function () {
           status: data.status,
         },
         function (res) {
-          if (res.success) {
+          console.log("📊 Log API Response:", res);
+
+          if (res.success && !res.skipped) {
             console.log(`✅ Access logged successfully for UID: ${uid}`);
 
-            // ✅ SMART AUTO-REFRESH: Refresh hanya jika ada kartu baru
-            if (!isAutoRefreshing) {
-              isAutoRefreshing = true;
+            // 🔔 Toast Notification - Cek nama kartu dari database
+            const statusText =
+              data.status === "granted" ? "Akses Diterima" : "Akses Ditolak";
+            const statusIcon = data.status === "granted" ? "success" : "error";
 
-              // 🔔 Toast Notification
-              const statusText =
-                data.status === "granted" ? "Akses Diterima" : "Akses Ditolak";
+            // Ambil nama kartu dari database
+            $.get(`api/rfid_crud.php?action=list`, function (cardRes) {
+              console.log("📋 Card List Response:", cardRes);
+
+              let cardName = "Unknown";
+              if (cardRes.success && cardRes.data) {
+                const card = cardRes.data.find((c) => c.uid === uid);
+                cardName = card ? card.name : "Tidak Terdaftar";
+                console.log(`🔍 Found card: ${cardName} for UID: ${uid}`);
+              }
 
               Swal.fire({
                 toast: true,
                 position: "top-end",
-                icon: data.status === "granted" ? "success" : "error",
-                title: "Kartu Baru Terdeteksi!",
-                html: `<div style="text-align:left;"><strong>UID:</strong> <code>${uid}</code><br><strong>Status:</strong> ${statusText}</div>`,
+                icon: statusIcon,
+                title:
+                  data.status === "granted"
+                    ? "Akses Diterima"
+                    : "Akses Ditolak",
+                html: `<div style="text-align:left;"><strong>UID:</strong> <code>${uid}</code><br><strong>Nama:</strong> ${cardName}<br><strong>Status:</strong> ${statusText}</div>`,
                 showConfirmButton: false,
-                timer: 1500,
+                timer: 3000,
                 timerProgressBar: true,
                 customClass: {
                   popup: "swal2-toast-custom",
                 },
               });
 
-              // 🚀 HARD REFRESH setelah toast
+              // Reload riwayat akses tanpa reload page
               setTimeout(function () {
-                console.log(
-                  "🔄 [AUTO-REFRESH] Kartu baru terdeteksi - Reloading page..."
-                );
-                location.reload(true);
-              }, 1700);
-            } else {
-              console.log("⚠️ Auto-refresh already in progress, skipping...");
-            }
+                console.log("🔄 Reloading access log...");
+                loadLog();
+              }, 800);
+            }).fail(function (xhr) {
+              console.error("❌ Failed to fetch card list:", xhr.responseText);
 
-            if (!data.uid) lastScannedUID = "";
+              // Fallback jika gagal ambil nama
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: statusIcon,
+                title:
+                  data.status === "granted"
+                    ? "Akses Diterima"
+                    : "Akses Ditolak",
+                html: `<div style="text-align:left;"><strong>UID:</strong> <code>${uid}</code><br><strong>Status:</strong> ${statusText}</div>`,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                customClass: {
+                  popup: "swal2-toast-custom",
+                },
+              });
+
+              // Reload riwayat akses
+              setTimeout(function () {
+                loadLog();
+              }, 800);
+            });
+          } else if (res.skipped) {
+            console.log(`⚠️ Access log skipped for unregistered card: ${uid}`);
+
+            // Toast untuk kartu tidak terdaftar
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "error",
+              title: "Kartu Tidak Terdaftar!",
+              html: `<div style="text-align:left;"><strong>UID:</strong> <code>${uid}</code><br><strong>Status:</strong> Tidak Terdaftar</div>`,
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+              customClass: {
+                popup: "swal2-toast-custom",
+              },
+            });
           } else {
-            console.warn(
-              `⚠️ Access log skipped or failed for UID: ${uid}`,
-              res
-            );
+            console.warn(`⚠️ Access log failed for UID: ${uid}`, res);
           }
         },
         "json"

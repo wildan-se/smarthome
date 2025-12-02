@@ -38,11 +38,63 @@ if ($type === 'rfid') {
   }
 
   if ($uid && $status) {
-    $stmt = $conn->prepare('INSERT INTO rfid_logs (uid, status) VALUES (?, ?)');
-    $stmt->bind_param('ss', $uid, $status);
-    $stmt->execute();
-    $stmt->close();
+    // ✅ Cek apakah kartu terdaftar
+    $check = $conn->prepare('SELECT name FROM rfid_cards WHERE uid = ?');
+    $check->bind_param('s', $uid);
+    $check->execute();
+    $result = $check->get_result();
+
+    if ($result->num_rows > 0) {
+      // Kartu TERDAFTAR
+      $card = $result->fetch_assoc();
+      $check->close();
+
+      // Insert log
+      $stmt = $conn->prepare('INSERT INTO rfid_logs (uid, status) VALUES (?, ?)');
+      $stmt->bind_param('ss', $uid, $status);
+
+      if ($stmt->execute()) {
+        $stmt->close();
+        ob_end_clean();
+        echo json_encode([
+          'success' => true,
+          'message' => 'RFID access logged',
+          'data' => [
+            'uid' => $uid,
+            'name' => $card['name'],
+            'status' => $status
+          ]
+        ]);
+      } else {
+        $stmt->close();
+        ob_end_clean();
+        echo json_encode([
+          'success' => false,
+          'error' => 'Failed to insert log: ' . $stmt->error
+        ]);
+      }
+    } else {
+      // Kartu TIDAK TERDAFTAR - skip logging
+      $check->close();
+      ob_end_clean();
+      echo json_encode([
+        'success' => false,
+        'skipped' => true,
+        'message' => 'Card not registered',
+        'data' => [
+          'uid' => $uid,
+          'status' => $status
+        ]
+      ]);
+    }
+  } else {
+    ob_end_clean();
+    echo json_encode([
+      'success' => false,
+      'error' => 'UID and status required'
+    ]);
   }
+  exit;
 } elseif ($type === 'dht') {
   // Log DHT
   $temperature = isset($payload['temperature']) ? floatval($payload['temperature']) : null;

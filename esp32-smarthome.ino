@@ -19,10 +19,10 @@ WebServer server(80);
 
 bool inConfigMode = false;
 
-const char *mqtt_server = "SESUAIKAN";
-const char *mqtt_username = "SESUAIKAN";
-const char *mqtt_password = "SESUAIKAN";
-const String serial_number = "BEBAS";
+const char *mqtt_server = "iotsmarthome.cloud.shiftr.io";
+const char *mqtt_username = "iotsmarthome";
+const char *mqtt_password = "gxBVaUn5Bvf9yfIm";
+const String serial_number = "12345678";
 
 String wifiSSID = "";
 String wifiPassword = "";
@@ -517,18 +517,32 @@ void checkRFID() {
   }
   cardUID[idx] = '\0';
   
-  Serial.println("UID: " + String(cardUID));
+  Serial.println("========== RFID DEBUG ==========");
+  Serial.println("UID RAW: " + String(cardUID));
+  Serial.println("UID Length: " + String(strlen(cardUID)));
+  
+  // Debug: Print semua kartu terdaftar
+  int count = preferences.getInt(keyCardCount.c_str(), 0);
+  Serial.println("Total registered cards: " + String(count));
+  for (int i = 0; i < count; i++) {
+    String key = keyCardPrefix + String(i);
+    String stored = preferences.getString(key.c_str(), "");
+    Serial.println("  Card[" + String(i) + "]: " + stored);
+  }
 
   String status = "denied";
   if (isCardRegistered(String(cardUID))) {
+    Serial.println("✅ Card GRANTED: " + String(cardUID));
     status = "granted";
     openDoor();
   } else {
+    Serial.println("❌ Card DENIED: " + String(cardUID));
     lcdShowNonBlocking("Akses Ditolak", String(cardUID));
   }
+  Serial.println("================================");
 
-  // ✅ MQTT QoS 0 (non-blocking)
-  String mqttPayload = "{\"status\":\"" + status + "\"}";
+  // ✅ MQTT QoS 0 (non-blocking) - HARUS KIRIM UID JUGA!
+  String mqttPayload = "{\"uid\":\"" + String(cardUID) + "\",\"status\":\"" + status + "\"}";
   client.publish(("smarthome/" + serial_number + "/rfid/access").c_str(),
                  mqttPayload.c_str(), false, 0);
   
