@@ -66,9 +66,10 @@ if (isset($data['data'])) {
 }
 
 if ($type === 'rfid') {
-  // Log RFID
-  $uid = isset($payload['uid']) ? $payload['uid'] : null;
-  $status = isset($payload['status']) ? $payload['status'] : null;
+  // ✅ Log RFID - support form-encoded dari ESP32
+  // ESP32 kirim: type=rfid&uid=XXX&status=granted
+  $uid = isset($data['uid']) ? $data['uid'] : (isset($payload['uid']) ? $payload['uid'] : null);
+  $status = isset($data['status']) ? $data['status'] : (isset($payload['status']) ? $payload['status'] : null);
 
   // ✅ Debug logging
   error_log("RFID received: uid=$uid, status=$status");

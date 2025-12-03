@@ -368,28 +368,69 @@ bool kirimKeDatabaseSync(String type, String dataJson) {
 
   String payload;
   
+  // ✅ InfinityFree FIX: Gunakan form-encoded untuk door dan RFID
   if (type == "door") {
-    int statusIdx = dataJson.indexOf("status\":\"");
-    int sourceIdx = dataJson.indexOf("source\":\"");
+    // Input: {"status":"terbuka","source":"rfid"}
+    int statusIdx = dataJson.indexOf("\"status\":\"");
+    int sourceIdx = dataJson.indexOf("\"source\":\"");
     
     String status = "";
     String source = "unknown";
     
     if (statusIdx >= 0) {
-      int start = statusIdx + 10;
+      int start = statusIdx + 11; // panjang "status":" adalah 11 karakter
       int end = dataJson.indexOf("\"", start);
-      status = dataJson.substring(start, end);
+      if (end > start) {
+        status = dataJson.substring(start, end);
+      }
     }
     
     if (sourceIdx >= 0) {
-      int start = sourceIdx + 10;
+      int start = sourceIdx + 10; // panjang "source":" adalah 10 karakter
       int end = dataJson.indexOf("\"", start);
-      source = dataJson.substring(start, end);
+      if (end > start) {
+        source = dataJson.substring(start, end);
+      }
     }
     
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     payload = "type=door&status=" + status + "&source=" + source;
+  } else if (type == "rfid") {
+    // ✅ Parse RFID data untuk form-encoded
+    // Input: {"uid":"AABBCCDD","status":"granted"}
+    int uidIdx = dataJson.indexOf("\"uid\":\"");
+    int statusIdx = dataJson.indexOf("\"status\":\"");
+    
+    String uid = "";
+    String status = "";
+    
+    if (uidIdx >= 0) {
+      int start = uidIdx + 7; // panjang "uid":" adalah 7 karakter
+      int end = dataJson.indexOf("\"", start);
+      if (end > start) {
+        uid = dataJson.substring(start, end);
+      }
+    }
+    
+    if (statusIdx >= 0) {
+      int start = statusIdx + 10; // panjang "status":" adalah 10 karakter
+      int end = dataJson.indexOf("\"", start);
+      if (end > start) {
+        status = dataJson.substring(start, end);
+      }
+    }
+    
+    Serial.println("🔍 RFID Parse Debug:");
+    Serial.println("  Input: " + dataJson);
+    Serial.println("  UID parsed: " + uid);
+    Serial.println("  Status parsed: " + status);
+    
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    payload = "type=rfid&uid=" + uid + "&status=" + status;
+    
+    Serial.println("  Payload: " + payload);
   } else {
+    // JSON untuk type lain (DHT)
     http.addHeader("Content-Type", "application/json");
     payload = "{\"type\":\"" + type + "\", \"data\":" + dataJson + "}";
   }
