@@ -235,12 +235,8 @@ $pageJS = ['assets/js/utils.js', 'assets/js/pages/rfid.js'];
             <div class="card-header">
               <h3 class="card-title">
                 <i class="fas fa-history"></i> Riwayat Akses Kartu Terbaru
-                <small class="text-muted ml-2" id="lastUpdateTime"></small>
               </h3>
               <div class="card-tools">
-                <span class="badge badge-success mr-2" id="autoRefreshBadge">
-                  <i class="fas fa-sync-alt fa-spin"></i> Auto 3s
-                </span>
                 <button type="button" class="btn btn-tool" onclick="loadLog()">
                   <i class="fas fa-sync"></i>
                 </button>
