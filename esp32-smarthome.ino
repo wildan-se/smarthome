@@ -310,143 +310,20 @@ void kirimKeDatabaseAsync(String type, String dataJson) {
 
   HTTPClient http;
   http.begin(serverUrl);
+  http.addHeader("Content-Type", "application/json");
   http.setTimeout(2000); // ✅ Timeout 2 detik
 
-  String payload;
-  
-  // ✅ InfinityFree FIX: Gunakan form-encoded untuk semua request
-  if (type == "door") {
-    // Parse dataJson untuk extract status dan source
-    int statusIdx = dataJson.indexOf("status\":\"");
-    int sourceIdx = dataJson.indexOf("source\":\"");
-    
-    String status = "";
-    String source = "unknown";
-    
-    if (statusIdx >= 0) {
-      int start = statusIdx + 10; // panjang "status":"
-      int end = dataJson.indexOf("\"", start);
-      status = dataJson.substring(start, end);
-    }
-    
-    if (sourceIdx >= 0) {
-      int start = sourceIdx + 10; // panjang "source":"
-      int end = dataJson.indexOf("\"", start);
-      source = dataJson.substring(start, end);
-    }
-    
-    // Kirim sebagai form-encoded (seperti DHT)
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    payload = "type=door&status=" + status + "&source=" + source;
-  } else {
-    // JSON untuk type lain (DHT, RFID)
-    http.addHeader("Content-Type", "application/json");
-    payload = "{\"type\":\"" + type + "\", \"data\":" + dataJson + "}";
-  }
+  String payload = "{\"type\":\"" + type + "\", \"data\":" + dataJson + "}";
   
   int code = http.POST(payload);
   
   if (code > 0) {
-    Serial.println("✅ Web: " + String(code) + " (" + type + ")");
+    Serial.println("✅ Web: " + String(code));
   } else {
-    Serial.println("⚠️ Web Timeout (" + type + ")");
+    Serial.println("⚠️ Web Timeout");
   }
   
   http.end();
-}
-
-// ✅ Synchronous version - return true if HTTP POST sukses
-bool kirimKeDatabaseSync(String type, String dataJson) {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("⚠️ No WiFi, skip HTTP");
-    return false;
-  }
-
-  HTTPClient http;
-  http.begin(serverUrl);
-  http.setTimeout(2000);
-
-  String payload;
-  
-  // ✅ InfinityFree FIX: Gunakan form-encoded untuk door dan RFID
-  if (type == "door") {
-    // Input: {"status":"terbuka","source":"rfid"}
-    int statusIdx = dataJson.indexOf("\"status\":\"");
-    int sourceIdx = dataJson.indexOf("\"source\":\"");
-    
-    String status = "";
-    String source = "unknown";
-    
-    if (statusIdx >= 0) {
-      int start = statusIdx + 11; // panjang "status":" adalah 11 karakter
-      int end = dataJson.indexOf("\"", start);
-      if (end > start) {
-        status = dataJson.substring(start, end);
-      }
-    }
-    
-    if (sourceIdx >= 0) {
-      int start = sourceIdx + 10; // panjang "source":" adalah 10 karakter
-      int end = dataJson.indexOf("\"", start);
-      if (end > start) {
-        source = dataJson.substring(start, end);
-      }
-    }
-    
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    payload = "type=door&status=" + status + "&source=" + source;
-  } else if (type == "rfid") {
-    // ✅ Parse RFID data untuk form-encoded
-    // Input: {"uid":"AABBCCDD","status":"granted"}
-    int uidIdx = dataJson.indexOf("\"uid\":\"");
-    int statusIdx = dataJson.indexOf("\"status\":\"");
-    
-    String uid = "";
-    String status = "";
-    
-    if (uidIdx >= 0) {
-      int start = uidIdx + 7; // panjang "uid":" adalah 7 karakter
-      int end = dataJson.indexOf("\"", start);
-      if (end > start) {
-        uid = dataJson.substring(start, end);
-      }
-    }
-    
-    if (statusIdx >= 0) {
-      int start = statusIdx + 10; // panjang "status":" adalah 10 karakter
-      int end = dataJson.indexOf("\"", start);
-      if (end > start) {
-        status = dataJson.substring(start, end);
-      }
-    }
-    
-    Serial.println("🔍 RFID Parse Debug:");
-    Serial.println("  Input: " + dataJson);
-    Serial.println("  UID parsed: " + uid);
-    Serial.println("  Status parsed: " + status);
-    
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    payload = "type=rfid&uid=" + uid + "&status=" + status;
-    
-    Serial.println("  Payload: " + payload);
-  } else {
-    // JSON untuk type lain (DHT)
-    http.addHeader("Content-Type", "application/json");
-    payload = "{\"type\":\"" + type + "\", \"data\":" + dataJson + "}";
-  }
-  
-  int code = http.POST(payload);
-  
-  bool success = (code >= 200 && code < 300);
-  
-  if (success) {
-    Serial.println("✅ Web OK: " + String(code) + " (" + type + ")");
-  } else {
-    Serial.println("⚠️ Web Failed: " + String(code) + " (" + type + ")");
-  }
-  
-  http.end();
-  return success;
 }
 
 void loadWiFiConfig() {
@@ -654,32 +531,25 @@ void checkRFID() {
   }
 
   String status = "denied";
-  bool accessGranted = isCardRegistered(String(cardUID));
-  
-  if (accessGranted) {
+  if (isCardRegistered(String(cardUID))) {
     Serial.println("✅ Card GRANTED: " + String(cardUID));
     status = "granted";
+    openDoor();
   } else {
     Serial.println("❌ Card DENIED: " + String(cardUID));
     lcdShowNonBlocking("Akses Ditolak", String(cardUID));
   }
   Serial.println("================================");
 
-  // ✅ STEP 1: HTTP POST RFID log dulu (blocking)
-  bool rfidLogSuccess = false;
-  if (WiFi.status() == WL_CONNECTED) {
-    String jsonData = "{\"uid\":\"" + String(cardUID) + "\",\"status\":\"" + status + "\"}";
-    rfidLogSuccess = kirimKeDatabaseSync("rfid", jsonData);
-  }
-  
-  // ✅ STEP 2: MQTT publish RFID access
+  // ✅ MQTT QoS 0 (non-blocking) - HARUS KIRIM UID JUGA!
   String mqttPayload = "{\"uid\":\"" + String(cardUID) + "\",\"status\":\"" + status + "\"}";
   client.publish(("smarthome/" + serial_number + "/rfid/access").c_str(),
                  mqttPayload.c_str(), false, 0);
   
-  // ✅ STEP 3: Jika granted, buka pintu (yang akan log door status)
-  if (accessGranted) {
-    openDoor(); // Ini akan memanggil kirimKeDatabaseSync untuk door status
+  // ✅ HTTP POST async
+  if (WiFi.status() == WL_CONNECTED) {
+    String jsonData = "{\"uid\":\"" + String(cardUID) + "\",\"status\":\"" + status + "\"}";
+    kirimKeDatabaseAsync("rfid", jsonData);
   }
 
   // ✅ WAJIB: Halt & Stop
@@ -714,18 +584,10 @@ void openDoor() {
   doorOpenTime = millis();
   doorTimerActive = true;
   
-  // ✅ PENTING: HTTP POST DULU (blocking), tunggu selesai, baru MQTT publish
-  // Ini memastikan data sudah masuk database sebelum frontend reload
+  client.publish(("smarthome/" + serial_number + "/pintu/status").c_str(), "terbuka", false, 0);
+  
   if (WiFi.status() == WL_CONNECTED) {
-    bool success = kirimKeDatabaseSync("door", "{\"status\":\"terbuka\",\"source\":\"rfid\"}");
-    if (success) {
-      // MQTT publish setelah HTTP berhasil
-      delay(100); // Extra delay untuk memastikan database commit
-      client.publish(("smarthome/" + serial_number + "/pintu/status").c_str(), "terbuka", false, 0);
-    }
-  } else {
-    // No WiFi - publish MQTT saja (offline mode)
-    client.publish(("smarthome/" + serial_number + "/pintu/status").c_str(), "terbuka", false, 0);
+    kirimKeDatabaseAsync("door", "{\"status\":\"terbuka\"}");
   }
   
   lcdShowNonBlocking("Pintu Terbuka", "Silahkan Masuk");
@@ -735,15 +597,10 @@ void closeDoor() {
   servo.write(0);
   doorStatus = false;
   
-  // ✅ PENTING: HTTP POST DULU (blocking), tunggu selesai, baru MQTT publish
+  client.publish(("smarthome/" + serial_number + "/pintu/status").c_str(), "tertutup", false, 0);
+  
   if (WiFi.status() == WL_CONNECTED) {
-    bool success = kirimKeDatabaseSync("door", "{\"status\":\"tertutup\",\"source\":\"auto\"}");
-    if (success) {
-      delay(100); // Extra delay untuk memastikan database commit
-      client.publish(("smarthome/" + serial_number + "/pintu/status").c_str(), "tertutup", false, 0);
-    }
-  } else {
-    client.publish(("smarthome/" + serial_number + "/pintu/status").c_str(), "tertutup", false, 0);
+    kirimKeDatabaseAsync("door", "{\"status\":\"tertutup\"}");
   }
   
   lcdShowNonBlocking("Pintu Tertutup", "Tempelkan Kartu");

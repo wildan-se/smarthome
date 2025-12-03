@@ -625,15 +625,6 @@ $(function () {
             '<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-inbox"></i><br>Belum ada riwayat akses</td></tr>';
         }
         $("#tableLog tbody").html(rows);
-
-        // ✅ Update last refresh time
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString("id-ID", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-        $("#lastUpdateTime").text(`(Update: ${timeStr})`);
       },
       "json"
     ).fail(function (xhr, status, error) {
@@ -707,72 +698,12 @@ $(function () {
   loadRFID();
   loadLog();
 
-  // ✅ Smart Auto-Refresh dengan Page Visibility API
-  let refreshInterval;
-  let isPageVisible = !document.hidden;
-
-  function startAutoRefresh(intervalMs) {
-    // Clear existing interval
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-    }
-
-    console.log(`⏰ Setting auto-refresh to ${intervalMs / 1000} seconds`);
-
-    // Update badge UI
-    const badge = $("#autoRefreshBadge");
-    console.log("🏷️ Badge element found:", badge.length > 0);
-
-    if (badge.length === 0) {
-      console.error("❌ Badge element #autoRefreshBadge NOT FOUND!");
-      console.log("Available badges:", $(".badge").length);
-    } else {
-      if (intervalMs === 3000) {
-        badge
-          .html('<i class="fas fa-sync-alt fa-spin"></i> Auto 3s')
-          .removeClass("badge-secondary")
-          .addClass("badge-success");
-        console.log("✅ Badge updated to: Auto 3s (success)");
-      } else {
-        badge
-          .html('<i class="fas fa-moon"></i> Auto 15s')
-          .removeClass("badge-success")
-          .addClass("badge-secondary");
-        console.log("✅ Badge updated to: Auto 15s (secondary)");
-      }
-    }
-
-    refreshInterval = setInterval(function () {
-      console.log(
-        `🔄 Auto-refreshing RFID data (page ${
-          isPageVisible ? "visible" : "hidden"
-        })...`
-      );
-      loadRFID();
-      loadLog();
-    }, intervalMs);
-  }
-
-  // Start dengan interval sesuai visibility
-  startAutoRefresh(isPageVisible ? 3000 : 15000);
-
-  // Listen to visibility change
-  document.addEventListener("visibilitychange", function () {
-    isPageVisible = !document.hidden;
-
-    if (isPageVisible) {
-      console.log("👁️ Page visible - switching to fast refresh (3s)");
-      // Immediate refresh when page becomes visible
-      loadRFID();
-      loadLog();
-      // Switch to 3 second interval
-      startAutoRefresh(3000);
-    } else {
-      console.log("🙈 Page hidden - switching to slow refresh (15s)");
-      // Switch to 15 second interval
-      startAutoRefresh(15000);
-    }
-  });
+  // Auto-refresh every 15 seconds for both tables
+  setInterval(function () {
+    console.log("⏰ Auto-refreshing RFID data...");
+    loadRFID();
+    loadLog();
+  }, 15000);
 
   console.log("✅ RFID page initialization complete");
 });
