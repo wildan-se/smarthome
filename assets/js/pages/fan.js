@@ -259,6 +259,40 @@ $(function () {
       // Update gauge position (0-50°C scale)
       const gaugePercent = Math.min((temp / 50) * 100, 100);
       $("#tempIndicator").css("left", gaugePercent + "%");
+
+      // ✅ AUTO MODE LOGIC: Update fan status based on temperature
+      if (currentMode === "auto") {
+        let expectedStatus = currentStatus;
+
+        // Determine expected status based on temperature and thresholds
+        if (temp >= thresholdOn) {
+          expectedStatus = "on";
+        } else if (temp <= thresholdOff) {
+          expectedStatus = "off";
+        }
+        // Hysteresis: Between thresholdOff and thresholdOn, keep current status
+
+        // Update UI if status should change
+        if (expectedStatus !== currentStatus) {
+          console.log(
+            `🌡️ Auto mode: Temperature ${temp}°C → Fan should be ${expectedStatus.toUpperCase()}`
+          );
+          currentStatus = expectedStatus;
+          updateFanUI(expectedStatus);
+        } else {
+          // Even if status unchanged, ensure UI is in sync
+          // This handles the case where status is correct but UI might be wrong
+          const actualUIStatus = $("#fanIcon").hasClass("fan-spinning")
+            ? "on"
+            : "off";
+          if (actualUIStatus !== currentStatus) {
+            console.log(
+              `🔧 Auto mode: Syncing UI to match current status ${currentStatus.toUpperCase()}`
+            );
+            updateFanUI(currentStatus);
+          }
+        }
+      }
     }
   }
 
@@ -328,6 +362,25 @@ $(function () {
     if (isAuto) {
       $("#manualControls").slideUp();
       if ($("#autoInfo").length) $("#autoInfo").slideDown();
+
+      // ✅ When switching to AUTO mode, sync fan status with current temperature
+      if (currentTemp > 0) {
+        let expectedStatus = currentStatus;
+
+        if (currentTemp >= thresholdOn) {
+          expectedStatus = "on";
+        } else if (currentTemp <= thresholdOff) {
+          expectedStatus = "off";
+        }
+
+        if (expectedStatus !== currentStatus) {
+          console.log(
+            `🔄 Mode switched to AUTO: Temperature ${currentTemp}°C → Fan ${expectedStatus.toUpperCase()}`
+          );
+          currentStatus = expectedStatus;
+          updateFanUI(expectedStatus);
+        }
+      }
     } else {
       $("#manualControls").slideDown();
       if ($("#autoInfo").length) $("#autoInfo").slideUp();
